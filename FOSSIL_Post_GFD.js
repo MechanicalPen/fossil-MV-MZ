@@ -39,7 +39,17 @@ if(!Imported.Fossil_GFD_Pre)
 
 Utils.RPGMAKER_VERSION=Utils.MZ_VERSION
 
-if(Imported.YEP_GridFreeDoodads)
+//hue is now done as a sprite property rather than upon bitmap loading.  This uses the new RMMZ version.
+var updateSpriteBaseHue = Sprite_Base.prototype.initialize
+Sprite_Base.prototype.initialize = function() {
+	updateSpriteBaseHue.call(this)
+	if(this._data && this._data.hue)
+	{
+		this.setHue(this._data.hue);
+	}
+};
+	
+if(Imported.YEP_GridFreeDoodads && !!DoodadManager)  //Only tweak the UI of doodads if the UI is loaded and the plugin exists
 {
 
 	// inject the fake RPGMAKER_VERSION when it's trying to save, so the doodad function uses the full path.
@@ -52,15 +62,6 @@ if(Imported.YEP_GridFreeDoodads)
 		Utils.RPGMAKER_VERSION=Utils.MZ_VERSION
 	}
 
-	//hue is now done as a sprite property rather than upon bitmap loading.  This uses the new RMMZ version.
-	var updateSpriteBaseHue = Sprite_Base.prototype.initialize
-	Sprite_Base.prototype.initialize = function() {
-		updateSpriteBaseHue.call(this)
-		if(this._data && this._data.hue)
-		{
-			this.setHue(this._data.hue);
-		}
-	};
 
 
 	//I want to minimize the number of times I interfere with blt, so I'm going to restrict that to
@@ -111,7 +112,7 @@ if(Imported.YEP_GridFreeDoodads)
 	} 
 }	 
  
-if(Imported.YEP_X_ExtDoodadPack1)
+if(Imported.YEP_X_ExtDoodadPack1 && !!DoodadManager)
 {
 	//while this was an issue in the MV version as well
 	//the party member names being hard to read is worse in MZ by default
