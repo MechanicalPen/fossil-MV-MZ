@@ -1036,3 +1036,14 @@ Window_Base.prototype.canvasToLocalY = function(y) {
 };
 
 
+var addToneToSpritesetBaseInitialize =Spriteset_Base.prototype.initialize
+Spriteset_Base.prototype.initialize = function(){
+	addToneToSpritesetBaseInitialize.call(this);
+	this.createToneChanger();
+}
+
+
+//this is a dummy function for injection (mog needs it)
+Spriteset_Base.prototype.createToneChanger = function() {
+    //dummy function for injection!
+};
