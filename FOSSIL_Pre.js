@@ -5,6 +5,16 @@
  * @author FOSSIL TEAM
  * @target MZ  
  
+ * @command useOldPlugin
+ * @text 'Enter MV plugin commands'
+ * @desc 'They're back! Enter them the same way you used to.'
+
+ * @arg OldPluginCommand
+ * @text
+ * @ desc Identical to MV's commands.
+
+
+ 
 Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.1
 
 FOSSIL is an interoperability plugin.  
@@ -12,6 +22,9 @@ The purpose of this layer is to expand the use and usefulness of RPG MAKER MV pl
 Version 0.1 is a test to see how effective the concept is, focusing primarily upon window calls. 
 
 So far we have interoperability with these MV plugins.  They seem to run with FOSSIL the same way they did in stock MV, free from all but a few little aesthetic glitches.  
+
+To invoke old plugin commands, either use the built in OldPluginCommand plugin command, or put oldCommand('whateverthecommandwas') in a script.
+
 
 ==Fully Functional:==
 -MOG_ActionName
@@ -83,12 +96,28 @@ Utils.MZ_VERSION= Utils.RPGMAKER_VERSION;
 Utils.RPGMAKER_VERSION="1.7.1";  
 
 
-ImageCache={};// The image cache works differently now, so let plugins that want to fiddle around with it play with a toy version :)
-ImageCache.prototype={};
 var Imported = Imported || {};
 Imported.Fossil_Pre=true;
 var Fossil =Fossil || {}
 Fossil.version='0.1'
+
+
+
+oldCommand = function (oldPluginCommand)
+{
+	//command356 is still in, just depreciated.  Use that code to invoke.
+	const args = oldPluginCommand.split(" ");
+    const command = args.shift();
+    Game_Interpreter.prototype.pluginCommand(command, args);
+    return true;
+	
+}
+
+PluginManager.registerCommand('FOSSIL_Pre', 'useOldPlugin' , args => {
+	const oldPluginCommand = String(args.OldPluginCommand );
+	oldCommand(oldPluginCommand)
+});
+
 
 
 
@@ -177,6 +206,14 @@ Window_Base.prototype.initialize = function(rect) {
 	{
 		rectFixWindowBase.apply(this,arguments) 
 	}else{ //if not, I am assuming it is MV.
+		if(this._backupRect) //if we don't have a rectangle now, and backed up one earlier, use that one.
+		{
+			rect=this._backupRect;
+			this._backupRect=undefined;
+			rectFixWindowBase.call(this,rect)
+			return;
+		}
+		
 		if(arguments.length==1)
 		{
 			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
@@ -1047,3 +1084,7 @@ Spriteset_Base.prototype.initialize = function(){
 Spriteset_Base.prototype.createToneChanger = function() {
     //dummy function for injection!
 };
+
+
+ImageCache={};// The image cache works differently now, so let plugins that want to fiddle around with it play with a toy version :)
+ImageCache.prototype={};
