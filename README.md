@@ -9,5 +9,6 @@ Some old MV plugins require extra attention to detail, and you have to sandwich 
 Terms of use:
 
 All unique code in FOSSIL is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License ( https://creativecommons.org/licenses/by-sa/4.0/ ).  The remainder is taken from RPG Maker MV and RPG Maker MZ, and is covered under the appropriate licenses. No code from any existing plugin was used. Credit Restart, 'FOSSIL' or 'FOSSIL Team', and link back to the github or the forum thread.
-In order to improve clarity, I am officially stating that the 'CC-BY-SA' only requires that code directly derived from FOSSIL be also put under a 'CC-BY-SA' license.  Any other assets in your game, (such as code, art, et cetera) as well as your game as a whole are [b]not[/b] considered to be 'derivative works' for this purpose.
+
+In order to improve clarity, I am officially stating that the 'CC-BY-SA' only requires that code directly derived from FOSSIL be also put under a 'CC-BY-SA' license.  Any other assets in your game, (such as code, art, et cetera) as well as your game as a whole are NOT considered to be 'derivative works' for this purpose.
 
