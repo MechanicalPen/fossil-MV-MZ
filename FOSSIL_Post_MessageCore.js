@@ -14,11 +14,12 @@ to pick one or the other.  Sorry if this does break compatibility, we can probab
 Known bugs: word wrap doesn't like the 'advance all text on a line' instantly command, and
 will stop word wrapping the moment that happens.  I've banged my head against the wall on this one long enough, time to move on.
 
-Put this immediately below YEP_MessageCore.
+Put this immediately below YEP_MessageCore (and below YEP_X_ExtMesPack1 and YEP_X_ExtMesPack2)
 
 */
 var Imported = Imported || {};
 Imported.YEPMCPost=true;
+
 
 if(Imported.YEP_MessageCore && Imported.YEPMCPre)
 {
@@ -26,15 +27,27 @@ if(Imported.YEP_MessageCore && Imported.YEPMCPre)
 	Window_NameBox= MZ_Window_NameBox;
 	MZ_Window_NameBox=undefined;//clean up after ourselves.
 	//yanfly just replaces the command101 function outright.
+	//we actually don't want that, because we lose the new noteboxes.  Revert it.
 	//we need to pass in the ._params it wants
-	var fixMessageCoreCommand101Params=Game_Interpreter.prototype.command101
-	Game_Interpreter.prototype.command101 = function() {
+ 	var fixMessageCoreCommand101Params=Game_Interpreter.prototype.command101
+	Game_Interpreter.prototype.command101 = function(params) {
 		this._params=arguments[0];
+		
+		if ($gameMessage.isBusy()) 
+		{
+			return false;
+		}
+		
+		$gameMessage.setSpeakerName(params[4]);
+		
 		fixMessageCoreCommand101Params.call(this);
-	}
+	} 
+	
+
+	
 	//tell rpg maker to ignore the namebox parsing code, and have it just return
 	//whatever gets put into it.
-	Window_Message.prototype.convertNameBox=function(){return arguments[0]};
+	//Window_Message.prototype.convertNameBox=function(){return arguments[0]};
 	
 	//because Window_Message.prototype.createSubWindows never happens, the name windows
 	//never get created by message core.  That's generally good, but it means that we have
@@ -44,11 +57,41 @@ if(Imported.YEP_MessageCore && Imported.YEPMCPre)
 	Window_Message.prototype.initialize = function(rect) {
 		this._nameWindow={};
 		this._nameWindow.deactivate = function(){};
+		this._backupRect=rect;
+		if($gameSystem.messageWidth())
+		{
+			rect.width=$gameSystem.messageWidth()
+		}
+		if($gameSystem.messageRows())
+		{
+			
+		}
+		
+
 		makeFakeNameBoxesWindowMessage.apply(this,arguments)
 	}
 	//undo yanfly's injection into the rendering code; this prevents the
 	// Window_Message.prototype.adjustWindowSettings from being called unnecessarily.
     Window_Message.prototype.newPage = Yanfly.Message.Window_Message_newPage;
 	
+	//in RMMZ message window size and stuff doesn't get reset whenever they get touched.
+	//this forces them to do that, so when we have plugin commands to change width it happens 
+	forceRefreshWindowMessageupdatePlacement=Window_Message.prototype.updatePlacement;
+	Window_Message.prototype.updatePlacement = function() {
+		//look up a couple levels to find our scene and the default generation
+		var rect=this.parent.parent.messageWindowRect();
+		// check if our window is different than the original.  If so, change location and refresh it.
+		if((this.x!==rect.x)||(this.y!==rect.y)||(this.width!==rect.width)||(this.height!==rect.height))
+		{
+			this.move(rect.x , rect.y, rect.width, rect.height);
+			this.createContents();
+		}
+
+		forceRefreshWindowMessageupdatePlacement.call(this)
+	}
 		
+		
+		
+}else{
+	console.log('I am missing a prereq plugin!')
 }

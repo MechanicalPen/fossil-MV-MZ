@@ -11,10 +11,13 @@ This might be bad for compatibility with other yanfly-derived name box plugins, 
 being able to use the built-in editor namebox is probably more useful for people, and i had 
 to pick one or the other.  Sorry if this does break compatibility, we can probably deal with it on a case-by case-basis if it ends up being a problem.
 
-Known bugs: word wrap doesn't like the 'advance all text on a line' instantly command, and
-will stop word wrapping the moment that happens.  I've banged my head against the wall on this one long enough, time to move on.  
+Known bugs: 
+ - Word wrap doesn't like the 'advance all text on a line instantly' command, and will stop word wrapping the moment that happens.  I've banged my head against the wall on this one long enough, time to move on.  
+ - None of the name box commands work (we have them by default now so I don't want to bother)
+ 
+ 
 
-Put this immediately above messagecore.
+Put this immediately above Messagecore (and YEP_X_ExtMesPack1 and YEP_X_ExtMesPack2 if you have them).
 
 */
 
@@ -44,4 +47,15 @@ Window_Base.prototype.processNormalCharacter = function(textState)
 	//dummy for injection
 }
 
-	
+
+
+//I have to overwrite the definition for a message window here
+//so that it respects yanfly's new definitions.
+Scene_Message.prototype.messageWindowRect = function() {
+    const ww = $gameSystem.messageWidth()||Graphics.boxWidth;
+    const wh = this.calcWindowHeight($gameSystem._messageRows||4, false) + 8;
+    const wx = (Graphics.boxWidth - ww) / 2;
+    const wy = 0;
+    return new Rectangle(wx, wy, ww, wh);
+};
+
