@@ -41,7 +41,7 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -MOG_GoldHud
 -MOG_CharPoses
 -MOG_EventSensor
--MOG_ChronoEngine
+*MOG_ChronoEngine
 -MOG_ChronoATBHud
 -MOG_ChronoEnemyHp
 -MOG_ChronoToolHud
@@ -57,24 +57,33 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -GALV_CharacterAnimations
 -GALV_DiagonalMovement
 
--YEP_SkillCore
+*YEP_SkillCore
 -YEP_X_LimitedSkillUses
 -YEP_MultiTypeSkills
 -YEP_X_SkillCooldowns
 -YEP_X_SkillCostItems
 -YEP_InstantCast
 -YEP_SkillMasteryLevels
--YEP_EquipCore  (Note: Item descriptions are shrunk to one line due to MZ leaving room for touchscreen buttons.)
+*YEP_EquipCore  (Note: Item descriptions are shrunk to one line due to MZ leaving room for touchscreen buttons.)
 -YEP_EquipRequirements
 -YEP_WeaponUnleash
--YEP_GridFreeDoodads (Some of the UI is ugly, one editor textbox is cut off by the screen)
+*YEP_BuffsStatesCore
+*YEP_AutoPassiveStates
+*YEP_GridFreeDoodads (Some of the UI is ugly, one editor textbox is cut off by the screen)
 -YEP_X_ExtDoodadPack1
+*YEP_StatusMenuCore
 
 
-
-=Almost Functional:=
+=Almost Functional (UI issues):=
 -YEP_SkillLearnSystem (Does not crash, but skill confirmation UI is glitched and looks ugly in a weird way.  Will need additional work for actual use in MZ games)
+-YEP Equip Battle Skills
+-YEP_X_EBSAllowedTypes
+-YEP_X_EquipSkillTiers
 
+=Special Cases:=
+*YEP_MessageCore: Requires dedicated plugins: FOSSIL_Pre_MessageCore & FOSSIL_Post_MessageCore, and Word Wrap doesn't like fast text advancement.
+-YEP_X_ExtMesPack1 (Works AFAICT, except for above word wrap issues with message core)
+-YEP_X_ExtMesPack2 (Works AFAICT, except for above word wrap issues with message core)
 
 
 
@@ -101,7 +110,10 @@ Imported.Fossil_Pre=true;
 var Fossil =Fossil || {}
 Fossil.version='0.1'
 
-
+//get a list of what plugins we have installed.  This is necessary because
+//we are acting BEFORE we can see that handy Imported convention, and because
+//not everyone is nice enough to do that.
+Fossil.pluginNameList =  $plugins.map(a => a.name);
 
 oldCommand = function (oldPluginCommand)
 {
@@ -133,6 +145,11 @@ PluginManager.registerCommand('FOSSIL_Pre', 'useOldPlugin' , args => {
 //so let's redirect any calls to the old windowbase solution to the new location
 Window_Base.prototype.textColor = function(n) {
 	return ColorManager.textColor(n);
+}
+
+//tell it the standard font size is our system font.
+Window_Base.prototype.standardFontSize=function(){
+	return $gameSystem.mainFontSize()
 }
 
 //and here's a big block redirecting all those specific color picks.
@@ -501,6 +518,42 @@ Window_BattleItem.prototype.initialize = function(rect) {
 	
 };
 
+
+var rectFixWindowBattleEnemy= Window_BattleEnemy.prototype.initialize;
+Window_BattleEnemy.prototype.initialize = function(rect) {
+	
+	if (arguments[0].constructor.name=='Rectangle') // if our first argument is a rectangle this is MZ code
+	{
+		rectFixWindowBattleEnemy.apply(this,arguments) 
+	}else{ //if not, I am assuming it is MV.
+		if(arguments.length==1)
+		{
+			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
+		}
+		//seeing if this might be a better option for defaults.  Just check what it was set to earlier.
+		if (SceneManager._scene.enemyWindowRect)
+		{
+			var rectA=SceneManager._scene.enemyWindowRect(); //spawn the defaults.
+		}
+		var rect = new Rectangle(
+		arguments[0]||rectA.x||0, 
+		arguments[1]||rectA.y||0, 
+		arguments[2]||rectA.width||400,  
+		arguments[3]||rectA.height|400
+		)
+		rectFixWindowBattleEnemy.call(this,rect)	
+	}	
+};
+
+Window_BattleEnemy.prototype.windowWidth = function() {
+    return Graphics.boxWidth - 192;
+};
+
+Window_BattleEnemy.prototype.windowHeight = function() {
+    return this.fittingHeight(this.numVisibleRows());
+};
+
+
 var rectFixWindowHorzCommand= Window_HorzCommand.prototype.initialize;
 Window_HorzCommand.prototype.initialize = function(rect) {
 	
@@ -640,12 +693,9 @@ Window_Command.prototype.windowHeight = function() {
     return this.fittingHeight(this.numVisibleRows());
 };
 
-//port over the MV code for rectangular text areas.
+//The MV code for rectangular text areas is now 'with padding' instead of 'for text'
 Window_Selectable.prototype.itemRectForText = function(index) {
-    var rect = this.itemRect(index);
-    rect.x += this.textPadding();
-    rect.width -= this.textPadding() * 2;
-    return rect;
+	return this.itemRectWithPadding(index)
 };
 
 
@@ -1088,3 +1138,41 @@ Spriteset_Base.prototype.createToneChanger = function() {
 
 ImageCache={};// The image cache works differently now, so let plugins that want to fiddle around with it play with a toy version :)
 ImageCache.prototype={};
+
+
+
+
+
+
+
+if (Fossil.pluginNameList.contains('YEP_BattleEngineCore'))
+{
+
+	/////Battle_Core
+	//MV function, but with the equivalent code from MZ's BattleManager.startInput
+	BattleManager.clearActor = function() {
+		this._currentActor = null;
+	};
+
+	backupSprite_BattlerDamagePopup=Sprite_Battler.prototype.setupDamagePopup;
+	backupdisplayHpDamage=Window_BattleLog.prototype.displayHpDamage;
+	backupdisplayMpDamage=Window_BattleLog.prototype.displayMpDamage;
+	backupdisplayTpDamage=Window_BattleLog.prototype.displayTpDamage;
+
+/* 	backup_SpriteBattler=Object.create(Sprite_Battler.prototype);
+	 
+	backup_SpriteEnemy=Object.create(Sprite_Enemy.prototype);
+	 
+
+	backup_SpriteDamage= Object.create(Sprite_Damage.prototype); */
+}
+
+
+//battle log needs a padded rect definition?
+/* Window_BattleLog.prototype.itemRectForText = function(index) {
+	return Window_Selectable.prototype.itemRectWithPadding.call(this,index)
+};
+//and an item rect.  Am guessing it's still selectalbe that it likes
+Window_BattleLog.prototype.itemRect = function(index) {
+	return Window_Selectable.prototype.itemRect.call(this,index)
+};  */

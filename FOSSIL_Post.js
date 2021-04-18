@@ -404,3 +404,149 @@ if( typeof(Window_Hidden) !== 'undefined')
 		}
 	};
 }
+
+
+if(Imported.YEP_BattleEngineCore)
+{
+	//in MV the battlelog inherited all the selectable stuff.
+	//in mz it only gets window_base.  
+	//since so many of these selections are needed, I am just changing the prototype
+	//in theory this shouldn't break things too much (since window_selectable 
+	//is also derived from window_base, and we aren't overwriting) but who knows?
+
+	//rip out all the properties that exist in window_selectable
+	//that don't exist in window_battlelog
+	//and stick them in!
+	
+     for (var i in Window_Selectable.prototype) 
+	{
+        //if (Object.hasOwnProperty.call(Window_Selectable.prototype, i)) 
+		//{
+			if(Window_BattleLog.prototype[i]==undefined)
+			{
+				Window_BattleLog.prototype[i] = Window_Selectable.prototype[i];
+			}
+        //}
+    } 
+	Sprite_Battler.prototype.setupDamagePopup=backupSprite_BattlerDamagePopup;
+	Window_BattleLog.prototype.displayHpDamage=backupdisplayHpDamage;
+	Window_BattleLog.prototype.displayMpDamage=backupdisplayMpDamage;
+	Window_BattleLog.prototype.displayTpDamage=backupdisplayTpDamage;
+}
+	
+if(Imported.YEP_StatusMenuCore)
+{
+	//add xp bars 
+	AddSprite_GaugeCurrentValueXP= Sprite_Gauge.prototype.currentValue;
+
+		
+	Sprite_Gauge.prototype.currentValue = function() 
+	{
+		//if we see a number assume it's a parameter id
+		if(typeof(this._statusType)=='number')
+		{
+			//and return it
+			return SceneManager._scene._infoWindow._actor.param(this._statusType) //Math.round(SceneManager._scene._infoWindow.calcParamRate(this._statusType)*this._largestParam)
+		}
+		if (this._battler) 
+		{
+			switch (this._statusType) 
+			{
+				case "xp":
+					return Math.floor(100*Window_StatusInfo.prototype.actorCurrentExpRate(this._battler));
+				case "xp2":
+					return Math.floor(100*Window_StatusInfo.prototype.actorExpRate(this._battler));
+			}
+		}
+		return AddSprite_GaugeCurrentValueXP.call(this)
+	};
+
+		//doing this as a percent
+	AddSprite_GaugeCurrentMaxValueXP =Sprite_Gauge.prototype.currentMaxValue;
+	Sprite_Gauge.prototype.currentMaxValue = function() 
+	{
+		if(typeof(this._statusType)=='number')
+		{
+			//these gauges are relative to the largest parameter
+			return SceneManager._scene._infoWindow._largestParam;
+		}
+		if (this._battler) 
+		{
+
+			switch (this._statusType) 
+			{
+				case "xp":
+				case "xp2":
+					return 100;
+			}
+		}
+		return AddSprite_GaugeCurrentMaxValueXP.call(this);
+	};
+
+	AddSprite_GaugeLabelXP=Sprite_Gauge.prototype.label;
+	Sprite_Gauge.prototype.label = function() 
+	{
+ 		if(typeof(this._statusType)=='number')
+		{
+			//return nothing if the statustype is a number
+			return ''
+			//if these weren't already labelled you could use this
+			/* if ((this._statusType>=0)&&this._statusType<=7)
+			{
+				return ['mhp','mmp','atk','def','mat','mdf','agi','luk'][this._statusType]
+			} */
+		} 
+		switch (this._statusType) 
+		{
+			case "xp":
+			case "xp2":
+				return TextManager.expA + '%';
+		}
+		return AddSprite_GaugeLabelXP.call(this);
+	};
+
+     for (var i in Window_StatusBase.prototype) 
+	{
+
+		if(Window_StatusInfo.prototype[i]==undefined)
+		{
+			Window_StatusInfo.prototype[i] = Window_StatusBase.prototype[i];
+		}
+
+    } 
+	
+	//add the additional sprites as an empty thing since we can't change the prototype
+	//directly to statusbase.
+	var fixWindowStatusInfoInitialization = Window_StatusInfo.prototype.initialize
+	Window_StatusInfo.prototype.initialize = function()
+	{
+		this._additionalSprites = {};
+		fixWindowStatusInfoInitialization.apply(this,arguments)
+	}
+	
+	//replace with a normal xp gauge
+	Window_StatusInfo.prototype.placeGauge=Window_StatusBase.prototype.placeGauge
+	Window_StatusInfo.prototype.drawExpGauge = function()
+	{
+		//if we already have an xp gauge, make a new one that's going to be total xp
+		if(this._additionalSprites["actor%1-gauge-%2".format(arguments[0].actorId(), "xp")])
+		{
+			this.placeGauge(arguments[0], "xp2", arguments[2].x, arguments[2].y);
+		}else{
+			this.placeGauge(arguments[0], "xp", arguments[2].x, arguments[2].y);
+		}
+	}
+	
+	Window_StatusInfo.prototype.drawParamGauge = function(dx, dy, dw, paramId)
+	{
+		this.placeGauge(this._actor,paramId, dx+100, dy);
+	}
+	
+	//tell it to hide sprites like statusbase does.
+	var hideSpritesWindow_StatusInfoRefresh = Window_StatusInfo.prototype.refresh;
+	Window_StatusInfo.prototype.refresh = function() {
+		this.hideAdditionalSprites();
+		hideSpritesWindow_StatusInfoRefresh.call(this)
+	}
+	
+}
