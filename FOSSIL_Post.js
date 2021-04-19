@@ -58,7 +58,6 @@ Sprite_Base.prototype.initialize = function() {
 };
 
 
-
 	
 
 //Moghunter section
@@ -85,10 +84,10 @@ if(Imported.MOG_BattleHud)
 if(Imported.MOG_TreasurePopup)
 {
 	//same with command 125, 126, 127, and 128
-	var fixGameInterpretercommand125=Game_Interpreter.prototype.command125;
+	var fixGameInterpretercommand125MOGTP=Game_Interpreter.prototype.command125;
 	Game_Interpreter.prototype.command125 = function() {
 		this._params=arguments[0];
-		fixGameInterpretercommand125.apply(this,arguments);
+		fixGameInterpretercommand125MOGTP.apply(this,arguments);
 		return this.commandReturnWorkaround
 	}
 	
@@ -98,10 +97,10 @@ if(Imported.MOG_TreasurePopup)
 		this.commandReturnWorkaround=fix_mog_treaPopUP_gint_command125.call(this,this._params);
 	}
 	
-	var fixGameInterpretercommand126=Game_Interpreter.prototype.command126;
+	var fixGameInterpretercommand126MOGTP=Game_Interpreter.prototype.command126;
 	Game_Interpreter.prototype.command126 = function() {
 		this._params=arguments[0];
-		fixGameInterpretercommand126.apply(this,arguments);
+		fixGameInterpretercommand126MOGTP.apply(this,arguments);
 		return this.commandReturnWorkaround
 	}
 	var fix_mog_treaPopUP_gint_command126 = _mog_treaPopUP_gint_command126;
@@ -111,10 +110,10 @@ if(Imported.MOG_TreasurePopup)
 	}
 	
 	//127
-		var fixGameInterpretercommand127=Game_Interpreter.prototype.command127;
+		var fixGameInterpretercommand127MOGTP=Game_Interpreter.prototype.command127;
 	Game_Interpreter.prototype.command127 = function() {
 		this._params=arguments[0];
-		fixGameInterpretercommand127.apply(this,arguments);
+		fixGameInterpretercommand127MOGTP.apply(this,arguments);
 		return this.commandReturnWorkaround
 	}
 	var fix_mog_treaPopUP_gint_command127 = _mog_treaPopUP_gint_command127;
@@ -123,10 +122,10 @@ if(Imported.MOG_TreasurePopup)
 		this.commandReturnWorkaround=fix_mog_treaPopUP_gint_command127.call(this,this._params);
 	}
 	
-	var fixGameInterpretercommand128=Game_Interpreter.prototype.command128;
+	var fixGameInterpretercommand128MOGTP=Game_Interpreter.prototype.command128;
 	Game_Interpreter.prototype.command128 = function() {
 		this._params=arguments[0];
-		fixGameInterpretercommand128.apply(this,arguments);
+		fixGameInterpretercommand128MOGTP.apply(this,arguments);
 		return this.commandReturnWorkaround
 	}
 	
@@ -150,10 +149,10 @@ if(Imported.MOG_TreasurePopup)
 
 if(Imported.MOG_ChronoEngine)
 {
-	var fixGameInterpretercommand212=Game_Interpreter.prototype.command212;
+	var fixGameInterpretercommand212CE=Game_Interpreter.prototype.command212;
 	Game_Interpreter.prototype.command212 = function() {
 		this._params=arguments[0];
-		fixGameInterpretercommand212.apply(this,arguments);
+		fixGameInterpretercommand212CE.apply(this,arguments);
 		return this.commandReturnWorkaround
 	}
 	
@@ -163,10 +162,10 @@ if(Imported.MOG_ChronoEngine)
 		this.commandReturnWorkaround=fix_mog_chrono_gint_command212.call(this,this._params);
 	}
 	
-	var fixGameInterpretercommand205=Game_Interpreter.prototype.command205;
+	var fixGameInterpretercommand205CE=Game_Interpreter.prototype.command205;
 	Game_Interpreter.prototype.command205 = function() {
 		this._params=arguments[0];
-		fixGameInterpretercommand205.apply(this,arguments);
+		fixGameInterpretercommand205CE.apply(this,arguments);
 		return this.commandReturnWorkaround
 	}
 	
@@ -547,6 +546,211 @@ if(Imported.YEP_StatusMenuCore)
 	Window_StatusInfo.prototype.refresh = function() {
 		this.hideAdditionalSprites();
 		hideSpritesWindow_StatusInfoRefresh.call(this)
+	}
+	
+}
+
+if(Imported.YEP_SelfSwVar)
+{
+	//fix a whole lot of command injections
+	
+	var fixGameInterpretercommand101Self=Game_Interpreter.prototype.command101;
+	Game_Interpreter.prototype.command101 = function() {
+		this._params=arguments[0];
+		fixGameInterpretercommand101Self.apply(this,arguments);
+		return this.commandReturnWorkaround
+	}
+	
+	var fixYanflySSVGame_Interpreter_command101 = Yanfly.SSV.Game_Interpreter_command101;
+	Yanfly.SSV.Game_Interpreter_command101=function()
+	{
+		this.commandReturnWorkaround=fixYanflySSVGame_Interpreter_command101.call(this,this._params);
+	}
+	
+	var fixGameInterpretercommand104Self=Game_Interpreter.prototype.command104;
+	Game_Interpreter.prototype.command104 = function() {
+		this._params=arguments[0];
+		fixGameInterpretercommand104Self.apply(this,arguments);
+		return this.commandReturnWorkaround
+	}
+	
+	var fixYanflySSVGame_Interpreter_command104 = Yanfly.SSV.Game_Interpreter_command104;
+	Yanfly.SSV.Game_Interpreter_command104=function()
+	{
+		this.commandReturnWorkaround=fixYanflySSVGame_Interpreter_command104.call(this,this._params);
+	}
+	
+	var fixGameInterpretercommand111Self=Game_Interpreter.prototype.command111;
+	Game_Interpreter.prototype.command111 = function() {
+		this._params=arguments[0];
+		fixGameInterpretercommand111Self.apply(this,arguments);
+		return this.commandReturnWorkaround
+	}
+	
+	var fixYanflySSVGame_Interpreter_command111 = Yanfly.SSV.Game_Interpreter_command111;
+	Yanfly.SSV.Game_Interpreter_command111=function()
+	{
+		this.commandReturnWorkaround=fixYanflySSVGame_Interpreter_command111.call(this,this._params);
+	}
+	
+	var fixGameInterpretercommand121Self=Game_Interpreter.prototype.command121;
+	Game_Interpreter.prototype.command121 = function() {
+		this._params=arguments[0];
+		fixGameInterpretercommand121Self.apply(this,arguments);
+		return this.commandReturnWorkaround
+	}
+	
+	var fixYanflySSVGame_Interpreter_command121 = Yanfly.SSV.Game_Interpreter_command121;
+	Yanfly.SSV.Game_Interpreter_command121=function()
+	{
+		this.commandReturnWorkaround=fixYanflySSVGame_Interpreter_command121.call(this,this._params);
+	}
+	
+	var fixGameInterpretercommand122Self=Game_Interpreter.prototype.command122;
+	Game_Interpreter.prototype.command122 = function() {
+		this._params=arguments[0];
+		fixGameInterpretercommand122Self.apply(this,arguments);
+		return this.commandReturnWorkaround
+	}
+	
+	var fixYanflySSVGame_Interpreter_command122 = Yanfly.SSV.Game_Interpreter_command122;
+	Yanfly.SSV.Game_Interpreter_command122=function()
+	{
+		this.commandReturnWorkaround=fixYanflySSVGame_Interpreter_command122.call(this,this._params);
+	}
+	
+	var fixGameInterpretercommand201Self=Game_Interpreter.prototype.command201;
+	Game_Interpreter.prototype.command201 = function() {
+		this._params=arguments[0];
+		fixGameInterpretercommand201Self.apply(this,arguments);
+		return this.commandReturnWorkaround
+	}
+	
+	var fixYanflySSVGame_Interpreter_command201 = Yanfly.SSV.Game_Interpreter_command201;
+	Yanfly.SSV.Game_Interpreter_command201=function()
+	{
+		this.commandReturnWorkaround=fixYanflySSVGame_Interpreter_command201.call(this,this._params);
+	}
+	var fixGameInterpretercommand202Self=Game_Interpreter.prototype.command202;
+	Game_Interpreter.prototype.command202 = function() {
+		this._params=arguments[0];
+		fixGameInterpretercommand202Self.apply(this,arguments);
+		return this.commandReturnWorkaround
+	}
+	
+	var fixYanflySSVGame_Interpreter_command202 = Yanfly.SSV.Game_Interpreter_command202;
+	Yanfly.SSV.Game_Interpreter_command202=function()
+	{
+		this.commandReturnWorkaround=fixYanflySSVGame_Interpreter_command202.call(this,this._params);
+	}
+	var fixGameInterpretercommand203Self=Game_Interpreter.prototype.command203;
+	Game_Interpreter.prototype.command203 = function() {
+		this._params=arguments[0];
+		fixGameInterpretercommand203Self.apply(this,arguments);
+		return this.commandReturnWorkaround
+	}
+	
+	var fixYanflySSVGame_Interpreter_command203 = Yanfly.SSV.Game_Interpreter_command203;
+	Yanfly.SSV.Game_Interpreter_command203=function()
+	{
+		this.commandReturnWorkaround=fixYanflySSVGame_Interpreter_command203.call(this,this._params);
+	}
+	
+	var fixGameInterpretercommand231Self=Game_Interpreter.prototype.command231;
+	Game_Interpreter.prototype.command231 = function() {
+		this._params=arguments[0];
+		fixGameInterpretercommand231Self.apply(this,arguments);
+		return this.commandReturnWorkaround
+	}
+	
+	var fixYanflySSVGame_Interpreter_command231 = Yanfly.SSV.Game_Interpreter_command231;
+	Yanfly.SSV.Game_Interpreter_command231=function()
+	{
+		this.commandReturnWorkaround=fixYanflySSVGame_Interpreter_command231.call(this,this._params);
+	}
+	
+	var fixGameInterpretercommand232Self=Game_Interpreter.prototype.command232;
+	Game_Interpreter.prototype.command232 = function() {
+		this._params=arguments[0];
+		fixGameInterpretercommand232Self.apply(this,arguments);
+		return this.commandReturnWorkaround
+	}
+	
+	var fixYanflySSVGame_Interpreter_command232 = Yanfly.SSV.Game_Interpreter_command232;
+	Yanfly.SSV.Game_Interpreter_command232=function()
+	{
+		this.commandReturnWorkaround=fixYanflySSVGame_Interpreter_command232.call(this,this._params);
+	}
+	
+	var fixGameInterpretercommand285Self=Game_Interpreter.prototype.command285;
+	Game_Interpreter.prototype.command285 = function() {
+		this._params=arguments[0];
+		fixGameInterpretercommand285Self.apply(this,arguments);
+		return this.commandReturnWorkaround
+	}
+	
+	var fixYanflySSVGame_Interpreter_command285 = Yanfly.SSV.Game_Interpreter_command285;
+	Yanfly.SSV.Game_Interpreter_command285=function()
+	{
+		this.commandReturnWorkaround=fixYanflySSVGame_Interpreter_command285.call(this,this._params);
+	}
+	
+}
+
+
+if(Imported["SumRndmDde Summon Core"])
+{
+	Sprite_Summon.prototype.setupIntroAnimation = function(){
+		if(this._actor.introAnimation())
+		{
+			$gameTemp.requestAnimation([this._actor], this._actor.introAnimation());
+			this.opacity=0;
+		}
+	}
+	
+	Sprite_Summon.prototype.updateTransition = function()
+	{
+		this._summonFrames=this._summonFrames||0;
+		
+		var flashStart=0;
+		var flashEnd=0;
+		if(this._actor)
+		{
+			
+				//we can't get animation duration directly, so we'll go with
+				//flashing.
+			if(this._actor.introAnimation() && $dataAnimations[this._actor.introAnimation()].flashTimings.length)
+			{
+				var flashList = $dataAnimations[this._actor.introAnimation()].flashTimings;
+				flashStart=flashList[flashList.length-1].frame ||0
+				flashEnd=flashList[flashList.length-1].duration+flashStart ||0;
+			}
+			//fully appear at the end of the last flash.
+			
+			
+			if (this._summonFrames<flashEnd)
+			{
+				//flashEnd must be >=1
+				this.opacity=Math.floor( 255* Math.min(this._summonFrames-flashStart,0)/(flashEnd-flashStart))
+			}
+			else
+			{
+				//done with transition
+				this.opacity=255;
+				this._transitionType = 0;
+				this._summonSprite = null;
+			}
+			this._summonFrames++;
+		}
+
+	}
+	
+	Sprite_Summon.prototype.setupExitAnimation = function(){
+		if(this._exitAnimation)
+		{
+			$gameTemp.requestAnimation([this], this._exitAnimation);
+			this._opacity=255
+		}
 	}
 	
 }

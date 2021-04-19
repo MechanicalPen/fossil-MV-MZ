@@ -25,8 +25,9 @@ So far we have interoperability with these MV plugins.  They seem to run with FO
 
 To invoke old plugin commands, either use the built in OldPluginCommand plugin command, or put oldCommand('whateverthecommandwas') in a script.
 
-
-==Fully Functional:==
+///////////////////////////////////////////////////////////////////////
+==Fully Functional==
+///////////////////////////////////////////////////////////////////////
 -MOG_ActionName
 -MOG_BattleHud
 -MOG_BossHp
@@ -57,6 +58,12 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -GALV_CharacterAnimations
 -GALV_DiagonalMovement
 
+*YEP_SelfSwVar
+*YEP_BuffsStatesCore
+-YEP_X_StateCategories
+*YEP_DamageCore
+-YEP_X_ArmorScaling
+-YEP_X_CriticalControl
 *YEP_SkillCore
 -YEP_X_LimitedSkillUses
 -YEP_MultiTypeSkills
@@ -64,24 +71,30 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_X_SkillCostItems
 -YEP_InstantCast
 -YEP_SkillMasteryLevels
-*YEP_EquipCore  (Note: Item descriptions are shrunk to one line due to MZ leaving room for touchscreen buttons.)
+*YEP_EquipCore
 -YEP_EquipRequirements
 -YEP_WeaponUnleash
-*YEP_BuffsStatesCore
+*YEP_StatusMenuCore
 *YEP_AutoPassiveStates
 *YEP_GridFreeDoodads (Some of the UI is ugly, one editor textbox is cut off by the screen)
 -YEP_X_ExtDoodadPack1
-*YEP_StatusMenuCore
 
+-SRD_SummonCore
 
-=Almost Functional (UI issues):=
+-Shaz_TileChanger
+
+///////////////////////////////////////////////////////////////////////
+==Almost Functional with UI issues==
+///////////////////////////////////////////////////////////////////////
 -YEP_SkillLearnSystem (Does not crash, but skill confirmation UI is glitched and looks ugly in a weird way.  Will need additional work for actual use in MZ games)
 -YEP Equip Battle Skills
 -YEP_X_EBSAllowedTypes
 -YEP_X_EquipSkillTiers
 
-=Special Cases:=
-*YEP_MessageCore: Requires dedicated plugins: FOSSIL_Pre_MessageCore & FOSSIL_Post_MessageCore, and Word Wrap doesn't like fast text advancement.
+///////////////////////////////////////////////////////////////////////
+==Special Cases==
+///////////////////////////////////////////////////////////////////////
+*YEP_MessageCore: Requires dedicated plugins: FOSSIL_Pre_MessageCore & FOSSIL_Post_MessageCore, and word wrap doesn't like fast text advancement.
 -YEP_X_ExtMesPack1 (Works AFAICT, except for above word wrap issues with message core)
 -YEP_X_ExtMesPack2 (Works AFAICT, except for above word wrap issues with message core)
 
@@ -393,7 +406,20 @@ Window_EquipItem.prototype.initialize = function(rect) {
 		{
 			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
 		}
-		var rect = new Rectangle(arguments[0], arguments[1], arguments[2]||(this.windowWidth ? this.windowWidth() : 0) ||400,  arguments[3]||(this.windowHeight ? this.windowHeight() : 0)||Graphics.boxHeight);
+		
+		if (SceneManager._scene.itemWindowRect)
+		{
+			var rectA=SceneManager._scene.itemWindowRect(); //pick the defaults.
+		}else{
+			var rectA=new Rectangle(0,0,0,0);
+		}
+		
+		var rect = new Rectangle(
+		arguments[0]||rectA.x, 
+		arguments[1]||rectA.y, 
+		arguments[2]||rectA.width||(this.windowWidth ? this.windowWidth() : 0) ||400,  
+		arguments[3]||rectA.height||(this.windowHeight ? this.windowHeight() : 0)||Graphics.boxHeight);
+		
 		rectFixWindowEquipItem.call(this,rect)
 		
 	}
@@ -411,7 +437,18 @@ Window_Gold.prototype.initialize = function(rect) {
 		{
 			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
 		}
-		var rect = new Rectangle(arguments[0], arguments[1], arguments[2]||(this.windowWidth ? this.windowWidth() : 0) ||400,  arguments[3]||(this.windowHeight ? this.windowHeight() : 0)||Graphics.boxHeight);
+		if (SceneManager._scene.goldWindowRect)
+		{
+			var rectA=SceneManager._scene.goldWindowRect(); //pick the defaults.
+		}else{
+			var rectA=new Rectangle(0,0,0,0);
+		}
+		var rect = new Rectangle(
+		arguments[0]||rectA.x, 
+		arguments[1]||rectA.y, 
+		arguments[2]||rectA.width||(this.windowWidth ? this.windowWidth() : 0) ||400,
+		arguments[3]||rectA.height||(this.windowHeight ? this.windowHeight() : 0)||Graphics.boxHeight);
+		
 		rectFixWindowGold.call(this,rect)
 		
 	}
@@ -432,11 +469,17 @@ Window_Help.prototype.initialize = function(rect) {
 		}
 		//RMMV passes this in with a single argument, which is how many lines of text
 		//there are
+		if (SceneManager._scene.helpWindowRect)
+		{
+			var rectA=SceneManager._scene.helpWindowRect(); //pick the defaults.
+		}else{
+			var rectA=new Rectangle(0,0,0,0);
+		}
 		var rect = new Rectangle(
-		0, 
-		0, 
-		Graphics.boxWidth||(this.windowWidth ? this.windowWidth() : 0) ||400,  
-		(this.windowHeight ? this.windowHeight() : 0)||this.fittingHeight(arguments[0]||2)||Graphics.boxHeight);
+		0||rectA.x, 
+		0||rectA.y, 
+		rectA.width||Graphics.boxWidth||(this.windowWidth ? this.windowWidth() : 0) ||400, 
+		rectA.height||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight);
 		
 		rectFixWindowHelp.call(this,rect)
 		
@@ -448,11 +491,13 @@ var rectFixWindowTitleCommand= Window_TitleCommand.prototype.initialize;
 Window_TitleCommand.prototype.initialize = function(rect) {
 	if (arguments.length==0)
 	{//RMMV doesn't take arguments for the title command window.
-		var x = (Graphics.boxWidth - this.width) / 2;
+/* 		var x = (Graphics.boxWidth - this.width) / 2;
 		var y = Graphics.boxHeight - this.height - 96;
 		var width=240;
 		var height=this.fittingHeight(this.numVisibleRows())
-		var rect = new Rectangle(x,y,width,height);
+		var rect = new Rectangle(x,y,width,height); */
+		const rect=SceneManager._scene.commandWindowRect(); //pick the defaults.
+
 		rectFixWindowTitleCommand.call(this,rect)
 		return;
 	}
@@ -464,7 +509,19 @@ Window_TitleCommand.prototype.initialize = function(rect) {
 		{
 			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
 		}
-		var rect = new Rectangle(arguments[0], arguments[1], arguments[2]||(this.windowWidth ? this.windowWidth() : 0) ||400,  arguments[3]||(this.windowHeight ? this.windowHeight() : 0)||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight);
+		if (SceneManager._scene.commandWindowRect)
+		{
+			var rectA=SceneManager._scene.commandWindowRect(); //pick the defaults.
+		}else{
+			var rectA=new Rectangle(0,0,0,0);
+		}
+		var rect = new Rectangle(
+		arguments[0]||rectA.x, 
+		arguments[1]||rectA.y, 
+		arguments[2]||rectA.width||(this.windowWidth ? this.windowWidth() : 0) ||400,  
+		arguments[3]||rectA.height||(this.windowHeight ? this.windowHeight() : 0)||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight);
+		
+
 		rectFixWindowTitleCommand.call(this,rect)
 		
 	}
@@ -483,11 +540,17 @@ Window_BattleSkill.prototype.initialize = function(rect) {
 		{
 			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
 		}
+		if (SceneManager._scene.skillWindowRect)
+		{
+			var rectA=SceneManager._scene.skillWindowRect(); //pick the defaults.
+		}else{
+			var rectA=new Rectangle(0,0,0,0);
+		}
 		var rect = new Rectangle(
-		arguments[0], 
-		arguments[1], 
-		arguments[2]||(this.windowWidth ? this.windowWidth() : 0) ||400,  
-		arguments[3]||(this.windowHeight ? this.windowHeight() : 0)||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight);
+		arguments[0]||rectA.x, 
+		arguments[1]||rectA.y, 
+		arguments[2]||rectA.width||(this.windowWidth ? this.windowWidth() : 0) ||400,  
+		arguments[3]||rectA.height||(this.windowHeight ? this.windowHeight() : 0)||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight);
 		
 		rectFixWindowBattleSkill.call(this,rect)
 		
@@ -506,11 +569,17 @@ Window_BattleItem.prototype.initialize = function(rect) {
 		{
 			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
 		}
+		if (SceneManager._scene.itemWindowRect)
+		{
+			var rectA=SceneManager._scene.itemWindowRect(); //pick the defaults.
+		}else{
+			var rectA=new Rectangle(0,0,0,0);
+		}
 		var rect = new Rectangle(
-		arguments[0], 
-		arguments[1], 
-		arguments[2]||(this.windowWidth ? this.windowWidth() : 0) ||400,  
-		arguments[3]||(this.windowHeight ? this.windowHeight() : 0)||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight);
+		arguments[0]||rectA.x, 
+		arguments[1]||rectA.y, 
+		arguments[2]||rectA.width||(this.windowWidth ? this.windowWidth() : 0) ||400,  
+		arguments[3]||rectA.height||(this.windowHeight ? this.windowHeight() : 0)||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight);
 		
 		rectFixWindowBattleItem.call(this,rect)
 		
@@ -534,6 +603,8 @@ Window_BattleEnemy.prototype.initialize = function(rect) {
 		if (SceneManager._scene.enemyWindowRect)
 		{
 			var rectA=SceneManager._scene.enemyWindowRect(); //spawn the defaults.
+		}else{
+			var rectA=new Rectangle(0,0,0,0);
 		}
 		var rect = new Rectangle(
 		arguments[0]||rectA.x||0, 
@@ -908,7 +979,8 @@ Sprite_Base.prototype.isAnimationPlaying = function() {
 
 
 
-//dummy out this function; this is what makes the loading bar moveAbove
+
+//dummy out this function; this is what makes the loading bar move
 //but RMMZ uses a spinner instead!
 Graphics.updateLoading = function() {
 }
@@ -1168,6 +1240,8 @@ if (Fossil.pluginNameList.contains('YEP_BattleEngineCore'))
 }
 
 
+
+
 //battle log needs a padded rect definition?
 /* Window_BattleLog.prototype.itemRectForText = function(index) {
 	return Window_Selectable.prototype.itemRectWithPadding.call(this,index)
@@ -1176,3 +1250,5 @@ if (Fossil.pluginNameList.contains('YEP_BattleEngineCore'))
 Window_BattleLog.prototype.itemRect = function(index) {
 	return Window_Selectable.prototype.itemRect.call(this,index)
 };  */
+
+
