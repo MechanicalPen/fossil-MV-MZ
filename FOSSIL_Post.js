@@ -754,3 +754,51 @@ if(Imported["SumRndmDde Summon Core"])
 	}
 	
 }
+
+
+if(Imported.YEP_BattleEngineCore)
+{
+	Sprite_Damage.prototype.initialize =Yanfly.BEC.Sprite_Damage_initialize;
+	Sprite_Damage.prototype.setup=backupSpriteDamageSetup;
+	//revert changes to start turn and end turn functions, since BEC's are
+	//derived directly from RMMV.
+	//then update phases so BEC knows what's happening
+	BattleManager.startTurn=function()
+	{
+		this.endEndPhase();
+		this.clearPerformedBattlers();
+		MZBattleManagerStartTurn.apply(this,arguments)
+	}
+
+	BattleManager.endTurn=function()
+	{
+		this.startEndPhase();
+		MZBattleManagerEndTurn.apply(this,arguments)
+	}
+}
+
+if(Imported.YEP_X_InBattleStatus)
+{
+	//import all the status window functions into the inbattlestatelist.
+     for (var i in Window_StatusBase.prototype) 
+	{
+			if(Window_InBattleStatus.prototype[i]==undefined)
+			{
+				Window_InBattleStatus.prototype[i] = Window_StatusBase.prototype[i];
+			}
+    } 
+	//tell it to hide gauge sprites like the statusinfo window does 
+	var hideSpritesWindow_InBattleStatusRefresh = Window_InBattleStatus.prototype.refresh;
+	Window_InBattleStatus.prototype.refresh = function() {
+		this.hideAdditionalSprites();
+		hideSpritesWindow_InBattleStatusRefresh.call(this)
+	}
+
+	var fixWindowInBattleStatusInitialization = Window_InBattleStatus.prototype.initialize
+	Window_InBattleStatus.prototype.initialize = function()
+	{
+		this._additionalSprites = {};
+		fixWindowInBattleStatusInitialization.apply(this,arguments)
+	}
+	
+}

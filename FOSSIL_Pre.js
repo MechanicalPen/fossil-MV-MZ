@@ -58,12 +58,20 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -GALV_CharacterAnimations
 -GALV_DiagonalMovement
 
+*YEP_BattleEngineCore
+*YEP_X_AnimatedSVEnemies
+*YEP_X_CounterControl
+*YEP_X_InBattleStatus
 *YEP_SelfSwVar
 *YEP_BuffsStatesCore
+-YEP_X_ExtDoT
 -YEP_X_StateCategories
+-YEP_X_VisualStateFX
+-YEP_Z_StateProtection
 *YEP_DamageCore
 -YEP_X_ArmorScaling
 -YEP_X_CriticalControl
+-YEP_Z_CriticalSway
 *YEP_SkillCore
 -YEP_X_LimitedSkillUses
 -YEP_MultiTypeSkills
@@ -76,7 +84,7 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_WeaponUnleash
 *YEP_StatusMenuCore
 *YEP_AutoPassiveStates
-*YEP_GridFreeDoodads (Some of the UI is ugly, one editor textbox is cut off by the screen)
+*YEP_GridFreeDoodads
 -YEP_X_ExtDoodadPack1
 
 -SRD_SummonCore
@@ -127,6 +135,11 @@ Fossil.version='0.1'
 //we are acting BEFORE we can see that handy Imported convention, and because
 //not everyone is nice enough to do that.
 Fossil.pluginNameList =  $plugins.map(a => a.name);
+if (Fossil.pluginNameList[0] !== 'FOSSIL_Pre')
+{
+	console.log('FOSSIL_Pre should probably be your first plugin')
+	
+}
 
 oldCommand = function (oldPluginCommand)
 {
@@ -1160,6 +1173,12 @@ Game_CharacterBase.prototype.requestAnimation = function(animationId) {
 };
 
 
+Game_Battler.prototype.startAnimation = function (animationId, mirror, delay)
+{
+	$gameTemp.requestAnimation([this], animationId);
+	
+}
+
 //MV includes the '.js' in filenames when calling plugins
 //MZ does not.  Check if it's there, and if it is, remove it.
 var fixPluginManagerLoadScript= PluginManager.loadScript
@@ -1219,6 +1238,24 @@ ImageCache.prototype={};
 
 if (Fossil.pluginNameList.contains('YEP_BattleEngineCore'))
 {
+	// selection help is broken because the interface with MZ changed
+	// if enabled it requires target selection for every ability, regardless of
+	// whether or not this selection is needed.
+	// so for instance guard will ask which ally to use it on, and regardless 
+	// of who you say, still apply it to the user
+	// this looks like a pain to fix for a minor cosmetic setting.
+	// I'm just forcibly turning the plugin parameter off, since it's on by default.
+	if(PluginManager.parameters('YEP_BattleEngineCore')['Select Help Window'])
+	{
+		if (Utils.isOptionValid('test'))
+		{
+			console.log('Select Help Window option in YEP_BattleEngineCore is not supported.')
+			console.log('Fossil has disabled it.')
+		}
+		//PluginManager.parameters('YEP_BattleEngineCore')
+		PluginManager.parameters('YEP_BattleEngineCore')['Select Help Window']="false";
+		
+	}
 
 	/////Battle_Core
 	//MV function, but with the equivalent code from MZ's BattleManager.startInput
@@ -1231,15 +1268,73 @@ if (Fossil.pluginNameList.contains('YEP_BattleEngineCore'))
 	backupdisplayMpDamage=Window_BattleLog.prototype.displayMpDamage;
 	backupdisplayTpDamage=Window_BattleLog.prototype.displayTpDamage;
 
-/* 	backup_SpriteBattler=Object.create(Sprite_Battler.prototype);
-	 
-	backup_SpriteEnemy=Object.create(Sprite_Enemy.prototype);
-	 
+	backupSpriteDamageSetup=Sprite_Damage.prototype.setup;
+	
+	
+	//avoid name collision with yanfly
+	BattleManager.updateBattlePhase = BattleManager.updatePhase;
+	//fix it here.
+	BattleManager.update = function(timeActive) {
+		if (!this.isBusy() && !this.updateEvent()) {
+			this.updateBattlePhase(timeActive);
+		}
+		if (this.isTpb()) {
+			this.updateTpbInput();
+		}
+	};
+	
+	
+	BattleManager.startEndPhase = function()
+	{
+		this._enteredEndPhase=true;
+	}
+	BattleManager.endEndPhase = function()
+	{
+		this._enteredEndPhase=false;
+	}
+	BattleManager.clearPerformedBattlers = function()
+	{
+		this._performedBattlers= [];
+	}
 
-	backup_SpriteDamage= Object.create(Sprite_Damage.prototype); */
+	//back up the start and end turn functions so we can revert the BC changes to them.
+	MZBattleManagerEndTurn=BattleManager.endTurn;
+	MZBattleManagerStartTurn=BattleManager.startTurn;
 }
 
+if(Fossil.pluginNameList.includes('YEP_X_InBattleStatus'))
+{
+	//move gauges on the in battle status window.
+	
+	Window_StatusBase.prototype.placeGauge = function(actor, type, x, y) 
+	{
+		const key = "actor%1-gauge-%2".format(actor.actorId(), type);
+		const sprite = this.createInnerSprite(key, Sprite_Gauge);
+		sprite.setup(actor, type);
+		if(this.constructor.name == 'Window_InBattleStatus')
+		{
+			sprite.move(x-40,y)
+		}else{
+			sprite.move(x, y);
+		}
+		sprite.show();
+	};
 
+
+	Window_StatusBase.prototype.drawActorClass = function(actor, x, y, width) {
+		width = width || 168;
+		this.resetTextColor();
+		if(this.constructor.name == 'Window_InBattleStatus')
+		{
+			this.drawText(actor.currentClass().name, x-54, y, width,'right');
+		}else{
+			this.drawText(actor.currentClass().name, x, y, width);
+		}
+	};
+	
+	
+
+}
 
 
 //battle log needs a padded rect definition?
