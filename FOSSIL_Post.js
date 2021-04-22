@@ -17,7 +17,7 @@ This is the 'post' half of the plugin.  Put it BELOW the supported MV plugins.
 
 Terms of use:
 
-All code not covered by the RPG Maker MV or RPG Maker MZ license is released under a Creative Commons CC-BY-SA license.  Please credit 'FOSSIL' or 'The FOSSIL TEAM', and link back to the forum thread or github.
+All code not covered by the RPG Maker MV or RPG Maker MZ license is released under a Creative Commons CC-BY-SA license.  Please credit 'FOSSIL', Restart, or 'The FOSSIL TEAM', and link back to the forum thread or github.
 
 */
 
@@ -177,16 +177,16 @@ if(Imported.MOG_ChronoEngine)
 		
 		//if you don't fix this,
 		//you can't talk to events!
-	var fixUpdateNonmoving=Game_Player.prototype.updateNonmoving;
+	Fossil.fixUpdateNonmoving=Game_Player.prototype.updateNonmoving;
 	Game_Player.prototype.updateNonmoving = function(wasMoving,sceneActive) {
 		this.fixMogArgs=arguments;
-		fixUpdateNonmoving.call(this,wasMoving,sceneActive);
+		Fossil.fixUpdateNonmoving.call(this,wasMoving,sceneActive);
 	}
 	
-	var fix__mog_toolSys_gPlayer_updateNonmoving = _mog_toolSys_gPlayer_updateNonmoving;
+	Fossil.fix__mog_toolSys_gPlayer_updateNonmoving = _mog_toolSys_gPlayer_updateNonmoving;
 	_mog_toolSys_gPlayer_updateNonmoving=function()
 	{
-		fix__mog_toolSys_gPlayer_updateNonmoving.call(this,this.fixMogArgs[0],this.fixMogArgs[1]);
+		Fossil.fix__mog_toolSys_gPlayer_updateNonmoving.call(this,this.fixMogArgs[0],this.fixMogArgs[1]);
 	}
 
 }
@@ -198,11 +198,11 @@ if(Imported.YEP_GridFreeDoodads && !!DoodadManager)  //Only tweak the UI of dood
 
 	// inject the fake RPGMAKER_VERSION when it's trying to save, so the doodad function uses the full path.
 	// I was hoping that I only had to spoof RPGM version once, but sadly that's not the case :(
-	var saveDoodadFakeVersion=StorageManager.saveDoodadSettings 
+	Fossil.saveDoodadFakeVersion=StorageManager.saveDoodadSettings 
 	StorageManager.saveDoodadSettings = function() 
 	{
 		Utils.RPGMAKER_VERSION="1.6.1";
-		saveDoodadFakeVersion.call(this)
+		Fossil.saveDoodadFakeVersion.call(this)
 		Utils.RPGMAKER_VERSION=Utils.MZ_VERSION
 	}
 
@@ -210,16 +210,16 @@ if(Imported.YEP_GridFreeDoodads && !!DoodadManager)  //Only tweak the UI of dood
 
 	//I want to minimize the number of times I interfere with blt, so I'm going to restrict that to
 	//times where it's actually necessary
-	var grabHueFromDoodadLoad = ImageManager.loadDoodad
+	Fossil.grabHueFromDoodadLoad = ImageManager.loadDoodad
 	  ImageManager.loadDoodad = function()
 	{
 		$gameTemp.lastHue = !!arguments[1];
-		return grabHueFromDoodadLoad.apply(this,arguments);
+		return Fossil.grabHueFromDoodadLoad.apply(this,arguments);
 		
 	}
 
 
-	 var updateSpriteDoodadSettingsHue = Window_GFD_SettingsHue.prototype.drawDoodadImage 
+	Fossil.updateSpriteDoodadSettingsHue = Window_GFD_SettingsHue.prototype.drawDoodadImage 
 	Window_GFD_SettingsHue.prototype.drawDoodadImage = function() {
 		if($gameTemp.lastHue)
 		{
@@ -244,13 +244,13 @@ if(Imported.YEP_GridFreeDoodads && !!DoodadManager)  //Only tweak the UI of dood
 				}
 			};
 
-			updateSpriteDoodadSettingsHue.apply(this,arguments);
+			Fossil.updateSpriteDoodadSettingsHue.apply(this,arguments);
 			Bitmap.prototype.blt=oldblt;
 			
 		}
 		else
 		{
-			updateSpriteDoodadSettingsHue.apply(this,arguments);
+			Fossil.updateSpriteDoodadSettingsHue.apply(this,arguments);
 		}
 
 	} 
@@ -405,38 +405,10 @@ if( typeof(Window_Hidden) !== 'undefined')
 }
 
 
-if(Imported.YEP_BattleEngineCore)
-{
-	//in MV the battlelog inherited all the selectable stuff.
-	//in mz it only gets window_base.  
-	//since so many of these selections are needed, I am just changing the prototype
-	//in theory this shouldn't break things too much (since window_selectable 
-	//is also derived from window_base, and we aren't overwriting) but who knows?
-
-	//rip out all the properties that exist in window_selectable
-	//that don't exist in window_battlelog
-	//and stick them in!
-	
-     for (var i in Window_Selectable.prototype) 
-	{
-        //if (Object.hasOwnProperty.call(Window_Selectable.prototype, i)) 
-		//{
-			if(Window_BattleLog.prototype[i]==undefined)
-			{
-				Window_BattleLog.prototype[i] = Window_Selectable.prototype[i];
-			}
-        //}
-    } 
-	Sprite_Battler.prototype.setupDamagePopup=backupSprite_BattlerDamagePopup;
-	Window_BattleLog.prototype.displayHpDamage=backupdisplayHpDamage;
-	Window_BattleLog.prototype.displayMpDamage=backupdisplayMpDamage;
-	Window_BattleLog.prototype.displayTpDamage=backupdisplayTpDamage;
-}
-	
 if(Imported.YEP_StatusMenuCore)
 {
 	//add xp bars 
-	AddSprite_GaugeCurrentValueXP= Sprite_Gauge.prototype.currentValue;
+	Fossil.AddSprite_GaugeCurrentValueXP= Sprite_Gauge.prototype.currentValue;
 
 		
 	Sprite_Gauge.prototype.currentValue = function() 
@@ -457,11 +429,11 @@ if(Imported.YEP_StatusMenuCore)
 					return Math.floor(100*Window_StatusInfo.prototype.actorExpRate(this._battler));
 			}
 		}
-		return AddSprite_GaugeCurrentValueXP.call(this)
+		return Fossil.AddSprite_GaugeCurrentValueXP.call(this)
 	};
 
 		//doing this as a percent
-	AddSprite_GaugeCurrentMaxValueXP =Sprite_Gauge.prototype.currentMaxValue;
+	Fossil.AddSprite_GaugeCurrentMaxValueXP =Sprite_Gauge.prototype.currentMaxValue;
 	Sprite_Gauge.prototype.currentMaxValue = function() 
 	{
 		if(typeof(this._statusType)=='number')
@@ -479,10 +451,10 @@ if(Imported.YEP_StatusMenuCore)
 					return 100;
 			}
 		}
-		return AddSprite_GaugeCurrentMaxValueXP.call(this);
+		return Fossil.AddSprite_GaugeCurrentMaxValueXP.call(this);
 	};
 
-	AddSprite_GaugeLabelXP=Sprite_Gauge.prototype.label;
+	Fossil.AddSprite_GaugeLabelXP=Sprite_Gauge.prototype.label;
 	Sprite_Gauge.prototype.label = function() 
 	{
  		if(typeof(this._statusType)=='number')
@@ -501,7 +473,7 @@ if(Imported.YEP_StatusMenuCore)
 			case "xp2":
 				return TextManager.expA + '%';
 		}
-		return AddSprite_GaugeLabelXP.call(this);
+		return Fossil.AddSprite_GaugeLabelXP.call(this);
 	};
 
      for (var i in Window_StatusBase.prototype) 
@@ -516,11 +488,11 @@ if(Imported.YEP_StatusMenuCore)
 	
 	//add the additional sprites as an empty thing since we can't change the prototype
 	//directly to statusbase.
-	var fixWindowStatusInfoInitialization = Window_StatusInfo.prototype.initialize
+	Fossil.fixWindowStatusInfoInitialization = Window_StatusInfo.prototype.initialize
 	Window_StatusInfo.prototype.initialize = function()
 	{
 		this._additionalSprites = {};
-		fixWindowStatusInfoInitialization.apply(this,arguments)
+		Fossil.fixWindowStatusInfoInitialization.apply(this,arguments)
 	}
 	
 	//replace with a normal xp gauge
@@ -706,6 +678,12 @@ if(Imported["SumRndmDde Summon Core"])
 			$gameTemp.requestAnimation([this._actor], this._actor.introAnimation());
 			this.opacity=0;
 		}
+		//initialize this so it can start moving.
+		if(BattleManager.isTpb())
+		{
+			this._battler.clearTpbChargeTime();
+			this._motion=0;//make a little pose after summoning before animation starts
+		}
 	}
 	
 	Sprite_Summon.prototype.updateTransition = function()
@@ -739,6 +717,7 @@ if(Imported["SumRndmDde Summon Core"])
 				this.opacity=255;
 				this._transitionType = 0;
 				this._summonSprite = null;
+				
 			}
 			this._summonFrames++;
 		}
@@ -749,17 +728,51 @@ if(Imported["SumRndmDde Summon Core"])
 		if(this._exitAnimation)
 		{
 			$gameTemp.requestAnimation([this], this._exitAnimation);
-			this._opacity=255
+			
 		}
+		this.opacity=0;
 	}
+	
+
+	//only count actual members of the party for speed
+	Game_Unit.prototype.tpbBaseSpeed = function() {
+		const members = this.rawBattleMembers();
+		return Math.max(...members.map(member => member.tpbBaseSpeed()));
+	};
 	
 }
 
 
 if(Imported.YEP_BattleEngineCore)
 {
+	//in MV the battlelog inherited all the selectable stuff.
+	//in mz it only gets window_base.  
+	//since so many of these selections are needed, I am just changing the prototype
+	//in theory this shouldn't break things too much (since window_selectable 
+	//is also derived from window_base, and we aren't overwriting) but who knows?
+
+	//rip out all the properties that exist in window_selectable
+	//that don't exist in window_battlelog
+	//and stick them in!
+	
+     for (var i in Window_Selectable.prototype) 
+	{
+        //if (Object.hasOwnProperty.call(Window_Selectable.prototype, i)) 
+		//{
+			if(Window_BattleLog.prototype[i]==undefined)
+			{
+				Window_BattleLog.prototype[i] = Window_Selectable.prototype[i];
+			}
+        //}
+    } 
+	Sprite_Battler.prototype.setupDamagePopup=Fossil.backupSprite_BattlerDamagePopup;
+	Window_BattleLog.prototype.displayHpDamage=Fossil.backupdisplayHpDamage;
+	Window_BattleLog.prototype.displayMpDamage=Fossil.backupdisplayMpDamage;
+	Window_BattleLog.prototype.displayTpDamage=Fossil.backupdisplayTpDamage;
+
+
 	Sprite_Damage.prototype.initialize =Yanfly.BEC.Sprite_Damage_initialize;
-	Sprite_Damage.prototype.setup=backupSpriteDamageSetup;
+	Sprite_Damage.prototype.setup=Fossil.backupSpriteDamageSetup;
 	//revert changes to start turn and end turn functions, since BEC's are
 	//derived directly from RMMV.
 	//then update phases so BEC knows what's happening
@@ -775,6 +788,32 @@ if(Imported.YEP_BattleEngineCore)
 		this.startEndPhase();
 		MZBattleManagerEndTurn.apply(this,arguments)
 	}
+	
+	Fossil.fixBECisStartActorCommand=Scene_Battle.prototype.isStartActorCommand;
+	Scene_Battle.prototype.isStartActorCommand = function() {
+		//if we are a time based system we need to tell BEC to shut up and stop starting new turns
+		if(BattleManager.isTpb())
+		{
+			return false
+		}
+		Fossil.fixBECisStartActorCommand.call(this)
+	};
+	
+	Fossil.BECWARNINGSCENEBATTLEINIT=Scene_Battle.prototype.initialize
+	Scene_Battle.prototype.initialize = function() {
+		if(BattleManager.isTpb())
+		{
+				$gameMessage.setBackground(1)
+				$gameMessage.setPositionType(1)
+				$gameMessage.add("Fossil note: Sadly, BattleEngineCore does not work")
+				$gameMessage.add("with ''Time Progress Battle' settings. Maybe it will")
+				$gameMessage.add("someday, no promises.")
+				$gameMessage.add("Sorry!")
+				console.log('Battle Engine Core only works in standard turn based battle system. ');
+		}
+		Fossil.BECWARNINGSCENEBATTLEINIT.call(this);
+	};
+	
 }
 
 if(Imported.YEP_X_InBattleStatus)
@@ -788,17 +827,17 @@ if(Imported.YEP_X_InBattleStatus)
 			}
     } 
 	//tell it to hide gauge sprites like the statusinfo window does 
-	var hideSpritesWindow_InBattleStatusRefresh = Window_InBattleStatus.prototype.refresh;
+	Fossil.hideSpritesWindow_InBattleStatusRefresh = Window_InBattleStatus.prototype.refresh;
 	Window_InBattleStatus.prototype.refresh = function() {
 		this.hideAdditionalSprites();
-		hideSpritesWindow_InBattleStatusRefresh.call(this)
+		Fossil.hideSpritesWindow_InBattleStatusRefresh.call(this)
 	}
 
-	var fixWindowInBattleStatusInitialization = Window_InBattleStatus.prototype.initialize
+	Fossil.fixWindowInBattleStatusInitialization = Window_InBattleStatus.prototype.initialize
 	Window_InBattleStatus.prototype.initialize = function()
 	{
 		this._additionalSprites = {};
-		fixWindowInBattleStatusInitialization.apply(this,arguments)
+		Fossil.fixWindowInBattleStatusInitialization.apply(this,arguments)
 	}
 	
 }

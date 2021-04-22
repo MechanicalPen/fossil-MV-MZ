@@ -58,7 +58,7 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -GALV_CharacterAnimations
 -GALV_DiagonalMovement
 
-*YEP_BattleEngineCore
+*YEP_BattleEngineCore	(Note: I haven't added functionality for ATB, since the base plugin doesn't support it. I tried but it was too hard for me.  Sorry!)
 *YEP_X_AnimatedSVEnemies
 *YEP_X_CounterControl
 *YEP_X_InBattleStatus
@@ -130,6 +130,7 @@ var Imported = Imported || {};
 Imported.Fossil_Pre=true;
 var Fossil =Fossil || {}
 Fossil.version='0.1'
+
 
 //get a list of what plugins we have installed.  This is necessary because
 //we are acting BEFORE we can see that handy Imported convention, and because
@@ -1181,7 +1182,7 @@ Game_Battler.prototype.startAnimation = function (animationId, mirror, delay)
 
 //MV includes the '.js' in filenames when calling plugins
 //MZ does not.  Check if it's there, and if it is, remove it.
-var fixPluginManagerLoadScript= PluginManager.loadScript
+Fossil.fixPluginManagerLoadScript= PluginManager.loadScript
 PluginManager.loadScript = function(name) {
 	if(name.substring(name.length-3)=='.js')
 	{
@@ -1192,7 +1193,7 @@ PluginManager.loadScript = function(name) {
 		name=name.substring(0,name.length-3)
 		
 	}
-	fixPluginManagerLoadScript.call(this,name);
+	Fossil.fixPluginManagerLoadScript.call(this,name);
 };
 
 
@@ -1252,10 +1253,11 @@ if (Fossil.pluginNameList.contains('YEP_BattleEngineCore'))
 			console.log('Select Help Window option in YEP_BattleEngineCore is not supported.')
 			console.log('Fossil has disabled it.')
 		}
-		//PluginManager.parameters('YEP_BattleEngineCore')
 		PluginManager.parameters('YEP_BattleEngineCore')['Select Help Window']="false";
 		
 	}
+
+
 
 	/////Battle_Core
 	//MV function, but with the equivalent code from MZ's BattleManager.startInput
@@ -1263,12 +1265,12 @@ if (Fossil.pluginNameList.contains('YEP_BattleEngineCore'))
 		this._currentActor = null;
 	};
 
-	backupSprite_BattlerDamagePopup=Sprite_Battler.prototype.setupDamagePopup;
-	backupdisplayHpDamage=Window_BattleLog.prototype.displayHpDamage;
-	backupdisplayMpDamage=Window_BattleLog.prototype.displayMpDamage;
-	backupdisplayTpDamage=Window_BattleLog.prototype.displayTpDamage;
+	Fossil.backupSprite_BattlerDamagePopup=Sprite_Battler.prototype.setupDamagePopup;
+	Fossil.backupdisplayHpDamage=Window_BattleLog.prototype.displayHpDamage;
+	Fossil.backupdisplayMpDamage=Window_BattleLog.prototype.displayMpDamage;
+	Fossil.backupdisplayTpDamage=Window_BattleLog.prototype.displayTpDamage;
 
-	backupSpriteDamageSetup=Sprite_Damage.prototype.setup;
+	Fossil.backupSpriteDamageSetup=Sprite_Damage.prototype.setup;
 	
 	
 	//avoid name collision with yanfly
@@ -1300,6 +1302,17 @@ if (Fossil.pluginNameList.contains('YEP_BattleEngineCore'))
 	//back up the start and end turn functions so we can revert the BC changes to them.
 	MZBattleManagerEndTurn=BattleManager.endTurn;
 	MZBattleManagerStartTurn=BattleManager.startTurn;
+	
+	
+	//ATB isn't suppported, but this is a tiny step towards eventually doing so.
+	
+	//need to pass in the active time since BEC doesn't.
+	fixactivetimeBECupdateTurn=BattleManager.updateTurn
+	BattleManager.updateTurn = function(timeActive = SceneManager._scene.isTimeActive())
+	{
+		fixactivetimeBECupdateTurn.call(this,timeActive)
+	}
+	fixactivetimeBEConTurnEnd=Game_Battler.prototype.onTurnEnd;
 }
 
 if(Fossil.pluginNameList.includes('YEP_X_InBattleStatus'))
