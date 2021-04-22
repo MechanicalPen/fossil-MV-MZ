@@ -684,6 +684,7 @@ if(Imported["SumRndmDde Summon Core"])
 			this._battler.clearTpbChargeTime();
 			this._motion=0;//make a little pose after summoning before animation starts
 		}
+		SceneManager._scene._statusWindow.refresh();
 	}
 	
 	Sprite_Summon.prototype.updateTransition = function()
@@ -731,6 +732,7 @@ if(Imported["SumRndmDde Summon Core"])
 			
 		}
 		this.opacity=0;
+		SceneManager._scene._statusWindow.refresh();
 	}
 	
 
