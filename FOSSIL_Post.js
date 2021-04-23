@@ -767,6 +767,17 @@ if(Imported.YEP_BattleEngineCore)
 			}
         //}
     } 
+	Fossil.fixBattleLogScrollInit=Window_BattleLog.prototype.initialize;
+	Window_BattleLog.prototype.initialize = function(rect) {
+    Fossil.fixBattleLogScrollInit.call(this, rect);
+    this._scrollX = 0;
+    this._scrollY = 0;
+    this._scrollBaseX = 0;
+    this._scrollBaseY = 0;
+    this.clearScrollStatus();
+	};
+	
+	
 	Sprite_Battler.prototype.setupDamagePopup=Fossil.backupSprite_BattlerDamagePopup;
 	Window_BattleLog.prototype.displayHpDamage=Fossil.backupdisplayHpDamage;
 	Window_BattleLog.prototype.displayMpDamage=Fossil.backupdisplayMpDamage;
