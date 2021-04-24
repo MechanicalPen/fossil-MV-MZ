@@ -730,6 +730,13 @@ if(Imported["SumRndmDde Summon Core"])
 
 if(Imported.YEP_BattleEngineCore)
 {
+	//if we don't have improved battle backs imported, then get rid of this function
+	//which is moving our battlebacks
+	if (!Imported.YEP_ImprovedBattlebacks) {
+		Spriteset_Battle.prototype.updateZCoordinates = function() {}
+	}
+  
+	
 	//in MV the battlelog inherited all the selectable stuff.
 	//in mz it only gets window_base.  
 	//since so many of these selections are needed, I am just changing the prototype
@@ -841,6 +848,50 @@ if(Imported.YEP_X_InBattleStatus)
 	
 }
 
+if(Imported.YEP_X_PartyLimitGauge)
+{
+	//this expects the windowlayer to have a .x of 0, but in RMMZ the window layer has a .x of 4 by default
+	//to avoid causing lasting issues, we'll set it and then refresh it
+	Fossil.fixWindow_PartyLimitGaugeupdateOpacity=Window_PartyLimitGauge.prototype.updateOpacity;
+	Window_PartyLimitGauge.prototype.updateOpacity = function() {
+		var saveWLX = this._windowLayer.x;
+		this._windowLayer.x = 0;
+		Fossil.fixWindow_PartyLimitGaugeupdateOpacity.call(this)
+		this._windowLayer.x = saveWLX;
+		
+	}
+		
+    Fossil.fixWindow_PartyLimitGaugeinitialize=Window_PartyLimitGauge.prototype.initialize;
+	Window_PartyLimitGauge.prototype.initialize = function(unit) 
+	{
+        Fossil.fixWindow_PartyLimitGaugeinitialize.call(this,unit)
+		//this.opacity=128
+		//opacity should be 0 but if you want to see the windows for debugging set it here
+	}
+	
+	//scoot our party
+	Fossil.fixWindow_BasedrawPartyLimitIcon=Window_Base.prototype.drawPartyLimitIcon;
+	Window_Base.prototype.drawPartyLimitIcon =function(unit,x,y,w,h)
+	{
+		if(unit.partyLimitGaugeIconAlign() === 'right')
+		{
+			//alignment is different in RMMZ.  Scootch it a little to the left.
+			x-=h/3
+		}
+		Fossil.fixWindow_BasedrawPartyLimitIcon.call(this,unit,x,y,w,h);
+	}
+	
+	//when we draw the limit gauges, reduce the width to account for window border size
+	Fossil.fixWindow_BasedrawPartyLimitGauge=Window_Base.prototype.drawPartyLimitGauge 
+	Window_Base.prototype.drawPartyLimitGauge = function(unit, x, y, w) 
+	{
+		this.width-=24;
+		Fossil.fixWindow_BasedrawPartyLimitGauge.call(this,unit,x,y,w)
+		this.width+=24;
+	}
+	
+	
+}
 
 if(Imported.YEP_X_ItemUpgrades)
 {

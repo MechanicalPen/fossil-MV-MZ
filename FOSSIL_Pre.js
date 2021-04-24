@@ -26,8 +26,17 @@ So far we have interoperability with these MV plugins.  They seem to run with FO
 To invoke old plugin commands, either use the built in OldPluginCommand plugin command, or put oldCommand('whateverthecommandwas') in a script.
 
 ///////////////////////////////////////////////////////////////////////
-==Fully Functional==
+==Fully Functional==  (Alphabetical by plugin maker, then roughly by plugin order)
 ///////////////////////////////////////////////////////////////////////
+
+-GALV_Questlog
+-GALV_TimedMessagePopups
+-GALV_RollCredits
+-GALV_CharacterFrames
+-GALV_CFStepSE
+-GALV_CharacterAnimations
+-GALV_DiagonalMovement
+
 -MOG_ActionName
 -MOG_BattleHud
 -MOG_BossHp
@@ -50,22 +59,21 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 
 -Reval's Animated Enemies
 
--GALV_Questlog
--GALV_TimedMessagePopups
--GALV_RollCredits
--GALV_CharacterFrames
--GALV_CFStepSE
--GALV_CharacterAnimations
--GALV_DiagonalMovement
+-Shaz_TileChanger
+
+-SRD_SummonCore
+-SRD_ReplaceSummons
+
+-VLUE Game Time MV 1.1c
 
 *YEP_BattleEngineCore	(Note: I haven't added functionality for ATB, since the base plugin doesn't support it. I tried but it was too hard for me.  Sorry!)
 -YEP_X_ActionSeqPack1
 -YEP_X_ActionSeqPack2
 -YEP_X_ActionSeqPack3
-*YEP_X_AnimatedSVEnemies
-*YEP_X_CounterControl
-*YEP_X_InBattleStatus
-*YEP_SelfSwVar
+-YEP_X_AnimatedSVEnemies
+-YEP_X_CounterControl
+-YEP_X_InBattleStatus
+-YEP_SelfSwVar
 *YEP_BuffsStatesCore
 -YEP_X_ExtDoT
 -YEP_X_StateCategories
@@ -76,9 +84,10 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_X_CriticalControl
 -YEP_Z_CriticalSway
 *YEP_ElementCore
-*YEP_HitAccuracy
+-YEP_VictoryAftermath
+-YEP_HitAccuracy
 *YEP_ItemCore
-*YEP_X_ItemUpgradeSlots
+-YEP_X_ItemUpgradeSlots
 *YEP_SkillCore
 -YEP_X_LimitedSkillUses
 -YEP_MultiTypeSkills
@@ -92,19 +101,16 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 *YEP_StatusMenuCore
 *YEP_AutoPassiveStates
 *YEP_MoveRouteCore
-*YEP_X_ExtMovePack1
-*YEP_EventChasePlayer
-*YEP_X_EventChaseStealth
-*YEP_BaseTroopEvents
+-YEP_X_ExtMovePack1
+-YEP_EventChasePlayer
+-YEP_X_EventChaseStealth
+-YEP_BaseTroopEvents
 *YEP_GridFreeDoodads
 -YEP_X_ExtDoodadPack1
-*YEP_RegionEvents
-*YEP_RegionRestrictions
-*YEP_SaveEventLocations
+-YEP_RegionEvents
+-YEP_RegionRestrictions
+-YEP_SaveEventLocations
 
--SRD_SummonCore
-
--Shaz_TileChanger
 
 ///////////////////////////////////////////////////////////////////////
 ==Almost Functional with UI issues==
@@ -173,6 +179,29 @@ PluginManager.registerCommand('FOSSIL_Pre', 'useOldPlugin' , args => {
 });
 
 
+//In RMMZ state icons scale with enemies
+//in RMMV they do not
+//due to the state icons being an excerpt from a bitmap, this means that if you scale a sprite
+//you get an irritating invisible state icon frame if they don't have a state
+//this fixes that.
+Fossil.fixSprite_Enemy_updateBitmapStateIcon =   Sprite_Enemy.prototype.updateBitmap;
+Sprite_Enemy.prototype.updateBitmap = function() 
+{
+	Fossil.fixSprite_Enemy_updateBitmapStateIcon.call(this);
+	if(this._enemy.stateIcons().length==0)
+	{
+		//the frame still shows up even when scaling is implemented, 
+		//possibly due to subpixel rounding.
+		//if you can't make it stay still, just make it vanish
+		this.children[0].visible=false;
+	}else{
+		//prevent the state icon from scaling with enemies.
+		this.children[0].visible=true;
+		this.children[0].scale.y = 1/this.scale.y;
+		this.children[0].scale.x = 1/this.scale.x;
+	}
+	
+}
 
 //Making custom gauges is more difficult in MZ, because they default is hard-coded to be
 //only for a few specific battler stats.
@@ -184,6 +213,9 @@ PluginManager.registerCommand('FOSSIL_Pre', 'useOldPlugin' , args => {
 //example in a window
 this.placeFossilGauge('testGauge','$gamePlayer.x','$gameMap.width()','xcoord',50,50,300,50)
 //this will monitor the game player's x position, out of how many tiles across the map is.
+
+// If you put in the string 'rate' as the maxExpression
+// then it will just use currentExpression as a numerical value (so 0.5 = half full)
 */
 
 Window_Base.prototype.placeFossilGauge = function(gaugeID, currentExpression, maxExpression,label,x,y,width,height) {
@@ -194,6 +226,7 @@ Window_Base.prototype.placeFossilGauge = function(gaugeID, currentExpression, ma
     newGauge._label = label;
 	newGauge.show()
 	newGauge.drawGauge();
+	return newGauge;
 };
 
 
@@ -239,29 +272,6 @@ Fossil_Sprite_Gauge.prototype.setupSize = function(x,y,barlength,thickness) {
 	this.createBitmap();//push our change in thickness
 };
 
-//In RMMZ state icons scale with enemies
-//in RMMV they do not
-//due to the state icons being an excerpt from a bitmap, this means that if you scale a sprite
-//you get an irritating invisible state icon frame if they don't have a state
-//this fixes that.
-Fossil.fixSprite_Enemy_updateBitmapStateIcon =   Sprite_Enemy.prototype.updateBitmap;
-Sprite_Enemy.prototype.updateBitmap = function() 
-{
-	Fossil.fixSprite_Enemy_updateBitmapStateIcon.call(this);
-	if(this._enemy.stateIcons().length==0)
-	{
-		//the frame still shows up even when scaling is implemented, 
-		//possibly due to subpixel rounding.
-		//if you can't make it stay still, just make it vanish
-		this.children[0].visible=false;
-	}else{
-		//prevent the state icon from scaling with enemies.
-		this.children[0].visible=true;
-		this.children[0].scale.y = 1/this.scale.y;
-		this.children[0].scale.x = 1/this.scale.x;
-	}
-	
-}
 
 //commment this out, but leave for injection
 Fossil_Sprite_Gauge.prototype.updateFlashing = function() {
@@ -277,6 +287,14 @@ Fossil_Sprite_Gauge.prototype.bitmapHeight = function() {
 
 Fossil_Sprite_Gauge.prototype.gaugeHeight = function() {
     return this._thickness||12;
+};
+
+Fossil_Sprite_Gauge.prototype.gaugeX = function() {
+    if (this._label === "" || this.hideLabelText) {
+        return 0;
+    } else {
+        return this.measureLabelWidth() + 6;
+    }
 };
 
 Fossil_Sprite_Gauge.prototype.drawGauge = function() {
@@ -297,6 +315,11 @@ Fossil_Sprite_Gauge.prototype.isValid = function() {
 Fossil_Sprite_Gauge.prototype.gaugeColor1 = function() {
     if (this._gaugeColor1)
 	{
+		//if we have a string, assume that it's a hex color.
+		if(typeof(this._gaugeColor1)=='string')
+		{
+			return(this._gaugeColor1) 
+		}
 		return ColorManager.textColor(this._gaugeColor1)
 	}
 	return ColorManager.normalColor();
@@ -305,6 +328,11 @@ Fossil_Sprite_Gauge.prototype.gaugeColor1 = function() {
 Fossil_Sprite_Gauge.prototype.gaugeColor2 = function() {
     if (this._gaugeColor2)
 	{
+		//if we have a string, assume that it's a hex color.
+		if(typeof(this._gaugeColor2)=='string')
+		{
+			return(this._gaugeColor2) 
+		}
 		return ColorManager.textColor(this._gaugeColor2)
 	}
 	return ColorManager.normalColor();
@@ -313,20 +341,36 @@ Fossil_Sprite_Gauge.prototype.gaugeColor2 = function() {
 Fossil_Sprite_Gauge.prototype.valueColor = function() {
     if (this._valueColor)
 	{
+		//if we have a string, assume that it's a hex color.
+		if(typeof(this._valueColor)=='string')
+		{
+			return(this._valueColor) 
+		}
 		return ColorManager.textColor(this._valueColor)
 	}
 	return ColorManager.normalColor();
     
 };
 
+
+
 Fossil_Sprite_Gauge.prototype.currentValue = function() {
+	if (this._maxExpression == 'rate')
+	{
+		return this._currentExpression
+	}
     if (this._currentExpression) {
+		
     	return eval(this._currentExpression)
 	}
     return NaN;
 };
 
 Fossil_Sprite_Gauge.prototype.currentMaxValue = function() {
+	if (this._maxExpression == 'rate')
+	{
+		return 1;
+	}
     if (this._maxExpression)
 	{
 		return eval(this._maxExpression)
@@ -340,8 +384,68 @@ Fossil_Sprite_Gauge.prototype.label = function() {
 	return this._label || "";
 };
 
-/*   
 
+Fossil_Sprite_Gauge.prototype.drawValue = function() {
+	if(!this.hideValueText)
+	{
+		Sprite_Gauge.prototype.drawValue.apply(this);
+	}
+};
+
+
+Fossil_Sprite_Gauge.prototype.drawLabel = function() {
+	if(!this.hideLabelText)
+	{
+		Sprite_Gauge.prototype.drawLabel.apply(this);
+	}
+    
+};
+
+
+//reimplement the drawgauge from RMMV using our new fossil gauge
+//note: yes, RMMZ has a 'drawGauge' function, but it's attached to the Sprite_Gauge object.
+//don't get them confused
+Window_Base.prototype.drawGauge = function(x, y, width, rate, color1, color2) {
+	//I am going to gamble and bet that nobody draws multiple different gauges
+	//of the exact same x y coordinates and width
+	//with the exact same object.  Maybe I'm wrong, but we can deal with that when it comes up
+	//so I think it's fine for our key to be this
+	gaugeID=[this.constructor.name.toString(),x,y,width].toString()
+	//this will be something like "Window_VictoryExp,184,38,416"
+	label ='';//no label
+	[x,y]=this.FossilTweakGaugeByPlugin(x,y)
+
+    var fillW = Math.floor(width * rate);
+    var gaugeY = y + this.lineHeight() - 8;
+	var newGauge=this.placeFossilGauge(gaugeID, rate,'rate',label,x,gaugeY,width,12)
+	newGauge._gaugeColor1 = color1;
+	newGauge._gaugeColor2 = color2;
+	newGauge.hideValueText = true;
+	newGauge.hideLabelText=true;
+
+};
+
+//helper function to do all our fine positioning, on a per-window basis.
+Window_Base.prototype.FossilTweakGaugeByPlugin=function(x,y)
+{
+	if(this.constructor.name=="Window_VictoryExp")
+	{
+		x=x-32;
+		y=y-12;
+	}
+	if(this.constructor.name=="Window_PartyLimitGauge")
+	{
+		
+		y=y-36;
+	}
+	
+	
+	return [x,y]
+}
+
+
+
+/*
 ////////////////////////////////////////////////////////////
      Window Handling Code
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
