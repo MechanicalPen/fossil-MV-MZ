@@ -303,23 +303,6 @@ if(Imported.YEP_EquipCore)
 
 if(Imported.AnimatedSVEnemies)
 {
-	FixRexalASVESprite_Enemy_updateBitmap =   Sprite_Enemy.prototype.updateBitmap;
-	Sprite_Enemy.prototype.updateBitmap = function() 
-	{
-		FixRexalASVESprite_Enemy_updateBitmap.call(this);
-		if(this._enemy.stateIcons().length==0)
-		{
-			//the frame still shows up even when scaling is implemented, 
-			//possibly due to subpixel rounding.
-			//if you can't make it stay still, just make it vanish
-			this.children[0].visible=false;
-		}else{
-			this.children[0].visible=true;
-			this.children[0].scale.y = 1/this.scale.y;
-			this.children[0].scale.x = 1/this.scale.x;
-		}
-		
-	}
 
 	//rexal spent a lot of effort setting a battleSprite, then at the last moment
 	//RMMZ decides to undo the work.
@@ -767,14 +750,16 @@ if(Imported.YEP_BattleEngineCore)
 			}
         //}
     } 
+	
+	//initialize it since we now have scrollable properties
 	Fossil.fixBattleLogScrollInit=Window_BattleLog.prototype.initialize;
 	Window_BattleLog.prototype.initialize = function(rect) {
-    Fossil.fixBattleLogScrollInit.call(this, rect);
-    this._scrollX = 0;
-    this._scrollY = 0;
-    this._scrollBaseX = 0;
-    this._scrollBaseY = 0;
-    this.clearScrollStatus();
+		Fossil.fixBattleLogScrollInit.call(this, rect);
+		this._scrollX = 0;
+		this._scrollY = 0;
+		this._scrollBaseX = 0;
+		this._scrollBaseY = 0;
+		this.clearScrollStatus();
 	};
 	
 	
@@ -827,6 +812,7 @@ if(Imported.YEP_BattleEngineCore)
 		Fossil.BECWARNINGSCENEBATTLEINIT.call(this);
 	};
 	
+
 }
 
 if(Imported.YEP_X_InBattleStatus)
@@ -854,3 +840,35 @@ if(Imported.YEP_X_InBattleStatus)
 	}
 	
 }
+
+
+if(Imported.YEP_X_ItemUpgrades)
+{
+	
+	
+	//there's a one-character typo at line 320.  It says
+	//item.types.contain
+	//but it should say
+	//item.types.contains
+	//if we could edit the plugin this would be ez pzy to fix but we can't so instead
+	//nasty injection time :(
+	
+	Fossil.fixprocessupgradenotetags = DataManager.processUpgradeNotetags
+	
+	DataManager.processUpgradeNotetags = function(item) {
+		//we need to predefine this item types
+		if(!item.types){
+			item.types=['ALL']
+		}
+		if(!item.types.contain)
+		{
+			//define a 'contain' that does the same thing as 'contains'.
+			item.types.contain= function()
+			{
+				this.contains.apply(this, arguments)
+			}
+		}
+	}	
+}
+
+

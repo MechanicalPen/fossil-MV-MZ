@@ -59,6 +59,9 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -GALV_DiagonalMovement
 
 *YEP_BattleEngineCore	(Note: I haven't added functionality for ATB, since the base plugin doesn't support it. I tried but it was too hard for me.  Sorry!)
+-YEP_X_ActionSeqPack1
+-YEP_X_ActionSeqPack2
+-YEP_X_ActionSeqPack3
 *YEP_X_AnimatedSVEnemies
 *YEP_X_CounterControl
 *YEP_X_InBattleStatus
@@ -72,6 +75,10 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_X_ArmorScaling
 -YEP_X_CriticalControl
 -YEP_Z_CriticalSway
+*YEP_ElementCore
+*YEP_HitAccuracy
+*YEP_ItemCore
+*YEP_X_ItemUpgradeSlots
 *YEP_SkillCore
 -YEP_X_LimitedSkillUses
 -YEP_MultiTypeSkills
@@ -84,8 +91,16 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_WeaponUnleash
 *YEP_StatusMenuCore
 *YEP_AutoPassiveStates
+*YEP_MoveRouteCore
+*YEP_X_ExtMovePack1
+*YEP_EventChasePlayer
+*YEP_X_EventChaseStealth
+*YEP_BaseTroopEvents
 *YEP_GridFreeDoodads
 -YEP_X_ExtDoodadPack1
+*YEP_RegionEvents
+*YEP_RegionRestrictions
+*YEP_SaveEventLocations
 
 -SRD_SummonCore
 
@@ -159,6 +174,171 @@ PluginManager.registerCommand('FOSSIL_Pre', 'useOldPlugin' , args => {
 
 
 
+//Making custom gauges is more difficult in MZ, because they default is hard-coded to be
+//only for a few specific battler stats.
+//I am making a custom gauge class (which other people can use if they want), which 
+//can reference an arbitary expression for the maxval and targetval
+
+
+/* 
+//example in a window
+this.placeFossilGauge('testGauge','$gamePlayer.x','$gameMap.width()','xcoord',50,50,300,50)
+//this will monitor the game player's x position, out of how many tiles across the map is.
+*/
+
+Window_Base.prototype.placeFossilGauge = function(gaugeID, currentExpression, maxExpression,label,x,y,width,height) {
+
+	const newGauge = this.fossilCreateInnerSprite(gaugeID, Fossil_Sprite_Gauge);
+    newGauge.setup(currentExpression, maxExpression)
+    newGauge.setupSize(x,y,width,height)
+    newGauge._label = label;
+	newGauge.show()
+	newGauge.drawGauge();
+};
+
+
+//create a generic inner sprite for window_base, allowing us to put gauges in any window
+Window_Base.prototype.fossilCreateInnerSprite = function(key, spriteClass) {
+	this._additionalSprites=this._additionalSprites||{};
+    return Window_StatusBase.prototype.createInnerSprite.apply(this,arguments)
+};
+
+function Fossil_Sprite_Gauge() {
+    this.initialize(...arguments);
+}
+
+Fossil_Sprite_Gauge.prototype = Object.create(Sprite_Gauge.prototype);
+Fossil_Sprite_Gauge.prototype.constructor = Fossil_Sprite_Gauge;
+
+Fossil_Sprite_Gauge.prototype.initialize = function(rect) {
+	if(rect)
+	{
+		this._barlength=rect.width;
+		this._thickness=rect.height;
+		this.move(rect.x,rect.y)
+	}
+	Sprite_Gauge.prototype.initialize.call(this);
+    this.initMembers();
+    this.createBitmap();
+	
+};
+
+Fossil_Sprite_Gauge.prototype.setup = function(currentExpression, maxExpression) {
+    this._currentExpression=currentExpression;
+	this._maxExpression=maxExpression;
+    this._value = this.currentValue();
+    this._maxValue = this.currentMaxValue();
+    this.updateBitmap();
+};
+
+
+Fossil_Sprite_Gauge.prototype.setupSize = function(x,y,barlength,thickness) {
+    if(barlength){this._barlength=barlength};
+	if(thickness){this._thickness=thickness};
+	this.move(x,y)
+	this.createBitmap();//push our change in thickness
+};
+
+//In RMMZ state icons scale with enemies
+//in RMMV they do not
+//due to the state icons being an excerpt from a bitmap, this means that if you scale a sprite
+//you get an irritating invisible state icon frame if they don't have a state
+//this fixes that.
+Fossil.fixSprite_Enemy_updateBitmapStateIcon =   Sprite_Enemy.prototype.updateBitmap;
+Sprite_Enemy.prototype.updateBitmap = function() 
+{
+	Fossil.fixSprite_Enemy_updateBitmapStateIcon.call(this);
+	if(this._enemy.stateIcons().length==0)
+	{
+		//the frame still shows up even when scaling is implemented, 
+		//possibly due to subpixel rounding.
+		//if you can't make it stay still, just make it vanish
+		this.children[0].visible=false;
+	}else{
+		//prevent the state icon from scaling with enemies.
+		this.children[0].visible=true;
+		this.children[0].scale.y = 1/this.scale.y;
+		this.children[0].scale.x = 1/this.scale.x;
+	}
+	
+}
+
+//commment this out, but leave for injection
+Fossil_Sprite_Gauge.prototype.updateFlashing = function() {
+}
+
+Fossil_Sprite_Gauge.prototype.bitmapWidth = function() {
+    return this._barlength||128;
+};
+
+Fossil_Sprite_Gauge.prototype.bitmapHeight = function() {
+    return this._thickness+12||24;
+};
+
+Fossil_Sprite_Gauge.prototype.gaugeHeight = function() {
+    return this._thickness||12;
+};
+
+Fossil_Sprite_Gauge.prototype.drawGauge = function() {
+    const gaugeX = this.gaugeX();
+    const gaugeY = this.bitmapHeight() - this.gaugeHeight();
+    const gaugewidth = this.bitmapWidth() - gaugeX;
+    const gaugeHeight = this.gaugeHeight()+500;
+    this.drawGaugeRect(gaugeX, gaugeY, gaugewidth, gaugeHeight);
+};
+
+Fossil_Sprite_Gauge.prototype.isValid = function() {
+    if (this._currentExpression && this._maxExpression) {
+		return true;
+    }
+    return false;
+};
+
+Fossil_Sprite_Gauge.prototype.gaugeColor1 = function() {
+    if (this._gaugeColor1)
+	{
+		return ColorManager.textColor(this._gaugeColor1)
+	}
+	return ColorManager.normalColor();
+};
+
+Fossil_Sprite_Gauge.prototype.gaugeColor2 = function() {
+    if (this._gaugeColor2)
+	{
+		return ColorManager.textColor(this._gaugeColor2)
+	}
+	return ColorManager.normalColor();
+};
+
+Fossil_Sprite_Gauge.prototype.valueColor = function() {
+    if (this._valueColor)
+	{
+		return ColorManager.textColor(this._valueColor)
+	}
+	return ColorManager.normalColor();
+    
+};
+
+Fossil_Sprite_Gauge.prototype.currentValue = function() {
+    if (this._currentExpression) {
+    	return eval(this._currentExpression)
+	}
+    return NaN;
+};
+
+Fossil_Sprite_Gauge.prototype.currentMaxValue = function() {
+    if (this._maxExpression)
+	{
+		return eval(this._maxExpression)
+	}
+    
+    return NaN;
+};
+
+//just return the label property.
+Fossil_Sprite_Gauge.prototype.label = function() {
+	return this._label || "";
+};
 
 /*   
 
@@ -1173,6 +1353,11 @@ Game_CharacterBase.prototype.requestAnimation = function(animationId) {
     $gameTemp.requestAnimation([this], animationId);
 };
 
+//request balloons.
+Game_CharacterBase.prototype.requestBalloon = function(balloonId) {
+    $gameTemp.requestBalloon(this,balloonId);
+};
+
 
 Game_Battler.prototype.startAnimation = function (animationId, mirror, delay)
 {
@@ -1313,6 +1498,19 @@ if (Fossil.pluginNameList.contains('YEP_BattleEngineCore'))
 		fixactivetimeBECupdateTurn.call(this,timeActive)
 	}
 	fixactivetimeBEConTurnEnd=Game_Battler.prototype.onTurnEnd;
+	
+	//if there are no subjects for an action (as can happen with action sequences)
+	// RMMZ chokes because it can't end it.  So let's tell it to just stop if it doesn't
+	// have a subject.
+	Fossil.fixEndActionBEC=BattleManager.endAction
+	BattleManager.endAction = function() 
+	{
+		if(!this._subject){
+			return
+		}
+		Fossil.fixEndActionBEC.apply(this,arguments)
+	}
+	
 }
 
 if(Fossil.pluginNameList.includes('YEP_X_InBattleStatus'))
