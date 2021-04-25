@@ -65,6 +65,7 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -SRD_ReplaceSummons
 
 -VLUE Game Time MV 1.1c
+-VLUE questsystem
 
 *YEP_BattleEngineCore	(Note: I haven't added functionality for ATB, since the base plugin doesn't support it. I tried but it was too hard for me.  Sorry!)
 -YEP_X_ActionSeqPack1
@@ -91,6 +92,7 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 *YEP_SkillCore
 -YEP_X_LimitedSkillUses
 -YEP_MultiTypeSkills
+-YEP_PartyLimitGauge
 -YEP_X_SkillCooldowns
 -YEP_X_SkillCostItems
 -YEP_InstantCast
@@ -462,6 +464,10 @@ Window_Base.prototype.textColor = function(n) {
 Window_Base.prototype.standardFontSize=function(){
 	return $gameSystem.mainFontSize()
 }
+//get the standard font face
+Window_Base.prototype.standardFontFace=function(){
+	return $gameSystem.mainFontFace()
+}
 
 //and here's a big block redirecting all those specific color picks.
 Window_Base.prototype.crisisColor = function() { return ColorManager.crisisColor() }
@@ -579,7 +585,12 @@ Window_Command.prototype.initialize = function(rect) {
 		{
 			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
 		}
-		var rect = new Rectangle(arguments[0], arguments[1], arguments[2]||(this.windowWidth ? this.windowWidth() : 0) ||400,  arguments[3]||(this.windowHeight ? this.windowHeight() : 0)||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight);
+		var rect = new Rectangle(
+		arguments[0], 
+		arguments[1], 
+		arguments[2]||(this.windowWidth ? this.windowWidth() : 0) ||400,  
+		arguments[3]||(this.windowHeight ? this.windowHeight() : 0)||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight
+		);
 		rectFixWindowCommand.call(this,rect)
 		
 	}
@@ -678,7 +689,7 @@ Window_ItemList.prototype.initialize = function(rect) {
 var rectFixWindowEquipSlot= Window_EquipSlot.prototype.initialize;
 Window_EquipSlot.prototype.initialize = function(rect) {
 	
-	if (arguments[0].constructor.name=='Rectangle') // if our first argument is a rectangle this is MZ code
+	if (arguments.length>0 && arguments[0].constructor.name=='Rectangle') // if our first argument is a rectangle this is MZ code
 	{
 		rectFixWindowEquipSlot.apply(this,arguments) 
 	}else{ //if not, I am assuming it is MV.
@@ -686,7 +697,17 @@ Window_EquipSlot.prototype.initialize = function(rect) {
 		{
 			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
 		}
-		var rect = new Rectangle(arguments[0], arguments[1], arguments[2]||(this.windowWidth ? this.windowWidth() : 0) ||400,  arguments[3]||(this.windowHeight ? this.windowHeight() : 0)||Graphics.boxHeight);
+		var rectA=new Rectangle(0,0,0,0);
+		if (SceneManager._scene.slotWindowRect)
+		{
+			rectA=SceneManager._scene.slotWindowRect(); //pick the defaults.
+		}
+		var rect = new Rectangle(
+		arguments[0], 
+		arguments[1], 
+		arguments[2]||(this.windowWidth ? this.windowWidth() : 0) ||400,  
+		arguments[3]||(this.windowHeight ? this.windowHeight() : 0)||Graphics.boxHeight
+		);
 		rectFixWindowEquipSlot.call(this,rect)
 		
 	}
@@ -705,11 +726,10 @@ Window_EquipItem.prototype.initialize = function(rect) {
 			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
 		}
 		
+		var rectA=new Rectangle(0,0,0,0);
 		if (SceneManager._scene.itemWindowRect)
 		{
-			var rectA=SceneManager._scene.itemWindowRect(); //pick the defaults.
-		}else{
-			var rectA=new Rectangle(0,0,0,0);
+			rectA=SceneManager._scene.itemWindowRect(); //pick the defaults.
 		}
 		
 		var rect = new Rectangle(
@@ -735,11 +755,10 @@ Window_Gold.prototype.initialize = function(rect) {
 		{
 			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
 		}
+		var rectA=new Rectangle(0,0,0,0);
 		if (SceneManager._scene.goldWindowRect)
 		{
-			var rectA=SceneManager._scene.goldWindowRect(); //pick the defaults.
-		}else{
-			var rectA=new Rectangle(0,0,0,0);
+			rectA=SceneManager._scene.goldWindowRect(); //pick the defaults.
 		}
 		var rect = new Rectangle(
 		arguments[0]||rectA.x, 
@@ -763,21 +782,21 @@ Window_Help.prototype.initialize = function(rect) {
 	}else{ //if not, I am assuming it is MV.
 		if(arguments.length==1)
 		{
-			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
+			console.log("Only one argument and not a rectangle. Could be help window inheriting form something that isn't updating, or it could just be RMMV behavior (it takes one number indicating how many lines of text there are)")
 		}
 		//RMMV passes this in with a single argument, which is how many lines of text
 		//there are
+		var rectA=new Rectangle(0,0,0,0);
 		if (SceneManager._scene.helpWindowRect)
 		{
-			var rectA=SceneManager._scene.helpWindowRect(); //pick the defaults.
-		}else{
-			var rectA=new Rectangle(0,0,0,0);
+			rectA=SceneManager._scene.helpWindowRect(); //pick the defaults.
 		}
 		var rect = new Rectangle(
 		0||rectA.x, 
 		0||rectA.y, 
 		rectA.width||Graphics.boxWidth||(this.windowWidth ? this.windowWidth() : 0) ||400, 
-		rectA.height||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight);
+		//in RMMV the height in lines is passed as a param.
+		this.fittingHeight(arguments[0]||2)||rectA.height||Graphics.boxHeight);
 		
 		rectFixWindowHelp.call(this,rect)
 		
@@ -807,11 +826,10 @@ Window_TitleCommand.prototype.initialize = function(rect) {
 		{
 			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
 		}
+		var rectA=new Rectangle(0,0,0,0);
 		if (SceneManager._scene.commandWindowRect)
 		{
-			var rectA=SceneManager._scene.commandWindowRect(); //pick the defaults.
-		}else{
-			var rectA=new Rectangle(0,0,0,0);
+			rectA=SceneManager._scene.commandWindowRect(); //pick the defaults.
 		}
 		var rect = new Rectangle(
 		arguments[0]||rectA.x, 
@@ -838,11 +856,10 @@ Window_BattleSkill.prototype.initialize = function(rect) {
 		{
 			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
 		}
+		var rectA=new Rectangle(0,0,0,0);
 		if (SceneManager._scene.skillWindowRect)
 		{
-			var rectA=SceneManager._scene.skillWindowRect(); //pick the defaults.
-		}else{
-			var rectA=new Rectangle(0,0,0,0);
+			rectA=SceneManager._scene.skillWindowRect(); //pick the defaults.
 		}
 		var rect = new Rectangle(
 		arguments[0]||rectA.x, 
@@ -867,11 +884,11 @@ Window_BattleItem.prototype.initialize = function(rect) {
 		{
 			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
 		}
+		
+		var rectA=new Rectangle(0,0,0,0);
 		if (SceneManager._scene.itemWindowRect)
 		{
-			var rectA=SceneManager._scene.itemWindowRect(); //pick the defaults.
-		}else{
-			var rectA=new Rectangle(0,0,0,0);
+			rectA=SceneManager._scene.itemWindowRect(); //pick the defaults.
 		}
 		var rect = new Rectangle(
 		arguments[0]||rectA.x, 
@@ -886,6 +903,8 @@ Window_BattleItem.prototype.initialize = function(rect) {
 };
 
 
+
+
 var rectFixWindowBattleEnemy= Window_BattleEnemy.prototype.initialize;
 Window_BattleEnemy.prototype.initialize = function(rect) {
 	
@@ -898,11 +917,10 @@ Window_BattleEnemy.prototype.initialize = function(rect) {
 			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
 		}
 		//seeing if this might be a better option for defaults.  Just check what it was set to earlier.
+		var rectA=new Rectangle(0,0,0,0);
 		if (SceneManager._scene.enemyWindowRect)
 		{
-			var rectA=SceneManager._scene.enemyWindowRect(); //spawn the defaults.
-		}else{
-			var rectA=new Rectangle(0,0,0,0);
+			rectA=SceneManager._scene.enemyWindowRect(); //spawn the defaults.
 		}
 		var rect = new Rectangle(
 		arguments[0]||rectA.x||0, 
@@ -999,6 +1017,8 @@ Window_ActorCommand.prototype.initialize = function(rect) {
 	
 };
 
+
+
 /*
 ///////////////////////////////////////////////////////////
 
@@ -1016,6 +1036,15 @@ Window_Base.prototype.drawActorIcons = function(actor, x, y, width) {	Window_Sta
 Window_Base.prototype.drawActorLevel = function(actor, x, y) {	Window_StatusBase.prototype.drawActorLevel.call(this,actor, x, y) }
 Window_Base.prototype.drawActorName = function(actor, x, y, width) {	Window_StatusBase.prototype.drawActorName.call(this,actor, x, y, width) }
 Window_Base.prototype.drawActorNickname = function(actor, x, y, width) {	Window_StatusBase.prototype.drawActorNickname.call(this,actor, x, y, width) }
+
+
+
+//RMMV defaulted width to 312.  I am going to respect that.
+Fossil.FixWindowBaseDrawItemNameWidth=Window_Base.prototype.drawItemName;
+Window_Base.prototype.drawItemName = function(item, x, y, width) {
+	width = width || 312;
+    Fossil.FixWindowBaseDrawItemNameWidth.call(this,item,x,y,width);
+};
 
 
 //scrolling works differently, so translate the old reset scroll into the new idiom.
@@ -1660,5 +1689,4 @@ if(Fossil.pluginNameList.includes('YEP_X_InBattleStatus'))
 Window_BattleLog.prototype.itemRect = function(index) {
 	return Window_Selectable.prototype.itemRect.call(this,index)
 };  */
-
 

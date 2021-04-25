@@ -923,3 +923,9 @@ if(Imported.YEP_X_ItemUpgrades)
 }
 
 
+//check if we imported questsystem.js by VLUE
+if(typeof($gameQuests)!==undefined)
+{
+	
+	
+}
