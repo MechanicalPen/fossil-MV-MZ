@@ -63,7 +63,7 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 
 -SRD_SummonCore
 -SRD_ReplaceSummons
--SRD_ShakingText (note: put AFTER YEP_MessageCore and FOSSIL_Post_MessageCore.)
+-SRD_ShakingText 
 
 -VLUE Game Time MV 1.1c
 -VLUE questsystem
@@ -1691,3 +1691,29 @@ Window_BattleLog.prototype.itemRect = function(index) {
 	return Window_Selectable.prototype.itemRect.call(this,index)
 };  */
 
+
+
+
+//There isn't a 'process normal character' function in MZ anymore
+//But there isn't one anymore!
+//Add a dummy process normal character in the same place it used to be.  
+//and give it a chance to tell the plugin that we are done processing it (this will need
+//to be added manually)
+var addNormaltoWindowBaseProcessCharacter=Window_Base.prototype.processCharacter;
+Window_Base.prototype.processCharacter = function(textState) {
+	//some plugins, like SRD_ShakingText, put in a full alternate character processing
+	//version.  Obviously if this happens we end up with text AlTeRnAtInG between print
+	//modes which is no good.  So if we need to stop processing this character, stop.
+    this.fossilStopProcessingThisCharacter=false;
+	this.processNormalCharacter(textState)
+
+	if(!this.fossilStopProcessingThisCharacter)
+	{
+		addNormaltoWindowBaseProcessCharacter.call(this,textState);
+	}	
+}
+
+Window_Base.prototype.processNormalCharacter = function(textState) 
+{
+	//dummy for injection
+}

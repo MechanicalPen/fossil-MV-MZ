@@ -29,29 +29,7 @@ Imported.YEPMCPre=true;
 MZ_Window_NameBox=Window_NameBox;
 
 
-//message core hooks into the 'process normal character' function in order to do word wrap.  
-//But there isn't one anymore!
-//Add a dummy process normal character in the same place it used to be
-var addNormaltoWindowBaseProcessCharacter=Window_Base.prototype.processCharacter;
-Window_Base.prototype.processCharacter = function(textState) {
-	//some plugins, like SRD_ShakingText, put in a full alternate character processing
-	//version.  Obviously if this happens we end up with text AlTeRnAtInG between print
-	//modes which is no good.  So if we need to stop processing this character, stop.
-    this.fossilStopProcessingThisCharacter=false;
-	this.processNormalCharacter(textState)
-
-	if(!this.fossilStopProcessingThisCharacter)
-	{
-		addNormaltoWindowBaseProcessCharacter.call(this,textState);
-	}	
-}
-
-Window_Base.prototype.processNormalCharacter = function(textState) 
-{
-	//dummy for injection
-}
-
-
+//normal character injection MOVED to Fossil_Pre
 
 //I have to overwrite the definition for a message window here
 //so that it respects yanfly's new definitions.

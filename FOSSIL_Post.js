@@ -926,11 +926,15 @@ if(Imported.YEP_X_ItemUpgrades)
 if(Imported["SumRndmDde Shaking Text"])
 {
 	
-	//remove iteration from textState so we don't double-tap it.
-	Fossil.fixWindow_MessageCreateShakingCharacter = Window_Message.prototype.createShakingCharacter;
-	Window_Message.prototype.createShakingCharacter = function(textState, c, w, h) {
-		this.fossilStopProcessingThisCharacter=true;
-		Fossil.fixWindow_MessageCreateShakingCharacter.call(this,textState, c, w, h)
+		//remove iteration from textState so we don't double-tap it.
+		Fossil.fixWindow_MessageCreateShakingCharacter = Window_Message.prototype.createShakingCharacter;
+		Window_Message.prototype.createShakingCharacter = function(textState, c, w, h) {
+			this.fossilStopProcessingThisCharacter=true;
+			Fossil.fixWindow_MessageCreateShakingCharacter.call(this,textState, c, w, h)
+		}
+		if(Imported.YEPMCPre)
+	{
+		
 	}
 	
 }
