@@ -931,8 +931,12 @@ if(Imported["SumRndmDde Shaking Text"])
 		Window_Message.prototype.createShakingCharacter = function(textState, c, w, h) {
 			this.fossilStopProcessingThisCharacter=true;
 			Fossil.fixWindow_MessageCreateShakingCharacter.call(this,textState, c, w, h)
+			    if (c.charCodeAt(0) < 0x20) {
+					this.flushTextState(textState);
+					this.processControlCharacter(textState, c);
+				}
 		}
-		if(Imported.YEPMCPre)
+	if(Imported.YEPMCPre)
 	{
 		
 	}
