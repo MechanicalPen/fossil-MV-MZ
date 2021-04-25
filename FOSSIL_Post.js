@@ -923,9 +923,20 @@ if(Imported.YEP_X_ItemUpgrades)
 }
 
 
-//check if we imported questsystem.js by VLUE
-if(typeof($gameQuests)!==undefined)
+if(Imported["SumRndmDde Shaking Text"])
 {
 	
+	//remove iteration from textState so we don't double-tap it.
+	Fossil.fixWindow_MessageCreateShakingCharacter = Window_Message.prototype.createShakingCharacter;
+	Window_Message.prototype.createShakingCharacter = function(textState, c, w, h) {
+		this.fossilStopProcessingThisCharacter=true;
+		Fossil.fixWindow_MessageCreateShakingCharacter.call(this,textState, c, w, h)
+	}
 	
 }
+
+
+
+
+
+

@@ -63,6 +63,7 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 
 -SRD_SummonCore
 -SRD_ReplaceSummons
+-SRD_ShakingText (note: put AFTER YEP_MessageCore and FOSSIL_Post_MessageCore.)
 
 -VLUE Game Time MV 1.1c
 -VLUE questsystem

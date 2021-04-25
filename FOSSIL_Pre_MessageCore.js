@@ -34,12 +34,16 @@ MZ_Window_NameBox=Window_NameBox;
 //Add a dummy process normal character in the same place it used to be
 var addNormaltoWindowBaseProcessCharacter=Window_Base.prototype.processCharacter;
 Window_Base.prototype.processCharacter = function(textState) {
-
+	//some plugins, like SRD_ShakingText, put in a full alternate character processing
+	//version.  Obviously if this happens we end up with text AlTeRnAtInG between print
+	//modes which is no good.  So if we need to stop processing this character, stop.
+    this.fossilStopProcessingThisCharacter=false;
 	this.processNormalCharacter(textState)
 
-	
-	addNormaltoWindowBaseProcessCharacter.call(this,textState);
-	
+	if(!this.fossilStopProcessingThisCharacter)
+	{
+		addNormaltoWindowBaseProcessCharacter.call(this,textState);
+	}	
 }
 
 Window_Base.prototype.processNormalCharacter = function(textState) 
