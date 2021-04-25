@@ -930,11 +930,16 @@ if(Imported["SumRndmDde Shaking Text"])
 		Fossil.fixWindow_MessageCreateShakingCharacter = Window_Message.prototype.createShakingCharacter;
 		Window_Message.prototype.createShakingCharacter = function(textState, c, w, h) {
 			this.fossilStopProcessingThisCharacter=true;
-			Fossil.fixWindow_MessageCreateShakingCharacter.call(this,textState, c, w, h)
-			    if (c.charCodeAt(0) < 0x20) {
-					this.flushTextState(textState);
-					this.processControlCharacter(textState, c);
-				}
+			if (c.charCodeAt(0) < 0x20) {
+				//textState.index--
+				this.flushTextState(textState);
+				//this doesn't always count the '\' for our text index and ends up printing it.
+				this.processControlCharacter(textState, c);
+				//textState.index++
+				textState.x -=w; //control character means we never advanced.
+			}else{
+				Fossil.fixWindow_MessageCreateShakingCharacter.call(this,textState, c, w, h)
+			}
 		}
 	if(Imported.YEPMCPre)
 	{
