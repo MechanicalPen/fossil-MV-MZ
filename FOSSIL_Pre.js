@@ -39,6 +39,7 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 
 -MOG_ActionName
 -MOG_BattleHud
+-MOG_BattleResult
 -MOG_BossHp
 -MOG_ComboCounter
 -MOG_CharacterMotion
@@ -171,7 +172,12 @@ oldCommand = function (oldPluginCommand)
 	//command356 is still in, just depreciated.  Use that code to invoke.
 	const args = oldPluginCommand.split(" ");
     const command = args.shift();
-    Game_Interpreter.prototype.pluginCommand(command, args);
+	//initial params (unused in mz).
+	var fossilInterpreter = new Game_Interpreter()
+	fossilInterpreter._params=[]
+	//apparently some MV people like to just read the whole thing raw.  :o
+	fossilInterpreter._params[0]=oldPluginCommand;
+    fossilInterpreter.pluginCommand(command, args);
     return true;
 	
 }
@@ -1681,7 +1687,6 @@ if(Fossil.pluginNameList.includes('YEP_X_InBattleStatus'))
 
 }
 
-
 //battle log needs a padded rect definition?
 /* Window_BattleLog.prototype.itemRectForText = function(index) {
 	return Window_Selectable.prototype.itemRectWithPadding.call(this,index)
@@ -1690,6 +1695,21 @@ if(Fossil.pluginNameList.includes('YEP_X_InBattleStatus'))
 Window_BattleLog.prototype.itemRect = function(index) {
 	return Window_Selectable.prototype.itemRect.call(this,index)
 };  */
+
+//this is an extra-dangerous command, so make sure the plugin is actually turned on.
+if(Fossil.pluginNameList.includes('SRD_ShakingText') && $plugins[Fossil.pluginNameList.indexOf('SRD_ShakingText')].status)
+{
+	//undo the weird little textstate++/-- shift SRD does in obtainEscapeCode
+	//this will cause problems if SRD_ShakingText isn't the last message parsing plugin before Fossil_Post
+	//but we'll cross that bridge when we come to it.
+	Fossil.FixSRDShakeTextWindowMessageobtainEscapeCodePre = Window_Message.prototype.obtainEscapeCode;
+	Window_Message.prototype.obtainEscapeCode = function(textState)
+	{
+		textState.index++;
+		return Fossil.FixSRDShakeTextWindowMessageobtainEscapeCodePre.call(this,textState);
+	}
+	
+}
 
 
 
@@ -1717,3 +1737,4 @@ Window_Base.prototype.processNormalCharacter = function(textState)
 {
 	//dummy for injection
 }
+
