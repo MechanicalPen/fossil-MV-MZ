@@ -90,7 +90,14 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_VictoryAftermath
 -YEP_HitAccuracy
 *YEP_ItemCore
+-YEP_X_AttachAugments
+-YEP_X_ItemDiscard
+-YEP_X_ItemCategories
+-YEP_X_ItemPictureImg
+-YEP_X_ItemRename
+-YEP_X_ItemRequirements
 -YEP_X_ItemUpgradeSlots
+-YEP_X_ItemSynthesis
 *YEP_SkillCore
 -YEP_X_LimitedSkillUses
 -YEP_MultiTypeSkills
@@ -98,31 +105,35 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_X_SkillCooldowns
 -YEP_X_SkillCostItems
 -YEP_InstantCast
+-YEP_SkillLearnSystem 
 -YEP_SkillMasteryLevels
 *YEP_EquipCore
 -YEP_EquipRequirements
 -YEP_WeaponUnleash
 *YEP_StatusMenuCore
 *YEP_AutoPassiveStates
+*YEP Equip Battle Skills
+-YEP_X_EBSAllowedTypes
+-YEP_X_EquipSkillTiers
 *YEP_MoveRouteCore
 -YEP_X_ExtMovePack1
 -YEP_EventChasePlayer
 -YEP_X_EventChaseStealth
+-YEP_EventMorpher
+-YEP_EventSpawner
 -YEP_BaseTroopEvents
+-YEP_FootstepSounds
 *YEP_GridFreeDoodads
 -YEP_X_ExtDoodadPack1
+-YEP_PictureSpriteSheets
 -YEP_RegionEvents
 -YEP_RegionRestrictions
 -YEP_SaveEventLocations
 
-
 ///////////////////////////////////////////////////////////////////////
 ==Almost Functional with UI issues==
 ///////////////////////////////////////////////////////////////////////
--YEP_SkillLearnSystem (Does not crash, but skill confirmation UI is glitched and looks ugly in a weird way.  Will need additional work for actual use in MZ games)
--YEP Equip Battle Skills
--YEP_X_EBSAllowedTypes
--YEP_X_EquipSkillTiers
+-YEP_X_ItemDurability (there's no obvious place to display the durability stat)
 
 ///////////////////////////////////////////////////////////////////////
 ==Special Cases==
@@ -187,6 +198,24 @@ PluginManager.registerCommand('FOSSIL_Pre', 'useOldPlugin' , args => {
 	oldCommand(oldPluginCommand)
 });
 
+
+//alter our buttondata in order to include an option for no button type being provided
+//as MV doesn't provide this information.  Value is a guess but seems to work.
+Sprite_Button.prototype.buttonData = function() {
+    const buttonTable = {
+		undefined: {x:0 , w:2},
+        cancel: { x: 0, w: 2 },
+        pageup: { x: 2, w: 1 },
+        pagedown: { x: 3, w: 1 },
+        down: { x: 4, w: 1 },
+        up: { x: 5, w: 1 },
+        down2: { x: 6, w: 1 },
+        up2: { x: 7, w: 1 },
+        ok: { x: 8, w: 2 },
+        menu: { x: 10, w: 1 }
+    };
+    return buttonTable[this._buttonType];
+};
 
 //In RMMZ state icons scale with enemies
 //in RMMV they do not
@@ -476,6 +505,15 @@ Window_Base.prototype.standardFontFace=function(){
 	return $gameSystem.mainFontFace()
 }
 
+//preemptive function redirections.
+Window_ShopNumber.prototype.itemY = function() {
+    return this.itemNameY();
+};
+
+Window_ShopNumber.prototype.priceY = function() {
+    return this.totalPriceY();
+};
+
 //and here's a big block redirecting all those specific color picks.
 Window_Base.prototype.crisisColor = function() { return ColorManager.crisisColor() }
 Window_Base.prototype.ctGaugeColor1 = function() { return ColorManager.ctGaugeColor1() }
@@ -592,11 +630,42 @@ Window_Command.prototype.initialize = function(rect) {
 		{
 			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
 		}
+		
+		
+		var rectA=new Rectangle(0,0,0,0);
+		//Window_Command is inherited from a lot of individual plugin windows.
+		//handle case-by-case window sizes here.
+		//I may have to refactor this later but this seems okay for now.
+		
+		switch(this.constructor.name)
+		{
+			case "Window_SkillLearnConfirm":
+			if(SceneManager._scene.helpWindowRect)
+			{
+				rectA=SceneManager._scene.helpWindowRect();
+				rectA.height = (this.windowHeight ? this.windowHeight() : rectA.height)
+			}
+			break;
+			case "Window_ItemActionCommand":
+			case "Window_ItemDiscardConfirm":
+			if(SceneManager._scene.itemWindowRect)
+			{
+				rectA=SceneManager._scene.itemWindowRect();
+				rectA.height = (this.windowHeight ? this.windowHeight() : rectA.height)
+			}
+			break;
+			default:
+		}
+			
+			
+			
+		
+		
 		var rect = new Rectangle(
-		arguments[0], 
-		arguments[1], 
-		arguments[2]||(this.windowWidth ? this.windowWidth() : 0) ||400,  
-		arguments[3]||(this.windowHeight ? this.windowHeight() : 0)||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight
+		arguments[0]||rectA.x, 
+		arguments[1]||rectA.y, 
+		arguments[2]||rectA.width ||(this.windowWidth ? this.windowWidth() : 0)  ||400,  
+		arguments[3]||rectA.height||(this.windowHeight ? this.windowHeight() : 0)||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight
 		);
 		rectFixWindowCommand.call(this,rect)
 		

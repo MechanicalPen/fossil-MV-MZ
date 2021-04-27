@@ -927,29 +927,117 @@ if(Imported["SumRndmDde Shaking Text"])
 {
 	
 		//remove iteration from textState so we don't double-tap it.
-		Fossil.fixWindow_MessageCreateShakingCharacter = Window_Message.prototype.createShakingCharacter;
-		Window_Message.prototype.createShakingCharacter = function(textState, c, w, h) {
-			this.fossilStopProcessingThisCharacter=true;
-			if (c.charCodeAt(0) < 0x20) {
-				//textState.index--
-				this.flushTextState(textState);
-				//this doesn't always count the '\' for our text index and ends up printing it.
-				this.processControlCharacter(textState, c);
-				//textState.index++
-				textState.x -=w; //control character means we never advanced.
-			}else{
-				Fossil.fixWindow_MessageCreateShakingCharacter.call(this,textState, c, w, h)
-			}
-		}
-	if(Imported.YEPMCPre)
-	{
+	Fossil.fixWindow_MessageCreateShakingCharacter = Window_Message.prototype.createShakingCharacter;
+	Window_Message.prototype.createShakingCharacter = function(textState, c, w, h) {
+		this.fossilStopProcessingThisCharacter=true;
 		
+		textState.x -=w;
+		
+		
+		if (c.charCodeAt(0) < 0x20) {
+			
+			
+			this.flushTextState(textState);
+			//this doesn't always count the '\' for our text index and ends up printing it.
+			this.processControlCharacter(textState, c);
+			
+			//c.charCodeAt(0)==0x10 //means a newline character.  If we did a newline, step back appropriately
+			if(c.charCodeAt(0)==0x10)
+			{
+				textState.x-=12;
+			}
+			
+			 //control character means we never advanced.
+		}else{
+			//our shakey characters are too far to the right by half a slot.  Correct this.
+			textState.x +=w/2;
+			Fossil.fixWindow_MessageCreateShakingCharacter.call(this,textState, c, w, h)
+			textState.x +=w/2;
+		}
+	}
+	
+	//undo the weird little textstate++/-- shift SRD does in obtainEscapeCode
+	//this will cause problems if SRD_ShakingText isn't the last message parsing plugin before Fossil_Post
+	//but we'll cross that bridge when we come to it.
+	Fossil.FixSRDShakeTextWindowMessageobtainEscapeCodePost=Window_Message.prototype.obtainEscapeCode;
+	Window_Message.prototype.obtainEscapeCode = function(textState){
+		textState.index--;
+		return Fossil.FixSRDShakeTextWindowMessageobtainEscapeCodePost.call(this,textState)
 	}
 	
 }
 
+if(Imported.YEP_Footsteps)
+{
+	Fossil.fixplayFootstepSound =Game_CharacterBase.prototype.playFootstepSound
+	Game_CharacterBase.prototype.playFootstepSound = function(volume, pitch, pan) 
+	{
+		Fossil.tempCoords=[this.x,this.y]
+		
+		//fix the coordinates to identify the next tile (this is bugged in the base plugin)
+		//if someone includes a diagonal movement that expands the .direction() beyond the four
+		//base coordinates, this will be futureproofed.
+		Fossil.tempCoord[0] += ([3,6,9].contains(this.direction())) - ([1,4,7].contains(this.direction()));
+		Fossil.tempCoord[1] += ([1,2,3].contains(this.direction())) - ([7,8,9].contains(this.direction()));
 
+		var backupRegion=$gameMap.regionId;
+		var backupTerrain=$gameMap.terrainTag;
+		$gameMap.regionId=function(x,y)
+		{
+			return backupRegion(Fossil.tempCoord[0],Fossil.tempCoord[1])
+		}
+		$gameMap.terrainTag=function(x,y)
+		{
+			return backupTerrain(Fossil.tempCoord[0],Fossil.tempCoord[1])
+		}
+		
+		Fossil.fixplayFootstepSound.apply(this,arguments);
+		
+		$gameMap.regionId=backupRegion;
+		$gameMap.terrainTag=backupTerrain;
+	}
+	
+	
+}
 
+if(Imported.YEP_X_ItemDiscard)
+{
+	//
+	Fossil.fixWindow_ItemActionCommandCreateDiscardCommandName =Window_ItemActionCommand.prototype.createDiscardCommandName;
+	Window_ItemActionCommand.prototype.createDiscardCommandName = function() 
+	{
+		
+		var text = Fossil.fixWindow_ItemActionCommandCreateDiscardCommandName.call(this);
+		
+		//trim the trailing '/' if you have independent items on.
+		if((text[text.length-1] == '/') && ($gameParty.maxItems(this._item) <= 1))
+		{
+			text = text.slice(0,text.length-1)
+		}
+		
+		return text;
+	}
+}
 
-
+if(Imported.YEP_X_ItemRequirements)
+{
+	
+	//this is bugged; it runs an eval (which is supposed to be caught in 'value'), but 
+	//doesn't actually catch the true/false in 'value'.
+	//I'm checking to see if 'value' ever gets referenced in the provided code
+	// (if it does, then someone did a workaround and I don't want to mess with it)
+	//if it is included I don't mess with it.
+	//if not, I am correcting the behavior to match the documentation.
+	Fossil.fixItemManagerUsableItemRequirementEval =ItemManager.usableItemRequirementEval;
+	ItemManager.usableItemRequirementEval=function(code)
+	{
+		if(!code.contains('value'))
+		{
+			//if we don't reference 'value', store whatever statement we make into it.
+			code = "value = ("+code+")";
+		}
+		return Fossil.fixItemManagerUsableItemRequirementEval.call(this,code);
+	}
+	
+}
 
