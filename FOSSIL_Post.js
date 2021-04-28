@@ -24,9 +24,10 @@ All code not covered by the RPG Maker MV or RPG Maker MZ license is released und
 var Imported = Imported || {};
 Imported.Fossil_Post=true;
 var Fossil =Fossil || {}
-if(Fossil.version!=='0.2.0')
+Fossil.postVersion='0.2.01'
+if(Fossil.version!==Fossil.postVersion)
 {
-	console.log('Version mismatch!  Fossil_Post version is 0.2.0, but Fossil_Pre is version '+Fossil.version)
+	console.log('Version mismatch!  Fossil_Post version is '+Fossil.postVersion +', but Fossil_Pre is version '+Fossil.version)
 }
 
 
@@ -1044,3 +1045,18 @@ if(Imported.YEP_X_ItemRequirements)
 	
 }
 
+
+//if we have imported the STV_BeastBook plugin
+if (Fossil.pluginNameList.contains('STV_BeastBook') &&(Scene_BeastBook))
+{
+	Fossil.fixWindow_BeastBook_updateStatus= Window_BeastBook_Info.prototype.setBeast
+     Window_BeastBook_Info.prototype.setBeast  = function(beast) 
+	{
+		if (this._additionalSprites)
+		{
+			Window_StatusBase.prototype.hideAdditionalSprites.call(this);
+		}
+		Fossil.fixWindow_BeastBook_updateStatus.call(this,beast);
+    };
+	
+}

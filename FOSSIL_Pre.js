@@ -168,12 +168,20 @@ In order to improve clarity, I am officially stating that the 'CC-BY-SA' only re
 //We save the correct version number one in this half of the plugin sandwich, then restore it afterwards!
 Utils.MZ_VERSION= Utils.RPGMAKER_VERSION;
 Utils.RPGMAKER_VERSION="1.7.1";  
+//if we are running MZ we have webgl.
+Graphics.hasWebGL=function(){return true}
+Graphics.isWebGL=function(){return true}
+//alias these again.
+Graphics.BLEND_NORMAL = PIXI.BLEND_MODES["NORMAL"];
+Graphics.BLEND_ADD = PIXI.BLEND_MODES["ADD"];
+Graphics.BLEND_MULTIPLY = PIXI.BLEND_MODES["MULTIPLY"];
+Graphics.BLEND_SCREEN = PIXI.BLEND_MODES["SCREEN"];
 
 
 var Imported = Imported || {};
 Imported.Fossil_Pre=true;
 var Fossil =Fossil || {}
-Fossil.version='0.2.0'
+Fossil.version='0.2.01'
 
 
 //get a list of what plugins we have installed.  This is necessary because
@@ -449,7 +457,6 @@ Fossil_Sprite_Gauge.prototype.drawLabel = function() {
     
 };
 
-
 //reimplement the drawgauge from RMMV using our new fossil gauge
 //note: yes, RMMZ has a 'drawGauge' function, but it's attached to the Sprite_Gauge object.
 //don't get them confused
@@ -530,6 +537,28 @@ Window_Base.prototype.drawActorTp = function(actor, x, y, width) {
 	
 	
 };
+
+//text handling tweak; in rmmv putting in no text would have no width.
+Fossil.measureTextUndefinedZero=Bitmap.prototype.measureTextWidth;
+Bitmap.prototype.measureTextWidth = function(text) {
+    if (text === undefined)
+	{
+		return 0;
+	}
+    return Fossil.measureTextUndefinedZero.call(this,text)
+};
+
+//similarly, don't choke if we're given no text to work with.  Just turn it into an empty string.
+Fossil.convertEscapeUndefined=Window_Base.prototype.convertEscapeCharacters;
+Window_Base.prototype.convertEscapeCharacters = function(text) {
+    if (text === undefined)
+	{
+		return '';
+	}
+    return Fossil.convertEscapeUndefined.call(this,text)
+};
+
+
 
 /*
 ////////////////////////////////////////////////////////////
@@ -1868,3 +1897,8 @@ if(Fossil.pluginNameList.contains('WAY_Core'))
 {
 	Fossil.backupPluginManagerCommands=PluginManager._commands;
 }
+
+
+
+
+
