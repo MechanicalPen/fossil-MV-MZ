@@ -67,6 +67,8 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -SRD_ShakingText 
 -SRD_ActorSelect
 
+-STV_BeastBook
+
 -VLUE Game Time MV 1.1c
 -VLUE questsystem
 
@@ -77,6 +79,7 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -WAY_CustomOnDeathEval
 -WAY_Achievements
 
+*YEP_MainMenuManager
 *YEP_BattleEngineCore	(Note: I haven't added functionality for ATB, since the base plugin doesn't support it. I tried but it was too hard for me.  Sorry!)
 -YEP_X_ActionSeqPack1
 -YEP_X_ActionSeqPack2
@@ -757,6 +760,38 @@ Window_Command.prototype.initialize = function(rect) {
 	
 };
 
+
+var rectFixWindowMenuCommand= Window_MenuCommand.prototype.initialize;
+Window_MenuCommand.prototype.initialize = function(rect) {
+	
+	if (arguments[0].constructor.name=='Rectangle') // if our first argument is a rectangle this is MZ code
+	{
+		rectFixWindowMenuCommand.apply(this,arguments) 
+	}else{ //if not, I am assuming it is MV.
+		if(arguments.length==1)
+		{
+			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
+		}
+		
+		
+		var rectA=new Rectangle(0,0,0,0);
+		
+		if(SceneManager._scene.commandWindowRect)
+		{
+			rectA=SceneManager._scene.commandWindowRect();
+		}
+
+		var rect = new Rectangle(
+		arguments[0]||rectA.x, 
+		arguments[1]||rectA.y, 
+		arguments[2]||rectA.width ||(this.windowWidth ? this.windowWidth() : 0)  ||400,  
+		arguments[3]||rectA.height||(this.windowHeight ? this.windowHeight() : 0)||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight
+		);
+		rectFixWindowMenuCommand.call(this,rect)
+		
+	}
+	
+};
 
 var rectFixWindowSkillList= Window_SkillList.prototype.initialize;
 Window_SkillList.prototype.initialize = function(rect) {
@@ -1898,7 +1933,19 @@ if(Fossil.pluginNameList.contains('WAY_Core'))
 	Fossil.backupPluginManagerCommands=PluginManager._commands;
 }
 
-
+if(Fossil.pluginNameList.contains('YEP_MainMenuManager'))
+{
+	Fossil.fixWindowCommandMaxItemsCrash=Window_Command.prototype.maxItems;
+	Window_Command.prototype.maxItems = function() {
+		if (this._list == undefined)
+		{
+			this.clearCommandList()
+			return 1;//we shouldn't have any empty command lists.
+		}
+		return Fossil.fixWindowCommandMaxItemsCrash.call(this)
+	};
+	
+}
 
 
 
