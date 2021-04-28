@@ -1,7 +1,7 @@
  /*:
  * @plugindesc Fossil V0.1 is an interoperability layer for RMMZ, designed
  to make MV plugins work with it. 
- * So far, we support about 40 plugins.  You can help!
+ * So far, we support over 100 plugins.  You can help!
  * @author FOSSIL TEAM
  * @target MZ  
  
@@ -65,9 +65,17 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -SRD_SummonCore
 -SRD_ReplaceSummons
 -SRD_ShakingText 
+-SRD_ActorSelect
 
 -VLUE Game Time MV 1.1c
 -VLUE questsystem
+
+-WAY_Core (note: requires Fossil_Post_Way to be the NEXT plugin beneath it, or all MZ plugin commands will break.)
+-WAY_StorageSystem
+-WAY_OptionsMenuCustomActions
+-WAY_VerticalScreenShake
+-WAY_CustomOnDeathEval
+-WAY_Achievements
 
 *YEP_BattleEngineCore	(Note: I haven't added functionality for ATB, since the base plugin doesn't support it. I tried but it was too hard for me.  Sorry!)
 -YEP_X_ActionSeqPack1
@@ -165,7 +173,7 @@ Utils.RPGMAKER_VERSION="1.7.1";
 var Imported = Imported || {};
 Imported.Fossil_Pre=true;
 var Fossil =Fossil || {}
-Fossil.version='0.1'
+Fossil.version='0.2.0'
 
 
 //get a list of what plugins we have installed.  This is necessary because
@@ -254,12 +262,13 @@ this.placeFossilGauge('testGauge','$gamePlayer.x','$gameMap.width()','xcoord',50
 
 // If you put in the string 'rate' as the maxExpression
 // then it will just use currentExpression as a numerical value (so 0.5 = half full)
+// the target param gets stored into this._target
 */
 
-Window_Base.prototype.placeFossilGauge = function(gaugeID, currentExpression, maxExpression,label,x,y,width,height) {
+Window_Base.prototype.placeFossilGauge = function(gaugeID, currentExpression, maxExpression,label,x,y,width,height,target) {
 
 	const newGauge = this.fossilCreateInnerSprite(gaugeID, Fossil_Sprite_Gauge);
-    newGauge.setup(currentExpression, maxExpression)
+    newGauge.setup(currentExpression, maxExpression,target)
     newGauge.setupSize(x,y,width,height)
     newGauge._label = label;
 	newGauge.show()
@@ -294,7 +303,8 @@ Fossil_Sprite_Gauge.prototype.initialize = function(rect) {
 	
 };
 
-Fossil_Sprite_Gauge.prototype.setup = function(currentExpression, maxExpression) {
+Fossil_Sprite_Gauge.prototype.setup = function(currentExpression, maxExpression,target) {
+	this._target=target||this;//target yourself if you don't have anyone to play with
     this._currentExpression=currentExpression;
 	this._maxExpression=maxExpression;
     this._value = this.currentValue();
@@ -481,7 +491,45 @@ Window_Base.prototype.FossilTweakGaugeByPlugin=function(x,y)
 	return [x,y]
 }
 
+//now let's reimplement the old RMMV draw actor hp/mp/tp functions with our new gauge
 
+Window_Base.prototype.drawActorHp = function(actor, x, y, width) {
+    width = width || 186;
+    var color1 = this.hpGaugeColor1();
+    var color2 = this.hpGaugeColor2();
+	var gaugeID = 'actor'+actor.actorId().toString()+'hpbar'
+	var newGauge = this.placeFossilGauge(gaugeID, 'this._target.hp','this._target.mhp',TextManager.hpA,x,y,width,12,actor)
+	newGauge._gaugeColor1=color1;
+	newGauge._gaugeColor2=color2;
+	newGauge._valueColor2 = ColorManager.hpColor(actor);	
+};
+
+Window_Base.prototype.drawActorMp = function(actor, x, y, width) {
+    width = width || 186;
+    var color1 = this.mpGaugeColor1();
+    var color2 = this.mpGaugeColor2();
+	var gaugeID = 'actor'+actor.actorId().toString()+'mpbar'
+	
+	var newGauge = this.placeFossilGauge(gaugeID, 'this._target.mp','this._target.mmp',TextManager.mpA,x,y,width,12,actor)
+	newGauge._gaugeColor1=color1;
+	newGauge._gaugeColor2=color2;
+	newGauge._valueColor2 = ColorManager.mpCostColor(actor);
+	
+};
+Window_Base.prototype.drawActorTp = function(actor, x, y, width) {
+    width = width || 186;
+    var color1 = this.tpGaugeColor1();
+    var color2 = this.tpGaugeColor2();
+	var gaugeID = 'actor'+actor.actorId().toString()+'tpbar'
+	
+	var newGauge = this.placeFossilGauge(gaugeID, 'this._target.tp','this._target.maxTp()',TextManager.tpA,x,y,width,12,actor)
+	
+	newGauge._gaugeColor1=color1;
+	newGauge._gaugeColor2=color2;
+	newGauge._valueColor2 = ColorManager.tpCostColor(actor);
+	
+	
+};
 
 /*
 ////////////////////////////////////////////////////////////
@@ -534,6 +582,13 @@ Window_Base.prototype.tpCostColor = function() { return ColorManager.tpCostColor
 Window_Base.prototype.tpGaugeColor1 = function() { return ColorManager.tpGaugeColor1() }
 Window_Base.prototype.tpGaugeColor2 = function() { return ColorManager.tpGaugeColor2() }
 Window_Base.prototype.paramchangeTextColor= function(change) {return ColorManager.paramchangeTextColor(change)}
+Window_Base.prototype.hpColor = function(actor) { return ColorManager.hpColor(actor) }
+Window_Base.prototype.mpColor = function(actor) { return ColorManager.mpColor(actor) }
+Window_Base.prototype.tpColor = function(actor) { return ColorManager.tpColor(actor) }
+
+//dummy out a RMMV function that isn't present, isn't needed, and isn't spelled right
+Window_Base.prototype.updateButtonsVisiblity = function(){}
+
 
 //MZ uses rectangles instead of multiple numbers being passed in.
 //There's even a special check in the MZ code that checks if you forgot a rectangle.
@@ -1807,3 +1862,9 @@ Window_Base.prototype.processNormalCharacter = function(textState)
 	//dummy for injection
 }
 
+
+
+if(Fossil.pluginNameList.contains('WAY_Core'))
+{
+	Fossil.backupPluginManagerCommands=PluginManager._commands;
+}

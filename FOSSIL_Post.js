@@ -1,7 +1,7 @@
 
 
  /*:
- * @plugindesc FOSSIL V0.1 is an interoperability layer for RMMZ, designed
+ * @plugindesc FOSSIL is an interoperability layer for RMMZ, designed
  to make MV plugins work with it.
  * @author FOSSIL TEAM
  * @target MZ 
@@ -24,7 +24,10 @@ All code not covered by the RPG Maker MV or RPG Maker MZ license is released und
 var Imported = Imported || {};
 Imported.Fossil_Post=true;
 var Fossil =Fossil || {}
-Fossil.version='0.1'
+if(Fossil.version!=='0.2.0')
+{
+	console.log('Version mismatch!  Fossil_Post version is 0.2.0, but Fossil_Pre is version '+Fossil.version)
+}
 
 
 
