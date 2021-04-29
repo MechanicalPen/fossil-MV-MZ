@@ -1047,7 +1047,7 @@ if(Imported.YEP_X_ItemRequirements)
 
 
 //if we have imported the STV_BeastBook plugin
-if (Fossil.pluginNameList.contains('STV_BeastBook') &&(Scene_BeastBook))
+if (Fossil.pluginNameList.contains('STV_BeastBook') &&(typeof(Scene_BeastBook)!=='undefined'))
 {
 	Fossil.fixWindow_BeastBook_updateStatus= Window_BeastBook_Info.prototype.setBeast
      Window_BeastBook_Info.prototype.setBeast  = function(beast) 

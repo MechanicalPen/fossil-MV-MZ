@@ -123,9 +123,11 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_WeaponUnleash
 *YEP_StatusMenuCore
 *YEP_AutoPassiveStates
+-YEP_X_PassiveAuras
 *YEP Equip Battle Skills
 -YEP_X_EBSAllowedTypes
 -YEP_X_EquipSkillTiers
+-YEP_StealSnatch
 *YEP_MoveRouteCore
 -YEP_X_ExtMovePack1
 -YEP_EventChasePlayer
@@ -136,6 +138,7 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_FootstepSounds
 *YEP_GridFreeDoodads
 -YEP_X_ExtDoodadPack1
+-YEP_MainMenuVar
 -YEP_PictureSpriteSheets
 -YEP_RegionEvents
 -YEP_RegionRestrictions
