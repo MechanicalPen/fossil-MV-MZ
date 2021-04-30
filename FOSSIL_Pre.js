@@ -1624,11 +1624,17 @@ PIXI.tilemap.TileRenderer={}
  }
  
 
-/* var oldSceneBootInit= Scene_Boot.prototype.initialize;
-Scene_Boot.prototype.initialize = function () {
-	oldSceneBootInit.apply(arguments);
-	window.onload();
-} */
+//RMMZ expects the 'folder' input to end with a slash  (so "se/")
+//RMMV expects it will need to add a slash itself (so "se")
+//add a slash if there isn't one at the end of the folder name.
+Fossil.FixAudioManagerBufferSlash=AudioManager.createBuffer
+AudioManager.createBuffer = function(folder, name) {
+	if(folder && folder[folder.length-1] !== '/')
+	{
+		folder=folder+'/'
+	}
+	return Fossil.FixAudioManagerBufferSlash.call(this,folder,name);
+};
 	
 //load fonts with the new version
 Graphics.loadFont = function(name, url) {
