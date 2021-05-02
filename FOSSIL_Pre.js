@@ -37,6 +37,8 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -GALV_CharacterAnimations
 -GALV_DiagonalMovement
 
+-Jay_BattleVAManager
+
 -MOG_ActionName
 -MOG_BattleHud
 -MOG_BattleResult
@@ -901,8 +903,8 @@ Window_EquipSlot.prototype.initialize = function(rect) {
 			rectA=SceneManager._scene.slotWindowRect(); //pick the defaults.
 		}
 		var rect = new Rectangle(
-		arguments[0], 
-		arguments[1], 
+		(typeof(arguments[0]) == undefined? rectA.x : arguments[0])||0,
+		(typeof(arguments[1]) == undefined? rectA.y : arguments[1])||0,
 		arguments[2]||(this.windowWidth ? this.windowWidth() : 0) ||400,  
 		arguments[3]||(this.windowHeight ? this.windowHeight() : 0)||Graphics.boxHeight
 		);
@@ -931,8 +933,8 @@ Window_EquipItem.prototype.initialize = function(rect) {
 		}
 		
 		var rect = new Rectangle(
-		arguments[0]||rectA.x, 
-		arguments[1]||rectA.y, 
+		typeof(arguments[0]) == undefined? rectA.x : arguments[0],
+		typeof(arguments[1]) == undefined? rectA.y : arguments[1],
 		arguments[2]||rectA.width||(this.windowWidth ? this.windowWidth() : 0) ||400,  
 		arguments[3]||rectA.height||(this.windowHeight ? this.windowHeight() : 0)||Graphics.boxHeight);
 		
@@ -959,8 +961,8 @@ Window_Gold.prototype.initialize = function(rect) {
 			rectA=SceneManager._scene.goldWindowRect(); //pick the defaults.
 		}
 		var rect = new Rectangle(
-		arguments[0]||rectA.x, 
-		arguments[1]||rectA.y, 
+		typeof(arguments[0]) == undefined? rectA.x : arguments[0],
+		typeof(arguments[1]) == undefined? rectA.y : arguments[1],
 		arguments[2]||rectA.width||(this.windowWidth ? this.windowWidth() : 0) ||400,
 		arguments[3]||rectA.height||(this.windowHeight ? this.windowHeight() : 0)||Graphics.boxHeight);
 		
@@ -1030,8 +1032,8 @@ Window_TitleCommand.prototype.initialize = function(rect) {
 			rectA=SceneManager._scene.commandWindowRect(); //pick the defaults.
 		}
 		var rect = new Rectangle(
-		arguments[0]||rectA.x, 
-		arguments[1]||rectA.y, 
+		typeof(arguments[0]) == undefined? rectA.x : arguments[0],
+		typeof(arguments[1]) == undefined? rectA.y : arguments[1],
 		arguments[2]||rectA.width||(this.windowWidth ? this.windowWidth() : 0) ||400,  
 		arguments[3]||rectA.height||(this.windowHeight ? this.windowHeight() : 0)||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight);
 		
@@ -1060,8 +1062,8 @@ Window_BattleSkill.prototype.initialize = function(rect) {
 			rectA=SceneManager._scene.skillWindowRect(); //pick the defaults.
 		}
 		var rect = new Rectangle(
-		arguments[0]||rectA.x, 
-		arguments[1]||rectA.y, 
+		typeof(arguments[0]) == undefined? rectA.x : arguments[0],
+		typeof(arguments[1]) == undefined? rectA.y : arguments[1],
 		arguments[2]||rectA.width||(this.windowWidth ? this.windowWidth() : 0) ||400,  
 		arguments[3]||rectA.height||(this.windowHeight ? this.windowHeight() : 0)||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight);
 		
@@ -1089,8 +1091,8 @@ Window_BattleItem.prototype.initialize = function(rect) {
 			rectA=SceneManager._scene.itemWindowRect(); //pick the defaults.
 		}
 		var rect = new Rectangle(
-		arguments[0]||rectA.x, 
-		arguments[1]||rectA.y, 
+		typeof(arguments[0]) == undefined? rectA.x : arguments[0],
+		typeof(arguments[1]) == undefined? rectA.y : arguments[1],
 		arguments[2]||rectA.width||(this.windowWidth ? this.windowWidth() : 0) ||400,  
 		arguments[3]||rectA.height||(this.windowHeight ? this.windowHeight() : 0)||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight);
 		
@@ -1121,8 +1123,8 @@ Window_BattleEnemy.prototype.initialize = function(rect) {
 			rectA=SceneManager._scene.enemyWindowRect(); //spawn the defaults.
 		}
 		var rect = new Rectangle(
-		arguments[0]||rectA.x||0, 
-		arguments[1]||rectA.y||0, 
+		(typeof(arguments[0]) == undefined? rectA.x : arguments[0])||0,
+		(typeof(arguments[1]) == undefined? rectA.y : arguments[1])||0,
 		arguments[2]||rectA.width||400,  
 		arguments[3]||rectA.height|400
 		)
@@ -1619,7 +1621,7 @@ PIXI.tilemap.TileRenderer={}
  window.onload = function ()
  {
 	//a target for injecting before-title-screen code.
-	//or it should be, anyway, once I find a place to put it
+	//or it should be, anyway, once I find a place to hook it in
 	//as is, this is where code goes to die. :(
  }
  
@@ -1631,7 +1633,7 @@ Fossil.FixAudioManagerBufferSlash=AudioManager.createBuffer
 AudioManager.createBuffer = function(folder, name) {
 	if(folder && folder[folder.length-1] !== '/')
 	{
-		folder=folder+'/'
+		folder=folder+'/';
 	}
 	return Fossil.FixAudioManagerBufferSlash.call(this,folder,name);
 };
@@ -1748,6 +1750,15 @@ Spriteset_Base.prototype.initialize = function(){
 Spriteset_Base.prototype.createToneChanger = function() {
     //dummy function for injection!
 };
+
+//this is stored elsewhere in RMMZ so redirect
+Spriteset_Battle.prototype.battleback1Name = function() {
+    return Sprite_Battleback.prototype.battleback1Name.call(this);
+};
+
+Spriteset_Battle.prototype.battleback2Name = function() {
+	return Sprite_Battleback.prototype.battleback2Name.call(this);
+}
 
 
 ImageCache={};// The image cache works differently now, so let plugins that want to fiddle around with it play with a toy version :)
