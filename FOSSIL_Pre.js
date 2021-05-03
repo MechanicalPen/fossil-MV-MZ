@@ -107,8 +107,8 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 *YEP_ElementCore
 -YEP_VictoryAftermath
 -YEP_HitAccuracy
-*YEP_TargetCore (note: there might be some odd interactions with action sequences, I am not familiar enough with sequences to debug the)
--YEP_X_SelectionControl
+*YEP_TargetCore (note: there might be some odd interactions with action sequences, I am not familiar enough with sequences to debug them)
+-YEP_X_SelectionControl	
 *YEP_ItemCore
 -YEP_X_AttachAugments
 -YEP_X_ItemDiscard
@@ -1578,6 +1578,39 @@ WindowLayer.prototype.move = function(x, y, width, height) {
 BattleManager.refreshStatus = function() {
 	SceneManager._scene._statusWindow.refresh();
 }
+
+
+
+if(Fossil.pluginNameList.contains('YEP_BattleEngineCore'))
+{
+	//okay this is horrible so let me explain it
+	//selectEnemySelection got renamed to startEnemySelection
+	//selectActorSelection got renamed to startActorSelection
+	
+	//we want to splice in the battle engine selection code appropriately.
+	//so replace this guy with selectEnemySelection
+	//then have selectEnemySelection call startEnemySelection and do nothing
+	Scene_Battle.prototype.onSelectAction = function() {
+		const action = BattleManager.inputtingAction();
+		if (!action.needsSelection()) {
+			this.selectNextCommand();
+		} else if (action.isForOpponent()) {
+			this.selectEnemySelection();
+		} else {
+			this.selectActorSelection();
+		}
+	};
+	
+	Scene_Battle.prototype.selectEnemySelection = function() {
+		this.startEnemySelection()
+	}
+	Scene_Battle.prototype.selectActorSelection = function() {
+		this.startActorSelection()
+	}
+	
+	
+}
+
 
 /*
 	Skill Gauge modifications!
