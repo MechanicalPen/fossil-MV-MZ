@@ -1,5 +1,5 @@
  /*:
- * @plugindesc Fossil V0.1 is an interoperability layer for RMMZ, designed
+ * @plugindesc Fossil V0.2 is an interoperability layer for RMMZ, designed
  to make MV plugins work with it. 
  * So far, we support over 100 plugins.  You can help!
  * @author FOSSIL TEAM
@@ -15,11 +15,10 @@
 
 
  
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.1
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.2.02
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER MV plugins, by allowing them to work in RPG MAKER MZ projects.
-Version 0.1 is a test to see how effective the concept is, focusing primarily upon window calls. 
 
 So far we have interoperability with these MV plugins.  They seem to run with FOSSIL the same way they did in stock MV, free from all but a few little aesthetic glitches.  
 
@@ -117,6 +116,8 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_X_ItemRequirements
 -YEP_X_ItemUpgradeSlots
 -YEP_ItemSynthesis
+*YEP_ShopMenuCore
+-YEP_X_MoreCurrencies
 *YEP_SkillCore
 -YEP_X_LimitedSkillUses
 -YEP_MultiTypeSkills
@@ -204,7 +205,7 @@ Graphics.BLEND_SCREEN = PIXI.BLEND_MODES["SCREEN"];
 var Imported = Imported || {};
 Imported.Fossil_Pre=true;
 var Fossil =Fossil || {}
-Fossil.version='0.2.01'
+Fossil.version='0.2.02'
 
 
 //get a list of what plugins we have installed.  This is necessary because

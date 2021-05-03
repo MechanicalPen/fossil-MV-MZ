@@ -6,14 +6,12 @@
  * @author FOSSIL TEAM
  * @target MZ 
  
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.1
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.2.02
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER MV plugins, by allowing them to work in RPG MAKER MZ projects.
-Version 0.1 is a test to see how effective the concept is.  
 
 This is the 'post' half of the plugin.  Put it BELOW the supported MV plugins.
-
 
 Terms of use:
 
@@ -24,7 +22,7 @@ All code not covered by the RPG Maker MV or RPG Maker MZ license is released und
 var Imported = Imported || {};
 Imported.Fossil_Post=true;
 var Fossil =Fossil || {}
-Fossil.postVersion='0.2.01'
+Fossil.postVersion='0.2.02'
 if(Fossil.version!==Fossil.postVersion)
 {
 	console.log('Version mismatch!  Fossil_Post version is '+Fossil.postVersion +', but Fossil_Pre is version '+Fossil.version)
@@ -900,6 +898,32 @@ if(Imported.YEP_BattleEngineCore)
 		Fossil.BECWARNINGSCENEBATTLEINIT.call(this);
 	};
 	
+	
+	if(Imported.YEP_X_SelectionControl)
+	{
+		Fossil.fixDrawBattleEnemyFakeSelectionControl=Window_BattleEnemy.prototype.drawItem
+		Window_BattleEnemy.prototype.drawItem = function(index) {
+			if(typeof(this._enemies[index]) =='string')
+			{
+				this.resetTextColor();
+				const name = this._enemies[index];
+				const rect = this.itemLineRect(index);
+				this.drawText(name, rect.x, rect.y, rect.width);
+			}else{
+				Fossil.fixDrawBattleEnemyFakeSelectionControl.call(this,index)
+			}
+		};
+		
+		
+	Scene_Battle.prototype.enemyWindowRect = function() 
+		{
+			const wx = this._statusWindow.x;
+			const ww = this._statusWindow.width;
+			const wh = this.windowAreaHeight();
+			const wy = Graphics.boxHeight - wh;
+			return new Rectangle(wx, wy, ww, wh);
+		};
+	}
 
 }
 
