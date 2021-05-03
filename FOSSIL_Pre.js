@@ -107,6 +107,8 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 *YEP_ElementCore
 -YEP_VictoryAftermath
 -YEP_HitAccuracy
+*YEP_TargetCore (note: there might be some odd interactions with action sequences, I am not familiar enough with sequences to debug the)
+-YEP_X_SelectionControl
 *YEP_ItemCore
 -YEP_X_AttachAugments
 -YEP_X_ItemDiscard

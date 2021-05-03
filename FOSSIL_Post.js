@@ -914,14 +914,13 @@ if(Imported.YEP_BattleEngineCore)
 			}
 		};
 		
-		
-	Scene_Battle.prototype.enemyWindowRect = function() 
+		Fossil.hideEnemySelectWindow=Scene_Battle.prototype.createEnemyWindow
+		Scene_Battle.prototype.createEnemyWindow = function() 
 		{
-			const wx = this._statusWindow.x;
-			const ww = this._statusWindow.width;
-			const wh = this.windowAreaHeight();
-			const wy = Graphics.boxHeight - wh;
-			return new Rectangle(wx, wy, ww, wh);
+			Fossil.hideEnemySelectWindow.apply(this,arguments)
+			
+			this._enemyWindow.move(0,0,0,0);//we want this to be invisible but usable.
+ 			
 		};
 	}
 
@@ -1192,10 +1191,10 @@ if(Imported.YEP_ShopMenuCore)
 		//this._categoryWindow.move(this._commandWindow.x,this._commandWindow.y,this._commandWindow.width,this._commandWindow.height);
 	}
 	
-	//scootch the item buy/sell information up a tiny bitmap
+	//scootch the item buy/sell information up a tiny bit
 	Fossil.fixYEPitemNameY=Window_ShopNumber.prototype.itemNameY;
 	Window_ShopNumber.prototype.itemNameY = function() {
-    return Fossil.fixYEPitemNameY.apply(this,arguments)-24;
+		return Fossil.fixYEPitemNameY.apply(this,arguments)-24;
 	};
 
 	
