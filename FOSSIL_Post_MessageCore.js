@@ -67,6 +67,11 @@ if(Imported.YEP_MessageCore && Imported.YEPMCPre)
 			
 		}
 		
+		if(Imported.YEP_X_MessageBacklog)
+		{
+			//we don't create subwindows, so call the existing message backlog window code from here
+			this.createMessageBacklogWindow();
+		}
 
 		makeFakeNameBoxesWindowMessage.apply(this,arguments)
 	}
@@ -90,8 +95,17 @@ if(Imported.YEP_MessageCore && Imported.YEPMCPre)
 		forceRefreshWindowMessageupdatePlacement.call(this)
 	}
 		
+
+	//copied out of RMMV, checks for bottom row.
+	Window_Selectable.prototype.bottomRow = function() {
+		return Math.max(0, this.topRow() + this.maxPageRows() - 1);
+	};
+	
+
 		
 		
 }else{
 	console.log('I am missing a prereq plugin!')
 }
+
+

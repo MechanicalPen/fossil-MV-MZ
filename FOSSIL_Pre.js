@@ -81,6 +81,12 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -WAY_CustomOnDeathEval
 -WAY_Achievements
 
+-YEP_AdvancedSwVar
+-YEP_BaseParamControl
+-YEP_ClassBaseParam
+*YEP_ClassChangeCore
+-YEP_X_Subclass
+-YEP_ExtraParamFormula
 *YEP_MainMenuManager
 *YEP_BattleEngineCore	(Note: I haven't added functionality for ATB, since the base plugin doesn't support it. I tried but it was too hard for me.  Sorry!)
 -YEP_X_ActionSeqPack1
@@ -110,7 +116,7 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_X_ItemRename
 -YEP_X_ItemRequirements
 -YEP_X_ItemUpgradeSlots
--YEP_X_ItemSynthesis
+-YEP_ItemSynthesis
 *YEP_SkillCore
 -YEP_X_LimitedSkillUses
 -YEP_MultiTypeSkills
@@ -121,6 +127,7 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_SkillLearnSystem 
 -YEP_SkillMasteryLevels
 *YEP_EquipCore
+-YEP_X_EquipCustomize
 -YEP_EquipRequirements
 -YEP_WeaponUnleash
 *YEP_StatusMenuCore
@@ -132,12 +139,19 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_StealSnatch
 *YEP_MoveRouteCore
 -YEP_X_ExtMovePack1
+*YEP_OptionsCore
+-YEP_AnimateTilesOption
 -YEP_EventChasePlayer
 -YEP_X_EventChaseStealth
+-YEP_EventEncounterAid
+-YEP_EventHitboxResize
 -YEP_EventMorpher
 -YEP_EventSpawner
+-YEP_EventSpriteOffset
 -YEP_BaseTroopEvents
+-YEP_DashToggle
 -YEP_FootstepSounds
+-YEP_GabWindow
 *YEP_GridFreeDoodads
 -YEP_X_ExtDoodadPack1
 -YEP_MainMenuVar
@@ -145,6 +159,7 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_RegionEvents
 -YEP_RegionRestrictions
 -YEP_SaveEventLocations
+-YEP_SlipperyTiles
 
 ///////////////////////////////////////////////////////////////////////
 ==Almost Functional with UI issues==
@@ -207,12 +222,17 @@ oldCommand = function (oldPluginCommand)
 	//command356 is still in, just depreciated.  Use that code to invoke.
 	const args = oldPluginCommand.split(" ");
     const command = args.shift();
+	
+	if(!Fossil.Interpreter)
+	{
+		//we need to have this be persistent since sometimes people put stuff into the interpreter.
+		Fossil.Interpreter = new Game_Interpreter()
+	}
 	//initial params (unused in mz).
-	var fossilInterpreter = new Game_Interpreter()
-	fossilInterpreter._params=[]
+	Fossil.Interpreter._params=[]
 	//apparently some MV people like to just read the whole thing raw.  :o
-	fossilInterpreter._params[0]=oldPluginCommand;
-    fossilInterpreter.pluginCommand(command, args);
+	Fossil.Interpreter._params[0]=oldPluginCommand;
+    Fossil.Interpreter.pluginCommand(command, args);
     return true;
 	
 }
@@ -243,9 +263,10 @@ Sprite_Button.prototype.buttonData = function() {
 
 //In RMMZ state icons scale with enemies
 //in RMMV they do not
-//due to the state icons being an excerpt from a bitmap, this means that if you scale a sprite
-//you get an irritating invisible state icon frame if they don't have a state
-//this fixes that.
+//due to the state icons being a larger bitmap with a small visible frame, 
+//rounding errors mean that if you scale a sprite, you get an irritating 
+//frame around your 'invisible' state icon. 
+//this fixes that, and also makes state icons stop scaling with enemies in general.
 Fossil.fixSprite_Enemy_updateBitmapStateIcon =   Sprite_Enemy.prototype.updateBitmap;
 Sprite_Enemy.prototype.updateBitmap = function() 
 {
@@ -473,19 +494,30 @@ Window_Base.prototype.drawGauge = function(x, y, width, rate, color1, color2) {
 	//of the exact same x y coordinates and width
 	//with the exact same object.  Maybe I'm wrong, but we can deal with that when it comes up
 	//so I think it's fine for our key to be this
+	
 	gaugeID=[this.constructor.name.toString(),x,y,width].toString()
+	//EDIT: it came up in YEP_OptionsCore.  Wow.
+	//inefficient but since nothing is going on here it's not gonna cause a 
+	//huge problem if we delete old gauges each time.
+/* 	if(Imported.YEP_OptionsCore && this.constructor.name =="Window_Options")
+	{
+		if(this._additionalSprites&& (typeof(this._additionalSprites[gaugeID])!=='undefined'))
+		{
+			this._additionalSprites[gaugeID]=undefined;
+		}
+	} */
 	//this will be something like "Window_VictoryExp,184,38,416"
 	label ='';//no label
 	[x,y]=this.FossilTweakGaugeByPlugin(x,y)
 
     var fillW = Math.floor(width * rate);
-    var gaugeY = y + this.lineHeight() - 8;
+    var gaugeY = y + this.lineHeight() - 20;
 	var newGauge=this.placeFossilGauge(gaugeID, rate,'rate',label,x,gaugeY,width,12)
 	newGauge._gaugeColor1 = color1;
 	newGauge._gaugeColor2 = color2;
 	newGauge.hideValueText = true;
 	newGauge.hideLabelText=true;
-
+	newGauge.drawGauge();
 };
 
 //helper function to do all our fine positioning, on a per-window basis.
@@ -494,15 +526,13 @@ Window_Base.prototype.FossilTweakGaugeByPlugin=function(x,y)
 	if(this.constructor.name=="Window_VictoryExp")
 	{
 		x=x-32;
-		y=y-12;
 	}
 	if(this.constructor.name=="Window_PartyLimitGauge")
 	{
 		
-		y=y-36;
+		y=y-24;
 	}
-	
-	
+
 	return [x,y]
 }
 
@@ -746,6 +776,12 @@ Window_Command.prototype.initialize = function(rect) {
 				rectA.height = (this.windowHeight ? this.windowHeight() : rectA.height)
 			}
 			break;
+/* 			case "Window_OptionsCategory":
+				//rectA.y=SceneManager._scene._helpWindow._frameSprite.y+SceneManager._scene._helpWindow._frameSprite.height
+				//rectA.width=this._width;
+				rectFixWindowCommand.call(this,rectA)
+				return;
+			break; */
 			default:
 		}
 			
@@ -1102,8 +1138,145 @@ Window_BattleItem.prototype.initialize = function(rect) {
 	
 };
 
+var rectFixWindowMenuActor= Window_MenuActor.prototype.initialize;
+Window_MenuActor.prototype.initialize = function(rect) {
+	
+	if (arguments.length && arguments[0].constructor.name=='Rectangle') // if our first argument is a rectangle this is MZ code
+	{
+		rectFixWindowMenuActor.apply(this,arguments) 
+	}else{ //if not, I am assuming it is MV.
+		if(arguments.length==1)
+		{
+			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
+		}
+		
+		var rectA=new Rectangle(0,0,0,0);
+		if (SceneManager._scene.actorWindowRect)
+		{
+			rectA=SceneManager._scene.actorWindowRect(); //pick the defaults.
+		}
+		if (Imported.YEP_ShopMenuCore && this.constructor.name =="Window_MenuActor")
+		{	//load faces
+			this._additionalSprites = {};
+			this.loadFaceImages();
+			rectA=Scene_Menu.prototype.statusWindowRect()
+		}
+		var rect = new Rectangle(
+		typeof(arguments[0]) == undefined? rectA.x : arguments[0],
+		typeof(arguments[1]) == undefined? rectA.y : arguments[1],
+		arguments[2]||rectA.width||(this.windowWidth ? this.windowWidth() : 0) ||400,  
+		arguments[3]||rectA.height||Graphics.boxHeight||400
+		);
+		
+		rectFixWindowMenuActor.call(this,rect)
+		
+	}
+	
 
 
+	
+};
+
+var rectFixWindowShopBuy= Window_ShopBuy.prototype.initialize;
+Window_ShopBuy.prototype.initialize = function(rect) {
+	
+	if (arguments.length && arguments[0].constructor.name=='Rectangle') // if our first argument is a rectangle this is MZ code
+	{
+		rectFixWindowShopBuy.apply(this,arguments) 
+	}else{ //if not, I am assuming it is MV.
+		if(arguments.length==1)
+		{
+			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
+		}
+		
+		var rectA=new Rectangle(0,0,0,0);
+		if (SceneManager._scene.buyWindowRect)
+		{
+			rectA=SceneManager._scene.buyWindowRect(); //pick the defaults.
+		}
+		
+		if(Imported.YEP_ShopMenuCore)
+		{
+			rectA.width=SceneManager._scene._dummyWindow.width
+			rectA.height=SceneManager._scene._dummyWindow.height
+		}
+		var rect = new Rectangle(
+		typeof(arguments[0]) == undefined? rectA.x : arguments[0],
+		typeof(arguments[1]) == undefined? rectA.y : arguments[1],
+		rectA.width||(this.windowWidth ? this.windowWidth() : 0) ||400,  
+		rectA.height||Graphics.boxHeight||400
+		);
+		
+		rectFixWindowShopBuy.call(this,rect)
+		
+	}
+	
+};
+
+var rectFixWindowShopSell= Window_ShopSell.prototype.initialize;
+Window_ShopSell.prototype.initialize = function(rect) {
+	
+	if (arguments.length && arguments[0].constructor.name=='Rectangle') // if our first argument is a rectangle this is MZ code
+	{
+		rectFixWindowShopSell.apply(this,arguments) 
+	}else{ //if not, I am assuming it is MV.
+		if(arguments.length==1)
+		{
+			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
+		}
+		
+		var rectA=new Rectangle(0,0,0,0);
+		if (SceneManager._scene.sellWindowRect)
+		{
+			rectA=SceneManager._scene.sellWindowRect(); //pick the defaults.
+		}
+		if(Imported.YEP_ShopMenuCore)
+		{
+			rectA.width=SceneManager._scene._dummyWindow.width
+			rectA.height=SceneManager._scene._dummyWindow.height
+		}
+		var rect = new Rectangle(
+		typeof(arguments[0]) == undefined? rectA.x : arguments[0],
+		typeof(arguments[1]) == undefined? rectA.y : arguments[1],
+		rectA.width||(this.windowWidth ? this.windowWidth() : 0) ||400,  
+		rectA.height||Graphics.boxHeight||400
+		);
+		
+		rectFixWindowShopSell.call(this,rect)
+		
+	}
+	
+};
+
+var rectFixWindowShopStatus= Window_ShopStatus.prototype.initialize;
+Window_ShopStatus.prototype.initialize = function(rect) {
+	
+	if (arguments.length && arguments[0].constructor.name=='Rectangle') // if our first argument is a rectangle this is MZ code
+	{
+		rectFixWindowShopStatus.apply(this,arguments) 
+	}else{ //if not, I am assuming it is MV.
+		if(arguments.length==1)
+		{
+			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
+		}
+		
+		var rectA=new Rectangle(0,0,0,0);
+		if (SceneManager._scene.actorWindowRect)
+		{
+			rectA=SceneManager._scene.actorWindowRect(); //pick the defaults.
+		}
+		var rect = new Rectangle(
+		typeof(arguments[0]) == undefined? rectA.x : arguments[0],
+		typeof(arguments[1]) == undefined? rectA.y : arguments[1],
+		arguments[2]||rectA.width||(this.windowWidth ? this.windowWidth() : 0) ||400,  
+		arguments[3]||rectA.height||Graphics.boxHeight||400
+		);
+		
+		rectFixWindowShopStatus.call(this,rect)
+		
+	}
+	
+};
 
 var rectFixWindowBattleEnemy= Window_BattleEnemy.prototype.initialize;
 Window_BattleEnemy.prototype.initialize = function(rect) {
@@ -1163,6 +1336,41 @@ Window_HorzCommand.prototype.initialize = function(rect) {
 	}
 	
 };
+
+var rectFixWindowShopCommand= Window_ShopCommand.prototype.initialize;
+Window_ShopCommand.prototype.initialize = function(rect) {
+    	
+	if((typeof(arguments[0])!='undefined' ) && arguments[0].constructor.name=='Rectangle') // if our first argument is a rectangle this is MZ code
+	{
+		rectFixWindowShopCommand.apply(this,arguments) 
+	}else{ //if not, I am assuming it is MV.
+		//MV calls it with 
+		//Window_ShopCommand(this._goldWindow.x, this._purchaseOnly);
+		//which is width,purchaseonly
+		//so we'll init with our MZ initialization
+		//sadly yanfly does order differently so we have to hardcode this call for the shop core
+		var rectA = new Rectangle();
+		if(Fossil.pluginNameList.contains('YEP_ShopMenuCore'))
+		{
+			//copypaste the code out of rmmv_scenes
+			const wx = 0;
+			const wy = SceneManager._scene.mainAreaTop();
+			const ww = arguments[0]||this.windowWidth();
+			const wh = this.fittingHeight(this.numVisibleRows());//SceneManager._scene.calcWindowHeight(1, true);
+			rectA = new Rectangle(wx, wy, ww, wh);
+		}else{
+			rectA = SceneManager._scene.commandWindowRect();		
+			rectA.width=arguments[0]||rectA.width;
+		}
+		rectFixWindowShopCommand.call(this,rectA)
+		//then we will set the purchaseonly.
+		this._purchaseOnly = arguments[1];
+	}
+};
+
+
+
+
 
 
 var rectFixWindowActorCommand= Window_ActorCommand.prototype.initialize;
@@ -1968,4 +2176,11 @@ if(Fossil.pluginNameList.contains('YEP_MainMenuManager'))
 }
 
 
+if(Fossil.pluginNameList.contains('YEP_X_MoreCurrencies'))
+{
+	//yanfly didn't initialize Yanfly.Icon when getting Yanfly.Icon.Gold in this
+	var Yanfly = Yanfly || {};
+	Yanfly.Param = Yanfly.Param || {};
+	Yanfly.Icon = Yanfly.Icon || {};
+}
 

@@ -40,4 +40,3 @@ Scene_Message.prototype.messageWindowRect = function() {
     const wy = 0;
     return new Rectangle(wx, wy, ww, wh);
 };
-

@@ -288,6 +288,36 @@ if(Imported.YEP_SkillCore)
 	};
 }
 
+
+//force the help window to the top, for yanfly plugins that assume it'll be there
+Fossil.moveHelpWindowForYEP=Scene_MenuBase.prototype.helpAreaTop;
+Scene_MenuBase.prototype.helpAreaTop= function()
+{
+	//for YEP_EquipCore
+	if(this.constructor.name == "Scene_Equip")
+	{
+		return 0;
+	}
+	//this is for YEP_EquipCustomize
+	if(this.constructor.name =="Scene_EquipCustomize")
+	{
+		return 0;
+	}
+	
+	//this is for YEP_OptionsCore
+	if(Imported.YEP_OptionsCore && this.constructor.name =="Scene_Options")
+	{
+		return 0;
+	}
+	
+	if(Imported.YEP_ShopMenuCore && this.constructor.name == "Scene_Shop")
+	{
+		return 0;
+	}
+	
+	return Fossil.moveHelpWindowForYEP.call(this,arguments);
+}
+
 if(Imported.YEP_EquipCore)
 {
 	//if we're using equip core, then the help bar is at the top!
@@ -295,14 +325,34 @@ if(Imported.YEP_EquipCore)
 	Scene_Base.prototype.isBottomHelpMode = function() {
     return false;
 	}
+	
+	//due to scrunching caused by the help bar we gotta shrink something.  
+	//Command window (and the associated actor window with empty space) seems a good candidate.
+	Window_EquipCommand.prototype.numVisibleRows = function() {
+		return 3;
+	};
 }
 
-// MZ makes status icons the children of sprites
-// PROBLEM: this means that when enemies breathe the status icons scale.
-// Not only does this look bad, but the resize bleeds onto adjacent icons
-// so there's a ghostly frame when enemies have no status ailment :(
-// This tells the status icon to breathe in the opposite direction from the sprite
-// thus cancelling out (almost) exactly.
+
+if(Imported.YEP_X_EquipCustomize)
+{
+	//fix the window Y location
+	Fossil.moveEquipCustomizeWindow=Scene_EquipCustomize.prototype.setCustomizedItem;
+	Scene_EquipCustomize.prototype.setCustomizedItem = function() 
+	{
+		//scootch this down.
+		Fossil.moveEquipCustomizeWindow.call(this)
+ 		this._itemActionWindow.move
+		(
+		this._itemActionWindow.x,
+		(this._commandWindow.height+this._helpWindow.height),
+		this._itemActionWindow.width,
+		this._itemActionWindow.height+this._itemActionWindow.y-(this._commandWindow.height+this._helpWindow.height)
+		) 
+	}
+
+	
+}
 
 
 if(Imported.AnimatedSVEnemies)
@@ -508,6 +558,33 @@ if(Imported.YEP_StatusMenuCore)
 	}
 	
 }
+
+if(Imported.YEP_OptionsCore)
+{
+	//tell it to redraw the gauges every frame, like in RMMV 
+	//(since they can be scrolled up and down this is needed)
+	var eraseGaugesdrawAllItems = Window_Selectable.prototype.drawAllItems;
+	Window_Selectable.prototype.drawAllItems = function() 
+	{
+		if ((this.constructor.name == "Window_Options") && this._additionalSprites)
+		{
+			this._additionalSprites = {};
+		}
+		eraseGaugesdrawAllItems.apply(this,arguments)
+	}
+	
+	var hideSpritesWindow_OptionsRefresh = Window_Options.prototype.refresh
+	Window_Options.prototype.refresh = function() 
+	{
+		if (this._additionalSprites)
+		{
+			Window_StatusBase.prototype.hideAdditionalSprites.call(this);
+		}
+		hideSpritesWindow_OptionsRefresh.apply(this,arguments)
+	}
+	
+}
+
 
 if(Imported.YEP_SelfSwVar)
 {
@@ -1059,4 +1136,49 @@ if (Fossil.pluginNameList.contains('STV_BeastBook') &&(typeof(Scene_BeastBook)!=
 		Fossil.fixWindow_BeastBook_updateStatus.call(this,beast);
     };
 	
+}
+
+if(Imported.YEP_ShopMenuCore)
+{
+	//unique windowtype in YEP_Shop_Menu_Core needs to be given a rect.
+	Window_ShopCategory.prototype.initialize = function() 
+	{
+		//this is always MV so we gotta make a rect for it.  Use the default
+		//var rect = new Rectangle(0,,this.windowWidth(),
+		var rect= new Rectangle(SceneManager._scene._commandWindow.x,SceneManager._scene._commandWindow.y,SceneManager._scene._commandWindow.width,SceneManager._scene._commandWindow.height)
+		Window_ItemCategory.prototype.initialize.call(this,rect)
+		
+	};
+	
+	
+	//put shopgoods into this becuase it didn't get handed off for some reason.
+	
+	Fossil.GiveShopGoodsToShopBuyWindow=Window_ShopBuy.prototype.initialize
+	Window_ShopBuy.prototype.initialize =function()
+	{
+		this._shopGoods=arguments[3];//grab the shop goods.
+		Fossil.GiveShopGoodsToShopBuyWindow.apply(this,arguments);
+	}
+	
+	//move the category window to where it used to be
+	Fossil.moveYEPcreateCategoryWindow =Scene_Shop.prototype.createCategoryWindow 
+	Scene_Shop.prototype.createCategoryWindow = function() 
+	{
+		Fossil.moveYEPcreateCategoryWindow.apply(this,arguments)
+		//this._categoryWindow.move(this._commandWindow.x,this._commandWindow.y,this._commandWindow.width,this._commandWindow.height);
+	}
+	
+	//scootch the item buy/sell information up a tiny bitmap
+	Fossil.fixYEPitemNameY=Window_ShopNumber.prototype.itemNameY;
+	Window_ShopNumber.prototype.itemNameY = function() {
+    return Fossil.fixYEPitemNameY.apply(this,arguments)-24;
+	};
+
+	
+}
+
+if(Imported.YEP_X_Subclass)
+{
+	//YEP is trying to overwrite the wrong function, correct it.
+	Window_StatusBase.prototype.drawActorClass = Window_Base.prototype.drawActorClass;
 }
