@@ -6,7 +6,7 @@
  * @author FOSSIL TEAM
  * @target MZ 
  
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.2.02
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.2.03
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER MV plugins, by allowing them to work in RPG MAKER MZ projects.
@@ -22,7 +22,7 @@ All code not covered by the RPG Maker MV or RPG Maker MZ license is released und
 var Imported = Imported || {};
 Imported.Fossil_Post=true;
 var Fossil =Fossil || {}
-Fossil.postVersion='0.2.02'
+Fossil.postVersion='0.2.03'
 if(Fossil.version!==Fossil.postVersion)
 {
 	console.log('Version mismatch!  Fossil_Post version is '+Fossil.postVersion +', but Fossil_Pre is version '+Fossil.version)
@@ -899,7 +899,7 @@ if(Imported.YEP_BattleEngineCore)
 	};
 	
 	
-	if(Imported.YEP_X_SelectionControl)
+	if(Imported.YEP_X_SelectionControl || Imported.YEP_BattleSelectCursor)
 	{
 		Fossil.fixDrawBattleEnemyFakeSelectionControl=Window_BattleEnemy.prototype.drawItem
 		Window_BattleEnemy.prototype.drawItem = function(index) {
@@ -922,6 +922,87 @@ if(Imported.YEP_BattleEngineCore)
 			this._enemyWindow.move(0,0,0,0);//we want this to be invisible but usable.
  			
 		};
+	}
+	
+	if(Imported.YEP_X_VisualHpGauge)
+	{
+		
+		Fossil.fixHpGaugeUpdate=Window_VisualHPGauge.prototype.update;
+		Window_VisualHPGauge.prototype.update = function() 
+		{
+			//hide sprites if they aren't supposed to be shown.
+			if (this._additionalSprites)
+			{
+				if(this.contentsOpacity==0)
+				{
+					Window_StatusBase.prototype.hideAdditionalSprites.call(this);
+				}else{
+					for (const sprite of Object.values(this._additionalSprites)) 
+					{
+						sprite.opacity=this.contentsOpacity;
+						sprite.show();
+					}
+				}
+			}
+			Fossil.fixHpGaugeUpdate.apply(this,arguments)
+		}
+	}
+
+	if(Imported.YEP_X_TurnOrderDisplay)
+	{
+
+		//increase the icon size parameter so it scales properly on screen.
+		//basically it didn't used to include the window frame size, but now it does.
+		//4 pixel frame around image, 8 pixel frame around window, present on BOTH sides
+		Yanfly.Param.TODIconSize+=24;
+		
+		//this expects the windowlayer to have a .x of 0, but in RMMZ the window layer has a .x of 4 by default
+		//to avoid causing lasting issues, we'll set it and then refresh it
+		Fossil.fixTurnOrderWindowOpacity = Window_TurnOrderIcon.prototype.isReduceOpacity 
+		Window_TurnOrderIcon.prototype.isReduceOpacity = function() 
+		{
+			if(this._windowLayer)
+			{
+				var saveWLX = this._windowLayer.x;
+				this._windowLayer.x = 0;
+				var tempVar = Fossil.fixTurnOrderWindowOpacity.apply(this,arguments)
+				this._windowLayer.x = saveWLX;
+				return tempVar
+			}else{
+				return Fossil.fixTurnOrderWindowOpacity.apply(this,arguments);
+			}
+		}
+		
+		//smooth images 
+		Fossil.fixWindow_TurnOrderIconsetup=Window_TurnOrderIcon.prototype.setup
+		Window_TurnOrderIcon.prototype.setup = function() {
+			Fossil.fixWindow_TurnOrderIconsetup.apply(this,arguments)
+			this._image.smooth=true;
+		};
+		
+		
+		//fix spacing since it's double-counting the frame here.
+		Fossil.fixWindow_TurnOrderIconcalculateDestinationXIndex=Window_TurnOrderIcon.prototype.calculateDestinationXIndex;
+		Window_TurnOrderIcon.prototype.calculateDestinationXIndex = function() {
+			var backupWidth=this.width;
+			this.width-=24;
+			Fossil.fixWindow_TurnOrderIconcalculateDestinationXIndex.call(this);
+			this.width = backupWidth;
+		}
+
+		
+		//if we have a visual enemy select, we use the enemy window instead of the help
+		//window to determine what we're looking at.
+		if(Imported.YEP_X_SelectionControl || Imported.YEP_BattleSelectCursor)
+		{
+			Fossil.fixScene_BattlesetupTurnOrderDisplayWindow=Scene_Battle.prototype.setupTurnOrderDisplayWindow;
+			Scene_Battle.prototype.setupTurnOrderDisplayWindow = function(win) 
+			{
+				Fossil.fixScene_BattlesetupTurnOrderDisplayWindow.call(this,win);
+				win._helpWindow = this._enemyWindow;
+			  
+			};
+		}
 	}
 
 }
@@ -1204,4 +1285,18 @@ if(Imported.YEP_X_Subclass)
 {
 	//YEP is trying to overwrite the wrong function, correct it.
 	Window_StatusBase.prototype.drawActorClass = Window_Base.prototype.drawActorClass;
+}
+
+if(Fossil.pluginNameList.contains('KMS_Minimap'))
+{
+	Fossil.fixKMSMiniMapUpdate=Spriteset_Map.prototype.update;
+	//fading is accomplished in a different way, but we can 
+	//still create a fake fadesprite to pass in the info about the opacity
+	Spriteset_Map.prototype.update = function()
+	{
+		this._fadeSprite=this._fadeSprite||{};
+		this._fadeSprite.opacity = 255-$gameScreen.brightness();
+		Fossil.fixKMSMiniMapUpdate.apply(this,arguments)
+	};
+	
 }

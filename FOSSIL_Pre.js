@@ -15,7 +15,7 @@
 
 
  
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.2.02
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.2.03
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER MV plugins, by allowing them to work in RPG MAKER MZ projects.
@@ -37,6 +37,10 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -GALV_DiagonalMovement
 
 -Jay_BattleVAManager
+
+-KMS_SpiralEncount
+-KMS_WaterMapEffect
+-KMS_Minimap
 
 -MOG_ActionName
 -MOG_BattleHud
@@ -77,8 +81,10 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -WAY_StorageSystem
 -WAY_OptionsMenuCustomActions
 -WAY_VerticalScreenShake
+-WAY_CustomOnEquipEval
 -WAY_CustomOnDeathEval
 -WAY_Achievements
+-WAY_YEP_TurnOrderDisplay
 
 -YEP_AdvancedSwVar
 -YEP_BaseParamControl
@@ -94,6 +100,15 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_X_AnimatedSVEnemies
 -YEP_X_CounterControl
 -YEP_X_InBattleStatus
+-YEP_X_TurnOrderDisplay
+-YEP_X_VisualHpGauge
+-YEP_X_WeakEnemyPoses
+-YEP_Z_ActionBeginEnd
+-YEP_AbsorptionBarrier
+*YEP_BattleAICore
+-YEP_X_ActorAutoBattleAI
+-YEP_BattleBGMControl
+-YEP_BattleSelectCursor
 -YEP_SelfSwVar
 *YEP_BuffsStatesCore
 -YEP_X_ExtDoT
@@ -134,6 +149,10 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_EquipRequirements
 -YEP_WeaponUnleash
 *YEP_StatusMenuCore
+-YEP_X_ActorVariables
+-YEP_X_BattleStatistics
+-YEP_X_MoreStatusPages
+-YEP_X_ProfileStatusPage
 *YEP_AutoPassiveStates
 -YEP_X_PassiveAuras
 *YEP Equip Battle Skills
@@ -207,17 +226,23 @@ Graphics.BLEND_SCREEN = PIXI.BLEND_MODES["SCREEN"];
 var Imported = Imported || {};
 Imported.Fossil_Pre=true;
 var Fossil =Fossil || {}
-Fossil.version='0.2.02'
+Fossil.version='0.2.03'
 
 
 //get a list of what plugins we have installed.  This is necessary because
 //we are acting BEFORE we can see that handy Imported convention, and because
 //not everyone is nice enough to do that.
-Fossil.pluginNameList =  $plugins.map(a => a.name);
+//this fills in with 'false' for any plugins that are added but not enabled, since I want to have
+//the indexes correct for these names just in case
+Fossil.pluginNameList =  $plugins.map(a => a.status && a.name ); 
 if (Fossil.pluginNameList[0] !== 'FOSSIL_Pre')
 {
 	console.log('FOSSIL_Pre should probably be your first plugin')
 	
+}
+if (!Fossil.pluginNameList.contains('FOSSIL_Post'))
+{
+	console.log('You need to have Fossil_Post as well!')
 }
 
 oldCommand = function (oldPluginCommand)
@@ -500,15 +525,9 @@ Window_Base.prototype.drawGauge = function(x, y, width, rate, color1, color2) {
 	
 	gaugeID=[this.constructor.name.toString(),x,y,width].toString()
 	//EDIT: it came up in YEP_OptionsCore.  Wow.
-	//inefficient but since nothing is going on here it's not gonna cause a 
+	//inefficient but since nothing is going on in that window it's not gonna cause a 
 	//huge problem if we delete old gauges each time.
-/* 	if(Imported.YEP_OptionsCore && this.constructor.name =="Window_Options")
-	{
-		if(this._additionalSprites&& (typeof(this._additionalSprites[gaugeID])!=='undefined'))
-		{
-			this._additionalSprites[gaugeID]=undefined;
-		}
-	} */
+
 	//this will be something like "Window_VictoryExp,184,38,416"
 	label ='';//no label
 	[x,y]=this.FossilTweakGaugeByPlugin(x,y)
@@ -534,6 +553,10 @@ Window_Base.prototype.FossilTweakGaugeByPlugin=function(x,y)
 	{
 		
 		y=y-24;
+	}
+	if(this.constructor.name=="Window_VisualHPGauge")
+	{
+		y=y-12;
 	}
 
 	return [x,y]
@@ -956,7 +979,7 @@ Window_EquipSlot.prototype.initialize = function(rect) {
 var rectFixWindowEquipItem= Window_EquipItem.prototype.initialize;
 Window_EquipItem.prototype.initialize = function(rect) {
 	
-	if (arguments[0].constructor.name=='Rectangle') // if our first argument is a rectangle this is MZ code
+	if (arguments.length && arguments[0].constructor.name=='Rectangle') // if our first argument is a rectangle this is MZ code
 	{
 		rectFixWindowEquipItem.apply(this,arguments) 
 	}else{ //if not, I am assuming it is MV.
@@ -1461,6 +1484,11 @@ Window_Base.prototype.drawItemName = function(item, x, y, width) {
 //scrolling works differently, so translate the old reset scroll into the new idiom.
 Window_Selectable.prototype.resetScroll = function() {
     this.scrollTo(0, 0);
+};
+
+//another function that isn't used anymore, kept in because sometimes it gets checked.
+Window_Selectable.prototype.isCursorVisible = function() {
+	return true; //am gonna trust RMMZ to keep the cursor visible.
 };
 
 //hook the old slot system into the new
@@ -2148,8 +2176,7 @@ Window_BattleLog.prototype.itemRect = function(index) {
 	return Window_Selectable.prototype.itemRect.call(this,index)
 };  */
 
-//this is an extra-dangerous command, so make sure the plugin is actually turned on.
-if(Fossil.pluginNameList.includes('SRD_ShakingText') && $plugins[Fossil.pluginNameList.indexOf('SRD_ShakingText')].status)
+if(Fossil.pluginNameList.includes('SRD_ShakingText'))
 {
 	//undo the weird little textstate++/-- shift SRD does in obtainEscapeCode
 	//this will cause problems if SRD_ShakingText isn't the last message parsing plugin before Fossil_Post
