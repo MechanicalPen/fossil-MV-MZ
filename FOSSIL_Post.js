@@ -1300,3 +1300,14 @@ if(Fossil.pluginNameList.contains('KMS_Minimap'))
 	};
 	
 }
+
+
+
+//defaults go somewhere else now!
+if(Fossil.pluginNameList.contains('Olivia_AntiPlayerStress'))
+{
+	AudioManager._bgmVolume = Olivia.AntiPlayerStress.DefaultVolume;
+	AudioManager._bgsVolume = Olivia.AntiPlayerStress.DefaultVolume;
+	AudioManager._meVolume = Olivia.AntiPlayerStress.DefaultVolume;
+	AudioManager._seVolume = Olivia.AntiPlayerStress.DefaultVolume;
+}

@@ -36,7 +36,10 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -GALV_CharacterAnimations
 -GALV_DiagonalMovement
 
+-Irina_AutoMessageColor
+
 -Jay_BattleVAManager
+-Jay_FocusedSoundEffects
 
 -KMS_SpiralEncount
 -KMS_WaterMapEffect
