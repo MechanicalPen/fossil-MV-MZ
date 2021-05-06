@@ -6,7 +6,7 @@
  * @author FOSSIL TEAM
  * @target MZ 
  
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.2.03
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.2.04
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER MV plugins, by allowing them to work in RPG MAKER MZ projects.
@@ -22,7 +22,7 @@ All code not covered by the RPG Maker MV or RPG Maker MZ license is released und
 var Imported = Imported || {};
 Imported.Fossil_Post=true;
 var Fossil =Fossil || {}
-Fossil.postVersion='0.2.03'
+Fossil.postVersion='0.2.04'
 if(Fossil.version!==Fossil.postVersion)
 {
 	console.log('Version mismatch!  Fossil_Post version is '+Fossil.postVersion +', but Fossil_Pre is version '+Fossil.version)
@@ -860,18 +860,120 @@ if(Imported.YEP_BattleEngineCore)
 	//revert changes to start turn and end turn functions, since BEC's are
 	//derived directly from RMMV.
 	//then update phases so BEC knows what's happening
-	BattleManager.startTurn=function()
+	if(!Imported.YEP_X_BattleSysSTB)
 	{
-		this.endEndPhase();
-		this.clearPerformedBattlers();
-		MZBattleManagerStartTurn.apply(this,arguments)
+		BattleManager.startTurn=function()
+		{
+			this.endEndPhase();
+			this.clearPerformedBattlers();
+			MZBattleManagerStartTurn.apply(this,arguments)
+		}
+	}else{
+		//override the redirection in YEP_X_BattleSysSTB, so we can get back to the original MZ start turn, but still keep the failed escape processing.
+		Yanfly.STB.BattleManager_startTurn=function()
+		{
+			this.endEndPhase();
+			this.clearPerformedBattlers();
+			MZBattleManagerStartTurn.apply(this,arguments)
+		} 
 	}
+	
 
 	BattleManager.endTurn=function()
 	{
 		this.startEndPhase();
 		MZBattleManagerEndTurn.apply(this,arguments)
 	}
+	
+/* 	Fossil.fixIndividualTurnUpdate=BattleManager.update;
+	BattleManager.update=function()
+	{
+		Fossil.fixIndividualTurnUpdate.apply(this,arguments)
+		this.updateTpbInput()
+	} */
+	
+	//if we have a custom battle system, change our actor setup
+	if(	Fossil.pluginNameList.contains('YEP_X_BattleSysATB') ||
+		Fossil.pluginNameList.contains('YEP_X_BattleSysCTB') ||
+		Fossil.pluginNameList.contains('YEP_X_BattleSysSTB')  )
+	{
+		//revert to RMMV version of this.  But update our _currentActor to reflect actor index.
+		Fossil.fixPickBattleManagerActor=BattleManager.actor;
+		
+		BattleManager.actor = function() 
+		{
+			var MVactor = this._actorIndex >= 0 ? $gameParty.members()[this._actorIndex] : null;
+			this._currentActor = MVactor;
+			return MVactor;
+		};
+		
+		Fossil.fixchangeCurrentActor=BattleManager.changeCurrentActor;
+		BattleManager.changeCurrentActor = function(forward) 
+		{
+			this._currentActor=this.actor();
+			Fossil.fixchangeCurrentActor.apply(this,arguments);
+		}
+		
+	}
+	
+	if( Fossil.pluginNameList.contains('YEP_X_BattleSysATB')|| Fossil.pluginNameList.contains('YEP_X_BattleSysCTB'))
+	{
+		//This lets you go back to the party window so you can flee a battle in ATB mode.
+		//you know, if you're a coward :p
+		Scene_Battle.prototype.commandCancel = function() {
+			Fossil.ATBCowards=true;
+			this.selectPreviousCommand();
+		};
+		
+		Scene_Battle.prototype.commandFight = function() {
+			Fossil.ATBCowards=false;
+			this.startActorCommandSelection();
+		};
+		
+		Scene_Battle.prototype.commandEscape = function() {
+			Fossil.ATBCowards=false; //at least you have the courage to ADMIT you can't fight.
+			BattleManager.processEscape();
+			this.changeInputWindow();
+		};
+		
+		Fossil.FixInputWindowSwap=Scene_Battle.prototype.needsInputWindowChange;
+		Scene_Battle.prototype.needsInputWindowChange = function() {
+			if(Fossil.ATBCowards) return false;
+			return Fossil.FixInputWindowSwap.apply(this,arguments);
+		};
+		
+ 		Scene_Battle.prototype.changeInputWindow = function() {
+			this.hideSubInputWindows();
+			if (BattleManager.isInputting()) {
+				if (BattleManager.actor() && !Fossil.ATBCowards) {
+					this.startActorCommandSelection();
+				} else {
+					this.startPartyCommandSelection();
+				}
+			} else {
+				this.endCommandSelection();
+			}
+		}; 
+		
+		//we don't use this anymore
+		BattleManager.statusUpdateATB =function(){}
+		//instead we hook into the rpgmaker MZ atbgauge
+		
+	}
+	
+	if(Fossil.pluginNameList.contains('YEP_X_BattleSysSTB'))
+	{
+		//no savescumming escapes, if you miss it it goes to the next party member.
+		Scene_Battle.prototype.commandEscape = function() {
+			BattleManager.stbSetSubject();
+			BattleManager.processEscape();
+			this.selectNextCommand();
+			BattleManager.endAction();
+		};
+
+		
+	}
+	
 	
 	Fossil.fixBECisStartActorCommand=Scene_Battle.prototype.isStartActorCommand;
 	Scene_Battle.prototype.isStartActorCommand = function() {
@@ -892,14 +994,14 @@ if(Imported.YEP_BattleEngineCore)
 				$gameMessage.add("Fossil note: Sadly, BattleEngineCore does not work")
 				$gameMessage.add("with ''Time Progress Battle' settings. Maybe it will")
 				$gameMessage.add("someday, no promises.")
-				$gameMessage.add("Sorry!")
-				console.log('Battle Engine Core only works in standard turn based battle system. ');
+				$gameMessage.add("Sorry! At least you can use Yanfly's ATB system.")
+				console.log('Battle Engine Core only works in standard turn based battle system. If you want ATB, use YEP_X_BattleSysATB.');
 		}
 		Fossil.BECWARNINGSCENEBATTLEINIT.call(this);
 	};
 	
 	
-	if(Imported.YEP_X_SelectionControl || Imported.YEP_BattleSelectCursor)
+	if(Imported.YEP_X_SelectionControl || Imported.YEP_BattleSelectCursor ||Imported.YEP_X_BattleSysATB||Imported.YEP_X_BattleSysCTB||Imported.YEP_X_BattleSysSTB)
 	{
 		Fossil.fixDrawBattleEnemyFakeSelectionControl=Window_BattleEnemy.prototype.drawItem
 		Window_BattleEnemy.prototype.drawItem = function(index) {
@@ -947,6 +1049,89 @@ if(Imported.YEP_BattleEngineCore)
 			Fossil.fixHpGaugeUpdate.apply(this,arguments)
 		}
 	}
+ 	if(Imported.YEP_X_VisualATBGauge)
+	{
+
+		//create a special gauge drawer for the enemy visual atb,
+		//don't get them confused
+		Window_EnemyVisualATB.prototype.drawGauge = function(x, y, width, rate, color1, color2) 
+		{
+			//width changes for this one, fixing it on a case-by-case basis
+			gaugeID=[this.constructor.name.toString(),x,y].toString()
+			label ='';//no label
+			[x,y]=this.FossilTweakGaugeByPlugin(x,y)
+
+			var fillW = Math.floor(width * rate);
+			var gaugeY = y + this.lineHeight() - 20;
+			if(this.drawingChargeGauge)
+			{
+				var newGauge=this.placeFossilGauge(
+					gaugeID+'charging',
+					rate,
+					'rate',
+					label,
+					x,
+					gaugeY,
+					width,
+					12+8*(!!Yanfly.Param.VATBThick),
+					this._battler
+				)
+				newGauge.chargeGauge=true;
+			}else{
+				var newGauge=this.placeFossilGauge(
+					gaugeID+'normal',
+					rate,
+					'rate',
+					label,
+					x,
+					gaugeY,
+					width,
+					12+8*(!!Yanfly.Param.VATBThick),
+					this._battler
+				)
+			}
+			newGauge._gaugeColor1 = color1;
+			newGauge._gaugeColor2 = color2;
+			newGauge.hideValueText = true;
+			newGauge.hideLabelText=true;
+		};
+
+		Fossil.markChargeGauge=Window_Base.prototype.drawAtbChargeGauge;
+		Window_EnemyVisualATB.prototype.drawAtbChargeGauge = function(actor, wx, wy, ww) {
+			this.drawingChargeGauge=true;
+			Fossil.markChargeGauge.apply(this,arguments)
+			this.drawingChargeGauge=undefined;
+		};
+		
+		//erase gauges when enemies are dead.
+		Fossil.EraseDeadGaugeFix=Window_EnemyVisualATB.prototype.updateRefresh;
+		Window_EnemyVisualATB.prototype.updateRefresh = function(actor, wx, wy, ww) 
+		{
+			Fossil.EraseDeadGaugeFix.apply(this,arguments);
+			//hide both gauges if actor is dead.
+			 if(this._battler.isDead())
+			 {
+				 Window_StatusBase.prototype.hideAdditionalSprites.call(this);
+			 }else{
+				 //otherwise, hide the overlay if the actor isn't overcharged and prepping to act.
+				for (const sprite of Object.values(this._additionalSprites)) 
+				{
+					if(sprite.chargeGauge&&(this._battler.atbChargeRate() == 0))
+					{
+						sprite.hide()
+					}
+					else
+					{
+						sprite.opacity=this.contentsOpacity;
+						sprite.show();
+					}
+				}
+			 }
+
+		}
+		
+		
+	} 
 
 	if(Imported.YEP_X_TurnOrderDisplay)
 	{

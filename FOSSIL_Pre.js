@@ -15,7 +15,7 @@
 
 
  
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.2.03
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.2.04
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER MV plugins, by allowing them to work in RPG MAKER MZ projects.
@@ -96,6 +96,7 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_X_Subclass
 -YEP_ExtraParamFormula
 *YEP_MainMenuManager
+-YEP_SelfSwVar
 *YEP_BattleEngineCore	(Note: I haven't added functionality for ATB, since the base plugin doesn't support it. I tried but it was too hard for me.  Sorry!)
 -YEP_X_ActionSeqPack1
 -YEP_X_ActionSeqPack2
@@ -112,7 +113,6 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_X_ActorAutoBattleAI
 -YEP_BattleBGMControl
 -YEP_BattleSelectCursor
--YEP_SelfSwVar
 *YEP_BuffsStatesCore
 -YEP_X_ExtDoT
 -YEP_X_StateCategories
@@ -123,12 +123,13 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_X_CriticalControl
 -YEP_Z_CriticalSway
 *YEP_ElementCore
--YEP_VictoryAftermath
 -YEP_HitAccuracy
 *YEP_TargetCore (note: there might be some odd interactions with action sequences, I am not familiar enough with sequences to debug them)
 -YEP_X_SelectionControl	
+-YEP_VictoryAftermath
 *YEP_ItemCore
 -YEP_X_AttachAugments
+-YEP_X_ItemDisassemble
 -YEP_X_ItemDiscard
 -YEP_X_ItemCategories
 -YEP_X_ItemPictureImg
@@ -212,6 +213,12 @@ In order to improve clarity, I am officially stating that the 'CC-BY-SA' only re
 
 */
 
+
+var Imported = Imported || {};
+Imported.Fossil_Pre=true;
+var Fossil =Fossil || {}
+Fossil.version='0.2.04'
+
 //Since the version number got reset with MZ, plugins that look for MV version number will get confused.  
 //We save the correct version number one in this half of the plugin sandwich, then restore it afterwards!
 Utils.MZ_VERSION= Utils.RPGMAKER_VERSION;
@@ -226,10 +233,6 @@ Graphics.BLEND_MULTIPLY = PIXI.BLEND_MODES["MULTIPLY"];
 Graphics.BLEND_SCREEN = PIXI.BLEND_MODES["SCREEN"];
 
 
-var Imported = Imported || {};
-Imported.Fossil_Pre=true;
-var Fossil =Fossil || {}
-Fossil.version='0.2.03'
 
 
 //get a list of what plugins we have installed.  This is necessary because
@@ -526,7 +529,6 @@ Window_Base.prototype.drawGauge = function(x, y, width, rate, color1, color2) {
 	//with the exact same object.  Maybe I'm wrong, but we can deal with that when it comes up
 	//so I think it's fine for our key to be this
 	
-	gaugeID=[this.constructor.name.toString(),x,y,width].toString()
 	//EDIT: it came up in YEP_OptionsCore.  Wow.
 	//inefficient but since nothing is going on in that window it's not gonna cause a 
 	//huge problem if we delete old gauges each time.
@@ -873,7 +875,22 @@ Window_SkillList.prototype.initialize = function(rect) {
 		{
 			console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
 		}
-		var rect = new Rectangle(arguments[0], arguments[1], arguments[2]||(this.windowWidth ? this.windowWidth() : 0)||400,  arguments[3]||(this.windowHeight ? this.windowHeight() : 0)||Graphics.boxHeight);
+		
+		//SRD initializes this tiny and then resizes it, which doesn't work anymore.
+		//because the options size doesn't get set beyond the first entry.
+		//do the reverse instead - start it big, then trust it to resize down.
+		if(this.constructor.name == 'Window_SkillExtend')
+		{
+			arguments[3]=800;
+		}
+		
+		
+		var rect = new Rectangle(
+		arguments[0], 
+		arguments[1], 
+		arguments[2]||(this.windowWidth ? this.windowWidth() : 0)||400,
+		arguments[3]||(this.windowHeight ? this.windowHeight() : 0)||Graphics.boxHeight
+		);
 		rectFixWindowSkillList.call(this,rect)
 	}
 
@@ -1611,6 +1628,11 @@ BattleManager.refreshStatus = function() {
 }
 
 
+//RMMZ flags inputting differently so we will make the function do both.
+BattleManager.isInputting = function() {
+    return this._inputting || this._phase === 'input';
+};
+
 
 if(Fossil.pluginNameList.contains('YEP_BattleEngineCore'))
 {
@@ -2094,6 +2116,35 @@ if (Fossil.pluginNameList.contains('YEP_BattleEngineCore'))
 	};
 	
 	
+	if(Fossil.pluginNameList.contains('YEP_X_BattleSysATB'))
+	{
+		//overwrite the MZ ATB with the BEC ATB
+		Game_Battler.prototype.tpbChargeTime = function() {
+			return this.atbRate();
+		};
+		
+		Window_StatusBase.prototype.placeTimeGauge = function(actor, x, y) {
+				this.placeGauge(actor, "time", x, y);
+		};
+		
+	}
+	
+	if(Fossil.pluginNameList.contains('YEP_X_BattleSysCTB'))
+	{
+		//overwrite the MZ ATB with the BEC CTB
+		Game_Battler.prototype.tpbChargeTime = function() {
+			return this.ctbRate();
+		};
+		
+		Window_StatusBase.prototype.placeTimeGauge = function(actor, x, y) {
+				this.placeGauge(actor, "time", x, y);
+		};
+		
+	}
+
+
+	
+	//setting flags for phase changes
 	BattleManager.startEndPhase = function()
 	{
 		this._enteredEndPhase=true;
