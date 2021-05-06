@@ -102,6 +102,8 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_X_ActionSeqPack2
 -YEP_X_ActionSeqPack3
 -YEP_X_AnimatedSVEnemies
+*YEP_X_BattleSysATB (note: now works with the MZ version of MOG_ATB_Gauge as well)
+-YEP_X_VisualATBGauge
 -YEP_X_CounterControl
 -YEP_X_InBattleStatus
 -YEP_X_TurnOrderDisplay

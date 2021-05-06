@@ -60,7 +60,6 @@ Sprite_Base.prototype.initialize = function() {
 };
 
 
-	
 
 //Moghunter section
 
@@ -191,6 +190,69 @@ if(Imported.MOG_ChronoEngine)
 		Fossil.fix__mog_toolSys_gPlayer_updateNonmoving.call(this,this.fixMogArgs[0],this.fixMogArgs[1]);
 	}
 
+}
+
+
+//cross compatibility between moghunter's ATB gauge and existing ATB
+//we check
+if(Imported.MOG_ATB_Gauge || !Imported.MOG_ATB)
+{
+	//mog named this the same thing for both MV and MZ, so check version with a unique function
+	if(ATB_Gauge.prototype.needCreateSkillIcon)
+	{
+		if(Imported.YEP_X_BattleSysATB)
+		{
+/* 			Game_BattlerBase.prototype.isMaxAtb = function() {
+				return this.isATBCharging()
+			}; */
+
+			
+			Fossil.fixSpriteSetSetupATB = Scene_Battle.prototype.createSpriteset;
+			Scene_Battle.prototype.createSpriteset = function() {
+				//tell it we're turnbased so we can create the gauge
+				var backuptpbcheck = BattleManager.isTpb;
+				BattleManager.isTpb = function() 
+				{
+					return true;
+				};
+				Fossil.fixSpriteSetSetupATB.call(this);
+				BattleManager.isTpb=backuptpbcheck;
+			};
+			
+			//hook into yanfly's ATB tracker instead of stock RMMZ 
+			ATB_Gauge.prototype.is_casting = function(battler) {
+				return battler.isATBCharging() || battler.atbRate() >= 1;
+			};
+			ATB_Gauge.prototype.cast_at = function(battler) {
+				return battler.atbCharge();  
+			};
+			ATB_Gauge.prototype.cast_max_at = function(battler) {
+				return battler.atbChargeDenom();  
+			};
+			ATB_Gauge.prototype.atb = function(battler) {
+				return battler.atbRate()	
+			}
+			Fossil.fixATBrefreshIconVisiblity = ATB_Gauge.prototype.refreshIconSkill;
+			ATB_Gauge.prototype.refreshIconSkill = function(spriteskill,battler) 
+			{
+				Fossil.fixATBrefreshIconVisiblity.apply(this,arguments);
+				spriteskill.opacity= spriteskill.visible? 255 : 0;
+			}
+			
+			//this updates before actions are taken, rather than after, causing issues.
+			//just force it to update every time by clearing the spriteskill.
+			//less efficient but works.
+			Fossil.forcemoreUpdateSkillRefresh=ATB_Gauge.prototype.updateSkillIcon;
+ 			ATB_Gauge.prototype.updateSkillIcon = function(spriteskill,spriteicon,battler) {
+				spriteskill.item=false;
+				Fossil.forcemoreUpdateSkillRefresh.apply(this,arguments)
+			}; 
+			
+		}
+	}else{
+		console.log('Mog has a MZ-native version of MOG_ATB_Gauge, use that one instead!')
+	}
+		
 }
 
 
@@ -992,8 +1054,8 @@ if(Imported.YEP_BattleEngineCore)
 				$gameMessage.setBackground(1)
 				$gameMessage.setPositionType(1)
 				$gameMessage.add("Fossil note: Sadly, BattleEngineCore does not work")
-				$gameMessage.add("with ''Time Progress Battle' settings. Maybe it will")
-				$gameMessage.add("someday, no promises.")
+				$gameMessage.add("with ''Time Progress Battle'' settings.")
+				$gameMessage.add("Please set Battle System to Turn-based in 'System 1'.")
 				$gameMessage.add("Sorry! At least you can use Yanfly's ATB system.")
 				console.log('Battle Engine Core only works in standard turn based battle system. If you want ATB, use YEP_X_BattleSysATB.');
 		}
