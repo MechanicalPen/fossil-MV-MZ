@@ -248,8 +248,58 @@ if(Imported.MOG_ATB_Gauge && !Imported.MOG_ATB)
 				Fossil.forcemoreUpdateSkillRefresh.apply(this,arguments)
 			}; 
 			
-		}
-	}else{
+		
+		}else if(Imported.YEP_X_BattleSysCTB){
+/* 			Game_BattlerBase.prototype.isMaxAtb = function() {
+				return this.isATBCharging()
+			}; */
+
+			
+			Fossil.fixSpriteSetSetupATB = Scene_Battle.prototype.createSpriteset;
+			Scene_Battle.prototype.createSpriteset = function() {
+				//tell it we're turnbased so we can create the gauge
+				var backuptpbcheck = BattleManager.isTpb;
+				BattleManager.isTpb = function() 
+				{
+					return true;
+				};
+				Fossil.fixSpriteSetSetupATB.call(this);
+				BattleManager.isTpb=backuptpbcheck;
+			};
+			
+			//hook into yanfly's ATB tracker instead of stock RMMZ 
+			ATB_Gauge.prototype.is_casting = function(battler) {
+				return battler.isCTBCharging() || battler.ctbRate() >= 1;
+			};
+			ATB_Gauge.prototype.cast_at = function(battler) {
+				return battler.ctbCharge();  
+			};
+			ATB_Gauge.prototype.cast_max_at = function(battler) {
+				return battler.ctbChargeDestination();  
+			};
+			ATB_Gauge.prototype.atb = function(battler) {
+				return battler.ctbRate()	
+			}
+			Fossil.fixATBrefreshIconVisiblity = ATB_Gauge.prototype.refreshIconSkill;
+			ATB_Gauge.prototype.refreshIconSkill = function(spriteskill,battler) 
+			{
+				Fossil.fixATBrefreshIconVisiblity.apply(this,arguments);
+				spriteskill.opacity= spriteskill.visible? 255 : 0;
+			}
+			
+			//this updates before actions are taken, rather than after, causing issues.
+			//just force it to update every time by clearing the spriteskill.
+			//less efficient but works.
+			Fossil.forcemoreUpdateSkillRefresh=ATB_Gauge.prototype.updateSkillIcon;
+ 			ATB_Gauge.prototype.updateSkillIcon = function(spriteskill,spriteicon,battler) {
+				spriteskill.item=false;
+				Fossil.forcemoreUpdateSkillRefresh.apply(this,arguments)
+			}; 
+			
+		
+		} 
+		
+	}else {
 		console.log('Mog has a MZ-native version of MOG_ATB_Gauge, use that one instead!')
 	}
 		
@@ -1035,7 +1085,30 @@ if(Imported.YEP_BattleEngineCore)
 
 		
 	}
-	
+
+
+	if(Fossil.pluginNameList.contains('YEP_X_BattleSysCTB'))
+	{
+		//standard windowlayer x fix.  RMMZ defaults windowlayer to 4, RMMV defaults it to 0,
+		//yaddayadda
+		Fossil.fixTurnOrderWindowOpacityCTB = Window_CTBIcon.prototype.isReduceOpacity
+		Window_CTBIcon.prototype.isReduceOpacity = function() 
+		{
+			if(this._windowLayer)
+			{
+				var saveWLX = this._windowLayer.x;
+				this._windowLayer.x = 0;
+				var tempVar = Fossil.fixTurnOrderWindowOpacityCTB.apply(this,arguments)
+				this._windowLayer.x = saveWLX;
+				return tempVar
+			}else{
+				return Fossil.fixTurnOrderWindowOpacityCTB.apply(this,arguments);
+			}
+		}
+		
+
+		
+	}
 	
 	Fossil.fixBECisStartActorCommand=Scene_Battle.prototype.isStartActorCommand;
 	Scene_Battle.prototype.isStartActorCommand = function() {
