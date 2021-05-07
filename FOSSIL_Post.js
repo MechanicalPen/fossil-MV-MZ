@@ -195,7 +195,7 @@ if(Imported.MOG_ChronoEngine)
 
 //cross compatibility between moghunter's ATB gauge and existing ATB
 //we check
-if(Imported.MOG_ATB_Gauge || !Imported.MOG_ATB)
+if(Imported.MOG_ATB_Gauge && !Imported.MOG_ATB)
 {
 	//mog named this the same thing for both MV and MZ, so check version with a unique function
 	if(ATB_Gauge.prototype.needCreateSkillIcon)
