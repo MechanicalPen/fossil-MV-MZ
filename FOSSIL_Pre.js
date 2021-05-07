@@ -536,6 +536,7 @@ Window_Base.prototype.drawGauge = function(x, y, width, rate, color1, color2) {
 	//EDIT: it came up in YEP_OptionsCore.  Wow.
 	//inefficient but since nothing is going on in that window it's not gonna cause a 
 	//huge problem if we delete old gauges each time.
+	gaugeID=[this.constructor.name.toString(),x,y,width].toString()
 
 	//this will be something like "Window_VictoryExp,184,38,416"
 	label ='';//no label
