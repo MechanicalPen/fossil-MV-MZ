@@ -695,6 +695,22 @@ if(Imported.YEP_OptionsCore)
 	
 }
 
+if(Fossil.pluginNameList.contains('HO_AchievementSystem'))
+{
+	//when we change panes, erase gauges.  
+	Fossil.eraseAchievementDataGauges=Window_AchievementData.prototype.updateItem;
+	Window_AchievementData.prototype.updateItem = function()
+	{
+		
+		if(!(this._item === this._lastItem) && this._additionalSprites)
+		{
+			Window_StatusBase.prototype.hideAdditionalSprites.call(this);
+			//this._additionalSprites = {};
+		}
+		Fossil.eraseAchievementDataGauges.call(this);
+	}
+}
+
 
 if(Imported.YEP_SelfSwVar)
 {
