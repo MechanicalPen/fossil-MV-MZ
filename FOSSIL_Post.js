@@ -5,17 +5,22 @@
  to make MV plugins work with it.
  * @author FOSSIL TEAM
  * @target MZ 
+ * @help Fossil_Post goes between your RMMV plugins and your RMMZ plugins.
  
 Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.2.04
 
 FOSSIL is an interoperability plugin.  
-The purpose of this layer is to expand the use and usefulness of RPG MAKER MV plugins, by allowing them to work in RPG MAKER MZ projects.
+The purpose of this layer is to expand the use and usefulness of RPG MAKER MV 
+plugins, by allowing them to work in RPG MAKER MZ projects.
 
-This is the 'post' half of the plugin.  Put it BELOW the supported MV plugins.
+This is the 'post' half of the plugin.  Put it BELOW the supported MV plugins,
+and above MZ plugins.
 
 Terms of use:
 
-All code not covered by the RPG Maker MV or RPG Maker MZ license is released under a Creative Commons CC-BY-SA license.  Please credit 'FOSSIL', Restart, or 'The FOSSIL TEAM', and link back to the forum thread or github.
+All code not covered by the RPG Maker MV or RPG Maker MZ license is released 
+under a Creative Commons CC-BY-SA license.  Please credit 'FOSSIL', Restart, 
+or 'The FOSSIL TEAM', and link back to the forum thread or github.
 
 */
 
@@ -1357,7 +1362,7 @@ if(Imported.YEP_X_InBattleStatus)
 	Fossil.hideSpritesWindow_InBattleStatusRefresh = Window_InBattleStatus.prototype.refresh;
 	Window_InBattleStatus.prototype.refresh = function() {
 		this.hideAdditionalSprites();
-		Fossil.hideSpritesWindow_InBattleStatusRefresh.call(this)
+		Fossil.hideSpritesWindow_InBattleStatusRefresh.apply(this,arguments)
 	}
 
 	Fossil.fixWindowInBattleStatusInitialization = Window_InBattleStatus.prototype.initialize
@@ -1377,7 +1382,7 @@ if(Imported.YEP_X_PartyLimitGauge)
 	Window_PartyLimitGauge.prototype.updateOpacity = function() {
 		var saveWLX = this._windowLayer.x;
 		this._windowLayer.x = 0;
-		Fossil.fixWindow_PartyLimitGaugeupdateOpacity.call(this)
+		Fossil.fixWindow_PartyLimitGaugeupdateOpacity.apply(this,arguments)
 		this._windowLayer.x = saveWLX;
 		
 	}
@@ -1385,7 +1390,7 @@ if(Imported.YEP_X_PartyLimitGauge)
     Fossil.fixWindow_PartyLimitGaugeinitialize=Window_PartyLimitGauge.prototype.initialize;
 	Window_PartyLimitGauge.prototype.initialize = function(unit) 
 	{
-        Fossil.fixWindow_PartyLimitGaugeinitialize.call(this,unit)
+        Fossil.fixWindow_PartyLimitGaugeinitialize.apply(this,arguments)
 		//this.opacity=128
 		//opacity should be 0 but if you want to see the windows for debugging set it here
 	}
@@ -1483,7 +1488,7 @@ if(Imported["SumRndmDde Shaking Text"])
 	Fossil.FixSRDShakeTextWindowMessageobtainEscapeCodePost=Window_Message.prototype.obtainEscapeCode;
 	Window_Message.prototype.obtainEscapeCode = function(textState){
 		textState.index--;
-		return Fossil.FixSRDShakeTextWindowMessageobtainEscapeCodePost.call(this,textState)
+		return Fossil.FixSRDShakeTextWindowMessageobtainEscapeCodePost.apply(this,arguments)
 	}
 	
 }

@@ -1,5 +1,8 @@
-/*
-Message Core WIP FOSSIL module.
+/*:
+ * @plugindesc FOSSIL_Post_MessageCore goes below message core and its add-ons.
+ * @author FOSSIL TEAM
+ * @target MZ 
+FOSSIL Post Message Core module.
 
 This is a bit of an oddity - we need two plugins dedicated just to deal with ONE plugin.
 The problem is that Yanfly did such a good job with messagecore that a lot of the 
@@ -11,11 +14,16 @@ This might be bad for compatibility with other yanfly-derived name box plugins, 
 being able to use the built-in editor namebox is probably more useful for people, and i had 
 to pick one or the other.  Sorry if this does break compatibility, we can probably deal with it on a case-by case-basis if it ends up being a problem.
 
-Known bugs: word wrap doesn't like the 'advance all text on a line' instantly command, and
-will stop word wrapping the moment that happens.  I've banged my head against the wall on this one long enough, time to move on.
-
 Put this immediately below YEP_MessageCore (and below YEP_X_ExtMesPack1 and YEP_X_ExtMesPack2)
 
+
+
+ * @help Fossil_Pre_MessageCore goes below YEP_MessageCore and any message core
+ expansion like YEP_X_ExtMesPack1
+ It is designed specifically for this plugin. 
+ You also need Fossil_Pre_MessageCore
+ 
+ 
 */
 var Imported = Imported || {};
 Imported.YEPMCPost=true;

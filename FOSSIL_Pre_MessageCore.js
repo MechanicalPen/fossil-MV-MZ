@@ -1,23 +1,30 @@
-/*
-Message Core WIP FOSSIL module.
+/*:
+* @plugindesc FOSSIL_Pre_MessageCore goes just above message core.
+* @author FOSSIL TEAM
+* @target MZ 
+FOSSIL Pre MessageCore module.
 
 This is a bit of an oddity - we need two plugins dedicated just to deal with ONE plugin.
-The problem is that Yanfly did such a good job with messagecore that a lot of the 
+The problem is that Yanfly did such a good job with message core that a lot of the 
 improvements were folded into core RMMZ.  
 
-Because of that, we need to tell the rest of the game to ignore the definitions in YEP_Messagecore, since they're conflicting with the namespace from RMMZ.
+Because of that, we need to tell the rest of the game to ignore the definitions in YEP_MessageCore, since they're conflicting with the namespace from RMMZ.
 
 This might be bad for compatibility with other yanfly-derived name box plugins, but I feel like
 being able to use the built-in editor namebox is probably more useful for people, and i had 
 to pick one or the other.  Sorry if this does break compatibility, we can probably deal with it on a case-by case-basis if it ends up being a problem.
 
-Known bugs: 
- - Word wrap doesn't like the 'advance all text on a line instantly' command, and will stop word wrapping the moment that happens.  I've banged my head against the wall on this one long enough, time to move on.  
- - None of the name box commands work (we have them by default now so I don't want to bother)
- 
+Known quirks:  
+ - None of the yanfly name box commands work (we have them by default in MZ now so I don't want to bother)
  
 
 Put this immediately above Messagecore (and YEP_X_ExtMesPack1 and YEP_X_ExtMesPack2 if you have them).
+
+
+ * @help Fossil_Pre_MessageCore goes just above YEP_MessageCore.
+ It is designed specifically for this plugin. 
+ You also need Fossil_Post_MessageCore
+ 
 
 */
 

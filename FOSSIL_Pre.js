@@ -1,10 +1,9 @@
  /*:
- * @plugindesc Fossil V0.2 is an interoperability layer for RMMZ, designed
- to make MV plugins work with it. 
+ * @plugindesc Fossil is an interoperability layer for RMMZ, designed to make MV plugins work with in MZ. Fossil_Pre goes at the start of your plugin list.
  * So far, we support over 100 plugins.  You can help!
  * @author FOSSIL TEAM
  * @target MZ  
- 
+
  * @command useOldPlugin
  * @text 'Enter MV plugin commands'
  * @desc 'They're back! Enter them the same way you used to.'
@@ -13,19 +12,24 @@
  * @text
  * @ desc Identical to MV's commands.
 
-
+ * @help Fossil_Pre goes at the start, before all other plugins.
  
 Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.2.04
 
 FOSSIL is an interoperability plugin.  
-The purpose of this layer is to expand the use and usefulness of RPG MAKER MV plugins, by allowing them to work in RPG MAKER MZ projects.
+The purpose of this layer is to expand the use and usefulness of RPG MAKER 
+MV plugins, by allowing them to work in RPG MAKER MZ projects.
 
-So far we have interoperability with these MV plugins.  They seem to run with FOSSIL the same way they did in stock MV, free from all but a few little aesthetic glitches.  
+So far we have interoperability with these MV plugins.  They seem to run 
+with FOSSIL the same way they did in stock MV, free from all but a few 
+little aesthetic glitches.  
 
-To invoke old plugin commands, either use the built in OldPluginCommand plugin command, or put oldCommand('whateverthecommandwas') in a script.
+To invoke old plugin commands, either use the built in OldPluginCommand 
+plugin command, or put oldCommand('whateverthecommandwas') in a script.
 
 ///////////////////////////////////////////////////////////////////////
-==Fully Functional==  (Alphabetical by plugin maker, then roughly by plugin order)
+==Fully Functional==  
+(Alphabetical by plugin maker, then roughly by plugin order)
 ///////////////////////////////////////////////////////////////////////
 
 -GALV_Questlog
@@ -80,7 +84,7 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -VLUE Game Time MV 1.1c
 -VLUE questsystem
 
--WAY_Core (note: requires Fossil_Post_Way to be the NEXT plugin beneath it, or all MZ plugin commands will break.)
+-WAY_Core (note: requires Fossil_Post_Way to be the NEXT plugin beneath it)
 -WAY_StorageSystem
 -WAY_OptionsMenuCustomActions
 -WAY_VerticalScreenShake
@@ -96,15 +100,20 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_X_Subclass
 -YEP_ExtraParamFormula
 *YEP_MainMenuManager
+*YEP_MessageCore (Needs FOSSIL_Pre_MessageCore & FOSSIL_Post_MessageCore)
+-YEP_X_ExtMesPack1 
+-YEP_X_ExtMesPack2 
+-YEP_MessageEvalText 
+-YEP_X_MessageMacros1
 -YEP_SelfSwVar
-*YEP_BattleEngineCore	(Note: I haven't added functionality for ATB, since the base plugin doesn't support it. I tried but it was too hard for me.  Sorry!)
+*YEP_BattleEngineCore (Note: Battle system must be 'turn-based' in System 1)
 -YEP_X_ActionSeqPack1
 -YEP_X_ActionSeqPack2
 -YEP_X_ActionSeqPack3
 -YEP_X_AnimatedSVEnemies
-*YEP_X_BattleSysATB (note: now works with the MZ version of Moghunter's MOG_ATB_Gauge as well)
+*YEP_X_BattleSysATB note: now works Moghunter's MOG_ATB_Gauge (MZ ver)
 -YEP_X_VisualATBGauge
-*YEP_X_BattleSysCTB (note: now works with the MZ version of Moghunter's MOG_ATB_Gauge as well)
+*YEP_X_BattleSysCTB note: now works Moghunter's MOG_ATB_Gauge (MZ ver)
 *YEP_X_BattleSysSTB
 -YEP_X_CounterControl
 -YEP_X_InBattleStatus
@@ -128,7 +137,7 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 -YEP_Z_CriticalSway
 *YEP_ElementCore
 -YEP_HitAccuracy
-*YEP_TargetCore (note: there might be some odd interactions with action sequences, I am not familiar enough with sequences to debug them)
+*YEP_TargetCore (Tell me if you have odd interactions with action sequences)
 -YEP_X_SelectionControl	
 -YEP_VictoryAftermath
 *YEP_ItemCore
@@ -194,26 +203,32 @@ To invoke old plugin commands, either use the built in OldPluginCommand plugin c
 ///////////////////////////////////////////////////////////////////////
 ==Almost Functional with UI issues==
 ///////////////////////////////////////////////////////////////////////
--YEP_X_ItemDurability (there's no obvious place to display the durability stat)
+-YEP_X_ItemDurability (there's no obvious spot to show the durability stat)
 
 ///////////////////////////////////////////////////////////////////////
 ==Special Cases==
 ///////////////////////////////////////////////////////////////////////
-*YEP_MessageCore: Requires dedicated plugins: FOSSIL_Pre_MessageCore & FOSSIL_Post_MessageCore, and word wrap doesn't like fast text advancement.
--YEP_X_ExtMesPack1 (Works AFAICT, except for above word wrap issues with message core)
--YEP_X_ExtMesPack2 (Works AFAICT, except for above word wrap issues with message core)
+-none ATM.
 
 
-
-This is the 'pre' half of the plugin.  Put it ABOVE the supported plugins.
+This is the 'pre' half of the plugin. Put it ABOVE the supported plugins.
 
 
 Terms of use:
 
 
-All unique code in FOSSIL is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License.  The remainder is taken from RPG Maker MV and RPG Maker MZ, and is covered under the appropriate licenses. No code from any existing plugin was used. Credit Restart, 'FOSSIL' or 'FOSSIL Team', and link back to the github or the forum thread.
+All unique code in FOSSIL is licensed under a 
+Creative Commons Attribution-ShareAlike 4.0 International License.  The 
+remainder is taken from RPG Maker MV and RPG Maker MZ, and is covered under 
+the appropriate licenses. No code from any existing plugin was used. 
+Credit Restart, 'FOSSIL' or 'FOSSIL Team', and link back to the github 
+or the forum thread.
 
-In order to improve clarity, I am officially stating that the 'CC-BY-SA' only requires that code directly derived from FOSSIL be also put under a 'CC-BY-SA' license.  Any other assets in your game, (such as code, art, et cetera) as well as your game as a whole are [b]not[/b] considered to be 'derivative works' for this purpose.
+In order to improve clarity, I am officially stating that the 'CC-BY-SA' 
+only requires that code directly derived from FOSSIL be also put under a 
+'CC-BY-SA' license.  Any other assets in your game, (such as code, art, 
+et cetera) as well as your game as a whole are *not* considered to be 
+'derivative works' for this purpose.
 
 */
 
@@ -619,7 +634,7 @@ Bitmap.prototype.measureTextWidth = function(text) {
 	{
 		return 0;
 	}
-    return Fossil.measureTextUndefinedZero.call(this,text)
+    return Fossil.measureTextUndefinedZero.apply(this,arguments)
 };
 
 //similarly, don't choke if we're given no text to work with.  Just turn it into an empty string.
@@ -629,7 +644,7 @@ Window_Base.prototype.convertEscapeCharacters = function(text) {
 	{
 		return '';
 	}
-    return Fossil.convertEscapeUndefined.call(this,text)
+    return Fossil.convertEscapeUndefined.apply(this,arguments)
 };
 
 
@@ -812,12 +827,7 @@ Window_Command.prototype.initialize = function(rect) {
 				rectA.height = (this.windowHeight ? this.windowHeight() : rectA.height)
 			}
 			break;
-/* 			case "Window_OptionsCategory":
-				//rectA.y=SceneManager._scene._helpWindow._frameSprite.y+SceneManager._scene._helpWindow._frameSprite.height
-				//rectA.width=this._width;
-				rectFixWindowCommand.call(this,rectA)
-				return;
-			break; */
+
 			default:
 		}
 			
@@ -1356,14 +1366,6 @@ Window_BattleEnemy.prototype.initialize = function(rect) {
 	}	
 };
 
-Window_BattleEnemy.prototype.windowWidth = function() {
-    return Graphics.boxWidth - 192;
-};
-
-Window_BattleEnemy.prototype.windowHeight = function() {
-    return this.fittingHeight(this.numVisibleRows());
-};
-
 
 var rectFixWindowHorzCommand= Window_HorzCommand.prototype.initialize;
 Window_HorzCommand.prototype.initialize = function(rect) {
@@ -1488,21 +1490,29 @@ Window_ActorCommand.prototype.initialize = function(rect) {
 //RMMV put drawActorName into Window_Base.  
 //RMMZ only puts it into Window_StatusBase.  hook into the new version.
 
-Window_Base.prototype.drawActorCharacter = function(actor, x, y) {	Window_StatusBase.prototype.drawActorCharacter.call(this,actor, x, y) }
-Window_Base.prototype.drawActorClass = function(actor, x, y, width) {	Window_StatusBase.prototype.drawActorClass.call(this,actor, x, y, width) }
-Window_Base.prototype.drawActorFace = function( actor, x, y, width, height){	Window_StatusBase.prototype.drawActorFace.call(this, actor, x, y, width, height)}
-Window_Base.prototype.drawActorIcons = function(actor, x, y, width) {	Window_StatusBase.prototype.drawActorIcons.call(this,actor, x, y, width) }
-Window_Base.prototype.drawActorLevel = function(actor, x, y) {	Window_StatusBase.prototype.drawActorLevel.call(this,actor, x, y) }
-Window_Base.prototype.drawActorName = function(actor, x, y, width) {	Window_StatusBase.prototype.drawActorName.call(this,actor, x, y, width) }
-Window_Base.prototype.drawActorNickname = function(actor, x, y, width) {	Window_StatusBase.prototype.drawActorNickname.call(this,actor, x, y, width) }
+Window_Base.prototype.drawActorCharacter = function(actor, x, y) {	Window_StatusBase.prototype.drawActorCharacterapply(this,arguments) }
+Window_Base.prototype.drawActorClass = function(actor, x, y, width) {	Window_StatusBase.prototype.drawActorClass.apply(this,arguments) }
+Window_Base.prototype.drawActorFace = function( actor, x, y, width, height){	Window_StatusBase.prototype.drawActorFace.apply(this,arguments)}
+Window_Base.prototype.drawActorIcons = function(actor, x, y, width) {	Window_StatusBase.prototype.drawActorIcons.apply(this,arguments) }
+Window_Base.prototype.drawActorLevel = function(actor, x, y) {	Window_StatusBase.prototype.drawActorLevel.apply(this,arguments) }
+Window_Base.prototype.drawActorName = function(actor, x, y, width) {	Window_StatusBase.prototype.drawActorName.apply(this,arguments) }
+Window_Base.prototype.drawActorNickname = function(actor, x, y, width) {	Window_StatusBase.prototype.drawActorNickname.apply(this,arguments) }
 
+
+Window_BattleEnemy.prototype.windowWidth = function() {
+    return Graphics.boxWidth - 192;
+};
+
+Window_BattleEnemy.prototype.windowHeight = function() {
+    return this.fittingHeight(this.numVisibleRows());
+};
 
 
 //RMMV defaulted width to 312.  I am going to respect that.
 Fossil.FixWindowBaseDrawItemNameWidth=Window_Base.prototype.drawItemName;
 Window_Base.prototype.drawItemName = function(item, x, y, width) {
 	width = width || 312;
-    Fossil.FixWindowBaseDrawItemNameWidth.call(this,item,x,y,width);
+    Fossil.FixWindowBaseDrawItemNameWidth.apply(this,arguments);
 };
 
 
@@ -1527,7 +1537,7 @@ Window_Message.prototype.newLineX = function(textState)
 {
 	//textstate is now a passed-in argument instead of a property.
 	var textState = textState || this._textState;
-	return fixnewLineX.call(this,textState)
+	return fixnewLineX.apply(this,arguments)
 };
 
 
@@ -1691,7 +1701,7 @@ Sprite_Gauge.prototype.currentValue = function() {
 		//this doesn't count equipped stuff, but I don't think you want to burn those for skills anyway.
 		return $gameParty.numItems($dataWeapons[this._statusType.substring(6)-0]) ;
 	}
-    return SpriteGaugeCurrent.call(this);
+    return SpriteGaugeCurrent.apply(this,arguments);
 };
 
 var SpriteGaugeMax = Sprite_Gauge.prototype.currentMaxValue 
@@ -1712,7 +1722,7 @@ Sprite_Gauge.prototype.currentMaxValue = function() {
 		//this doesn't count equipped stuff, but I don't think you want to burn those for skills anyway.
 		return Math.max($gameParty.numItems($dataWeapons[this._statusType.substring(6)-0]) ,1);
 	}
-	return SpriteGaugeMax.call(this);
+	return SpriteGaugeMax.apply(this,arguments);
 };
 
 var SpriteGaugeLabel = Sprite_Gauge.prototype.label
@@ -1727,7 +1737,7 @@ Sprite_Gauge.prototype.label = function() {
 		//this doesn't count equipped stuff, but I don't think you want to burn those for skills anyway.
 		return $dataWeapons[this._statusType.substring(6)-0].name ;
 	}
-    return SpriteGaugeLabel.call(this);
+    return SpriteGaugeLabel.apply(this,arguments);
 };
 
 
@@ -1753,14 +1763,14 @@ Sprite_Base.prototype = Object.create(Sprite.prototype);
 Sprite_Base.prototype.constructor = Sprite_Base;
 
 Sprite_Base.prototype.initialize = function() {
-    Sprite.prototype.initialize.call(this);
+    Sprite.prototype.initialize.apply(this,arguments);
     this._animationSprites = [];
     this._effectTarget = this;
     this._hiding = false;
 };
 
 Sprite_Base.prototype.update = function() {
-    Sprite.prototype.update.call(this);
+    Sprite.prototype.update.apply(this,arguments);
     this.updateVisibility();
     this.updateAnimationSprites();
 };
@@ -1937,7 +1947,7 @@ AudioManager.createBuffer = function(folder, name) {
 	{
 		folder=folder+'/';
 	}
-	return Fossil.FixAudioManagerBufferSlash.call(this,folder,name);
+	return Fossil.FixAudioManagerBufferSlash.apply(this,arguments);
 };
 	
 //load fonts with the new version
@@ -2043,7 +2053,7 @@ Window_Base.prototype.canvasToLocalY = function(y) {
 
 var addToneToSpritesetBaseInitialize =Spriteset_Base.prototype.initialize
 Spriteset_Base.prototype.initialize = function(){
-	addToneToSpritesetBaseInitialize.call(this);
+	addToneToSpritesetBaseInitialize.apply(this,arguments);
 	this.createToneChanger();
 }
 
@@ -2055,11 +2065,11 @@ Spriteset_Base.prototype.createToneChanger = function() {
 
 //this is stored elsewhere in RMMZ so redirect
 Spriteset_Battle.prototype.battleback1Name = function() {
-    return Sprite_Battleback.prototype.battleback1Name.call(this);
+    return Sprite_Battleback.prototype.battleback1Name.apply(this,arguments);
 };
 
 Spriteset_Battle.prototype.battleback2Name = function() {
-	return Sprite_Battleback.prototype.battleback2Name.call(this);
+	return Sprite_Battleback.prototype.battleback2Name.apply(this,arguments);
 }
 
 
@@ -2244,7 +2254,7 @@ if(Fossil.pluginNameList.includes('SRD_ShakingText'))
 	Window_Message.prototype.obtainEscapeCode = function(textState)
 	{
 		textState.index++;
-		return Fossil.FixSRDShakeTextWindowMessageobtainEscapeCodePre.call(this,textState);
+		return Fossil.FixSRDShakeTextWindowMessageobtainEscapeCodePre.apply(this,arguments);
 	}
 	
 }
@@ -2267,7 +2277,7 @@ Window_Base.prototype.processCharacter = function(textState) {
 
 	if(!this.fossilStopProcessingThisCharacter)
 	{
-		addNormaltoWindowBaseProcessCharacter.call(this,textState);
+		addNormaltoWindowBaseProcessCharacter.apply(this,arguments);
 	}	
 }
 
@@ -2292,7 +2302,7 @@ if(Fossil.pluginNameList.contains('YEP_MainMenuManager'))
 			this.clearCommandList()
 			return 1;//we shouldn't have any empty command lists.
 		}
-		return Fossil.fixWindowCommandMaxItemsCrash.call(this)
+		return Fossil.fixWindowCommandMaxItemsCrash.apply(this,arguments)
 	};
 	
 }
