@@ -171,58 +171,87 @@ if(Imported.YEP_MessageCore && Imported.YEPMCPre)
 		); 
 	};   */
 
-Fossil.FixUpdateMessageWW=Window_Message.prototype.updateMessage;
-Window_Message.prototype.updateMessage = function() {
-    const textState = this._textState;
-	if(this._wordWrap)
-	{
+	Fossil.FixUpdateMessageWW=Window_Message.prototype.updateMessage;
+	Window_Message.prototype.updateMessage = function() {
 		const textState = this._textState;
-		if (textState) {
-			while (!this.isEndOfText(textState)) {
-				if (this.needsNewPage(textState)) {
-					this.newPage(textState);
-				}
-				this.updateShowFast();
-				this.processCharacter(textState);
-				if (this.shouldBreakHere(textState)) {
-					break;
-				}else{
-					//if we have word wrap we still 
-					//will need to process all the text
-					//so do it here real quick.
-					//otherwise it loops through all text without printing it which means you get it all on one big line with no gaps
-					while (!this.isEndOfText(textState)) 
-					{
-						if (this.needsNewPage(textState)) {
-							return true;
-						}
-						this.processCharacter(textState);
-						this.flushTextState(textState);
+		if(this._wordWrap)
+		{
+			const textState = this._textState;
+			if (textState) {
+				while (!this.isEndOfText(textState)) {
+					if (this.needsNewPage(textState)) {
+						this.newPage(textState);
 					}
-					break;
+					this.updateShowFast();
+					this.processCharacter(textState);
+					if (this.shouldBreakHere(textState)) {
+						break;
+					}else{
+						//if we have word wrap we still 
+						//will need to process all the text
+						//so do it here real quick.
+						//otherwise it loops through all text without printing it which means you get it all on one big line with no gaps
+						while (!this.isEndOfText(textState)) 
+						{
+							if(!this._wordWrap)
+							{
+								//if we turn off word wrap or, stop fast rendering.
+								return true;
+							}
+							if (this.needsNewPage(textState)) {
+								return true;
+							}
+							this.processCharacter(textState);
+							this.flushTextState(textState);
+							//if we turn off the fast text we go back to normal processing.
+							if(this.shouldBreakHere(textState))
+							{
+								return true;
+							}
+						}
+						break;
+					}
 				}
+				this.flushTextState(textState);
+				if (this.isEndOfText(textState) && !this.isWaiting()) {
+					this.onEndOfText();
+				}
+				return true;
+			} else {
+				return false;
 			}
-			this.flushTextState(textState);
-			if (this.isEndOfText(textState) && !this.isWaiting()) {
-				this.onEndOfText();
-			}
-			return true;
-		} else {
-			return false;
+		
+		}else{
+			return Fossil.FixUpdateMessageWW.apply(this,arguments);
 		}
-	
-	}else{
-		return Fossil.FixUpdateMessageWW.apply(this,arguments);
-	}
-};
+	};
 
-Fossil.sendBufferSignalWordWrap=Window_Base.prototype.checkWordWrap;
-Window_Base.prototype.checkWordWrap = function(textState) {
-	var wordWrapState=Fossil.sendBufferSignalWordWrap.call(this,textState);
-	this._needsWordWrapRefresh=wordWrapState;
-	return wordWrapState;
-    
-};
+	Fossil.sendBufferSignalWordWrap=Window_Base.prototype.checkWordWrap;
+	Window_Base.prototype.checkWordWrap = function(textState) {
+		var wordWrapState=Fossil.sendBufferSignalWordWrap.call(this,textState);
+		this._needsWordWrapRefresh=wordWrapState;
+		return wordWrapState;
+		
+	};
+
+	Fossil.fixprocessNewLine=Window_Message.prototype.processNewLine 
+	Window_Message.prototype.processNewLine = function(textState) {
+		if (this._wordWrap)
+		{
+			//fast line showing shouldn't stop when wordwrapping just becuase we move to a new line
+			//instead we should only stop it when we get the /< signal.
+			//so comment this out:
+			//this._lineShowFast = false;
+			//and do the rest
+			//it'll still stop autoadvancing in a new message box though.
+			Window_Base.prototype.processNewLine.call(this, textState);
+			if (this.needsNewPage(textState)) {
+				this.startPause();
+			}
+		}else{
+			Fossil.fixprocessNewLine.apply(this,arguments)
+		}
+	};
 
 
  	//this flushes all the text in the buffer at once.
