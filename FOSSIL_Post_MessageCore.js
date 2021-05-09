@@ -75,6 +75,16 @@ if(Imported.YEP_MessageCore && Imported.YEPMCPre)
 
 		makeFakeNameBoxesWindowMessage.apply(this,arguments)
 	}
+
+	Fossil.testFunc=Window_Base.prototype.textWidthExCheck
+ 	Window_Base.prototype.textWidthExCheck = function(text) 
+	{
+/* 		var asdf=Window_Base.prototype.textSizeEx.apply(this,arguments);
+		var jkl=Fossil.testFunc.apply(this,arguments);
+		console.log(asdf.width-jkl); */
+		return Fossil.testFunc.apply(this,arguments);//asdf.width;
+	} 
+
 	//undo yanfly's injection into the rendering code; this prevents the
 	// Window_Message.prototype.adjustWindowSettings from being called unnecessarily.
     Window_Message.prototype.newPage = Yanfly.Message.Window_Message_newPage;
@@ -92,7 +102,7 @@ if(Imported.YEP_MessageCore && Imported.YEPMCPre)
 			this.createContents();
 		}
 
-		forceRefreshWindowMessageupdatePlacement.call(this)
+		forceRefreshWindowMessageupdatePlacement.apply(this,arguments)
 	}
 		
 
@@ -101,8 +111,140 @@ if(Imported.YEP_MessageCore && Imported.YEPMCPre)
 		return Math.max(0, this.topRow() + this.maxPageRows() - 1);
 	};
 	
+	Window_Message.prototype.shouldBreakHere = function(textState) {
+		if (this.canBreakHere(textState)) {
+			if(this._needsWordWrapRefresh)
+			{
+				this._needsWordWrapRefresh=false;
+				return true;
+			}
+			if (!this._showFast && !this._lineShowFast) {
+				return true;
+			}
+			if (this.isWaiting()) {
+				return true;
+			}
+		}
+		return false;
+	};
 
+	//this disables where word wrap checking is hooked into yanfly.
+	Window_Base.prototype.processNormalCharacter=Yanfly.Message.Window_Base_processNormalCharacter;
+	//by undoing the overwrite.
+	//then we overwrite the function again, but in a different way
+    Fossil.FixWordWrapPNC = Window_Base.prototype.processNormalCharacter;
+	Window_Base.prototype.processNormalCharacter = function(textState) {
 		
+		if (this.checkWordWrap(textState))
+		{
+			//if our current character is a space, replace it with a newline.  otherwise insert a newline.
+			if (textState.text[textState.index]==' ')
+			{
+				textState.text=textState.text.slice(0,textState.index)+'\n'+textState.text.slice(textState.index+1);
+			}else{
+				textState.text=textState.text.slice(0,textState.index)+'\n'+textState.text.slice(textState.index);
+			}
+			
+		}else{
+			Fossil.FixWordWrapPNC.apply(this,arguments);
+		}
+	};
+
+ 
+/*   	//hook in the MZ messageshowfast again, overwriting the messagecore overwrite
+ 	Window_Message.prototype.updateShowFast = function() 
+	{
+		if (!$gameSystem.isFastFowardEnabled() && (this.isTriggered() ||
+			Input.isRepeated("Yanfly.Param.MSGFastForwardKey")) ){
+			this._showFast = true;
+		}
+	};
+	//if we disable it in messagecore, then we can't fastforward the message.
+	//also hook in whatever key yanfly sets for fastforwarding as well.
+	Window_Message.prototype.isTriggered = function() 
+	{
+		return ((
+			Input.isRepeated("ok") ||
+			Input.isRepeated("cancel")  ||
+			TouchInput.isRepeated()
+			)
+		); 
+	};   */
+
+Fossil.FixUpdateMessageWW=Window_Message.prototype.updateMessage;
+Window_Message.prototype.updateMessage = function() {
+    const textState = this._textState;
+	if(this._wordWrap)
+	{
+		const textState = this._textState;
+		if (textState) {
+			while (!this.isEndOfText(textState)) {
+				if (this.needsNewPage(textState)) {
+					this.newPage(textState);
+				}
+				this.updateShowFast();
+				this.processCharacter(textState);
+				if (this.shouldBreakHere(textState)) {
+					break;
+				}else{
+					//if we have word wrap we still 
+					//will need to process all the text
+					//so do it here real quick.
+					//otherwise it loops through all text without printing it which means you get it all on one big line with no gaps
+					while (!this.isEndOfText(textState)) 
+					{
+						if (this.needsNewPage(textState)) {
+							return true;
+						}
+						this.processCharacter(textState);
+						this.flushTextState(textState);
+					}
+					break;
+				}
+			}
+			this.flushTextState(textState);
+			if (this.isEndOfText(textState) && !this.isWaiting()) {
+				this.onEndOfText();
+			}
+			return true;
+		} else {
+			return false;
+		}
+	
+	}else{
+		return Fossil.FixUpdateMessageWW.apply(this,arguments);
+	}
+};
+
+Fossil.sendBufferSignalWordWrap=Window_Base.prototype.checkWordWrap;
+Window_Base.prototype.checkWordWrap = function(textState) {
+	var wordWrapState=Fossil.sendBufferSignalWordWrap.call(this,textState);
+	this._needsWordWrapRefresh=wordWrapState;
+	return wordWrapState;
+    
+};
+
+
+ 	//this flushes all the text in the buffer at once.
+	//we want to word wrap it, though!
+/* 	Window_Base.prototype.flushTextState = function(textState) {
+		const text = textState.buffer;
+		const rtl = textState.rtl;
+		const width = this.textWidth(text);
+		const height = textState.height;
+		const x = rtl ? textState.x - width : textState.x;
+		const y = textState.y;
+		if (textState.drawing) {
+			this.contents.drawText(text, x, y, width, height);
+		}
+		textState.x += rtl ? -width : width;
+		textState.buffer = this.createTextBuffer(rtl);
+		const outputWidth = Math.abs(textState.x - textState.startX);
+		if (textState.outputWidth < outputWidth) {
+			textState.outputWidth = outputWidth;
+		}
+		textState.outputHeight = y - textState.startY + height;
+	};	  */
 		
 }else{
 	console.log('I am missing a prereq plugin!')
