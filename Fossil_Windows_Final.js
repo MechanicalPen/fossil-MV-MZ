@@ -4,14 +4,17 @@
  * @plugindesc Fossil Windows Final Fix: This goes at the END of your plugin list. 
  * @author FOSSIL TEAM
  * @target MZ 
- * @help Fossil_Windows_Final goes at the end, after all plugins.
+ * @help Fossil_Windows_Final goes at the end, after ALL plugins (Both MV and MZ)
  
-This is a final cap layer trying for added window compaibility between RMMZ
- and RMMV plugins, as it is possible for data to be lost when transferring 
- window initialization aliases.
+This is a final cap layer trying for added window compatibility between RMMZ
+and RMMV plugins, as when RMMZ initialization injections run they may lose some 
+of the arguments that RMMV initializations use, resulting weird window sizes when
+MZ and MV plugins are mixed.
+ 
+Hopefully this will make things work more smoothly.
 
 This will likely get reworked considerably in the future but is a rough test.  
-Window aliases are from Fossil_Pre version 0.2.04
+Window aliases are from Fossil_Pre version 0.3.01
 
 Terms of use:
 
@@ -20,6 +23,15 @@ under a Creative Commons CC-BY-SA license.  Please credit 'FOSSIL', Restart,
 or 'The FOSSIL TEAM', and link back to the forum thread or github.
 
 */
+
+var Imported = Imported || {};
+Imported.Fossil_WindowsFix=true;
+var Fossil =Fossil || {}
+
+if(!Imported.Fossil_Pre || !Imported.Fossil_Post)	
+{
+	console.log('You should have both Fossil_Pre and Fossil_Post active and above this')
+}
 
 //MZ uses rectangles instead of multiple numbers being passed in.
 //There's even a special check in the MZ code that checks if you forgot a rectangle.
