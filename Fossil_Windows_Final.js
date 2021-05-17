@@ -1,20 +1,27 @@
 
 
  /*:
- * @plugindesc Fossil Windows Final Fix: This goes at the END of your plugin list. 
+ * @plugindesc Fossil WindowFixer: This goes at the END of your plugin list. 
  * @author FOSSIL TEAM
  * @target MZ 
  * @help Fossil_Windows_Final goes at the end, after ALL plugins (Both MV and MZ)
  
-This is a final cap layer trying for added window compatibility between RMMZ
-and RMMV plugins, as when RMMZ initialization injections run they may lose some 
-of the arguments that RMMV initializations use, resulting weird window sizes when
+This is a final layer trying for added window compatibility between RMMZ
+and RMMV plugins. 
+When RMMZ initialization injections run they only take one argument by default, 
+and MZ plugins that modify this code may only pass through one argument, instead
+of all the arguments. This is a problem because RMMV initializations use FOUR
+arguments instead. The result of this combination is weird window sizes when
 MZ and MV plugins are mixed.
  
-Hopefully this will make things work more smoothly.
+Hopefully this plugin will make things work more smoothly.  It checks window
+initializations before anything else, and corrects the values.
 
 This will likely get reworked considerably in the future but is a rough test.  
-Window aliases are from Fossil_Pre version 0.3.01
+Window aliases are from Fossil_Pre version 0.3.01, but iteration on this plugin
+will be slower than Fossil_Pre, as it only needs to be updated when there's 
+a new window fix.  
+(So don't be surprised if Fossil_Pre is a higher version number than this).
 
 Terms of use:
 
@@ -592,6 +599,8 @@ Window_ShopBuy.prototype.initialize = function(rect) {
 		rectA.width||(this.windowWidth ? this.windowWidth() : 0) ||400,  
 		rectA.height||Graphics.boxHeight||400
 		);
+		//set up our goods since MV set it up here.
+		this._shopGoods=this._shopGoods||arguments[3]
 		
 		rectFixFinalWindowShopBuy.call(this,rect)
 		

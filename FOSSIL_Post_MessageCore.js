@@ -50,12 +50,7 @@ if(Imported.YEP_MessageCore && Imported.YEPMCPre)
 		
 		fixMessageCoreCommand101Params.call(this);
 	} 
-	
 
-	
-	//tell rpg maker to ignore the namebox parsing code, and have it just return
-	//whatever gets put into it.
-	//Window_Message.prototype.convertNameBox=function(){return arguments[0]};
 	
 	//because Window_Message.prototype.createSubWindows never happens, the name windows
 	//never get created by message core.  That's generally good, but it means that we have
@@ -83,15 +78,6 @@ if(Imported.YEP_MessageCore && Imported.YEPMCPre)
 
 		makeFakeNameBoxesWindowMessage.apply(this,arguments)
 	}
-
-	Fossil.testFunc=Window_Base.prototype.textWidthExCheck
- 	Window_Base.prototype.textWidthExCheck = function(text) 
-	{
-/* 		var asdf=Window_Base.prototype.textSizeEx.apply(this,arguments);
-		var jkl=Fossil.testFunc.apply(this,arguments);
-		console.log(asdf.width-jkl); */
-		return Fossil.testFunc.apply(this,arguments);//asdf.width;
-	} 
 
 	//undo yanfly's injection into the rendering code; this prevents the
 	// Window_Message.prototype.adjustWindowSettings from being called unnecessarily.
@@ -158,33 +144,12 @@ if(Imported.YEP_MessageCore && Imported.YEPMCPre)
 		}
 	};
 
- 
-/*   	//hook in the MZ messageshowfast again, overwriting the messagecore overwrite
- 	Window_Message.prototype.updateShowFast = function() 
-	{
-		if (!$gameSystem.isFastFowardEnabled() && (this.isTriggered() ||
-			Input.isRepeated("Yanfly.Param.MSGFastForwardKey")) ){
-			this._showFast = true;
-		}
-	};
-	//if we disable it in messagecore, then we can't fastforward the message.
-	//also hook in whatever key yanfly sets for fastforwarding as well.
-	Window_Message.prototype.isTriggered = function() 
-	{
-		return ((
-			Input.isRepeated("ok") ||
-			Input.isRepeated("cancel")  ||
-			TouchInput.isRepeated()
-			)
-		); 
-	};   */
 
 	Fossil.FixUpdateMessageWW=Window_Message.prototype.updateMessage;
 	Window_Message.prototype.updateMessage = function() {
 		const textState = this._textState;
 		if(this._wordWrap)
 		{
-			const textState = this._textState;
 			if (textState) {
 				while (!this.isEndOfText(textState)) {
 					if (this.needsNewPage(textState)) {
@@ -260,28 +225,6 @@ if(Imported.YEP_MessageCore && Imported.YEPMCPre)
 			Fossil.fixprocessNewLine.apply(this,arguments)
 		}
 	};
-
-
- 	//this flushes all the text in the buffer at once.
-	//we want to word wrap it, though!
-/* 	Window_Base.prototype.flushTextState = function(textState) {
-		const text = textState.buffer;
-		const rtl = textState.rtl;
-		const width = this.textWidth(text);
-		const height = textState.height;
-		const x = rtl ? textState.x - width : textState.x;
-		const y = textState.y;
-		if (textState.drawing) {
-			this.contents.drawText(text, x, y, width, height);
-		}
-		textState.x += rtl ? -width : width;
-		textState.buffer = this.createTextBuffer(rtl);
-		const outputWidth = Math.abs(textState.x - textState.startX);
-		if (textState.outputWidth < outputWidth) {
-			textState.outputWidth = outputWidth;
-		}
-		textState.outputHeight = y - textState.startY + height;
-	};	  */
 		
 }else{
 	console.log('I am missing a prereq plugin!')

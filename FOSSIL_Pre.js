@@ -14,7 +14,7 @@
 
  * @help Fossil_Pre goes at the start, before all other plugins.
  
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.2.04
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.3.04
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER 
@@ -39,6 +39,11 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -GALV_CFStepSE
 -GALV_CharacterAnimations
 -GALV_DiagonalMovement
+-GALV_PrizeWheel
+-GALV_VariableBar
+
+-Gimmer_MirrorMirrorOnTheWall
+-Gimmer_WibblyWobbly
 
 -Irina_AutoMessageColor
 
@@ -48,6 +53,11 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -KMS_SpiralEncount
 -KMS_WaterMapEffect
 -KMS_Minimap
+
+-mjshi's ChainCommand QTE plugin
+-mjshi's MatchCardLottery Minigame
+-mjshi's StatPolygon
+-mjshi's Wuxing Minigame
 
 -MOG_ActionName
 -MOG_BattleHud
@@ -80,11 +90,12 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -SRD_ActorSelect
 
 -STV_BeastBook
+-STV_MonsterCards
 
 -VLUE Game Time MV 1.1c
 -VLUE questsystem
 
--WAY_Core (note: requires Fossil_Post_Way to be the NEXT plugin beneath it)
+*WAY_Core (note: requires Fossil_Post_Way to be the NEXT plugin beneath it)
 -WAY_StorageSystem
 -WAY_OptionsMenuCustomActions
 -WAY_VerticalScreenShake
@@ -136,10 +147,15 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -YEP_X_CriticalControl
 -YEP_Z_CriticalSway
 *YEP_ElementCore
+-YEP_ExtraEnemyDrops
+-YEP_ForceAdvantage
 -YEP_HitAccuracy
+-YEP_HitDamageSounds
 *YEP_TargetCore (Tell me if you have odd interactions with action sequences)
 -YEP_X_SelectionControl	
+-YEP_Taunt
 -YEP_VictoryAftermath
+-YEP_X_AftermathLevelUp
 *YEP_ItemCore
 -YEP_X_AttachAugments
 -YEP_X_ItemDisassemble
@@ -151,6 +167,7 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -YEP_X_ItemUpgradeSlots
 -YEP_ItemSynthesis
 *YEP_ShopMenuCore
+-YEP_HideShowItems
 -YEP_X_MoreCurrencies
 *YEP_SkillCore
 -YEP_X_LimitedSkillUses
@@ -172,33 +189,62 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -YEP_X_ProfileStatusPage
 *YEP_AutoPassiveStates
 -YEP_X_PassiveAuras
+-YEP_Z_PassiveCases
+*YEP_EnemyLevels
+-YEP_X_DifficultySlider
+-YEP_X_EnemyBaseParam
+-YEP_EnhancedTP
 *YEP Equip Battle Skills
 -YEP_X_EBSAllowedTypes
 -YEP_X_EquipSkillTiers
+-YEP_JobPoints
+-YEP_PartySystem
 -YEP_StealSnatch
 *YEP_MoveRouteCore
 -YEP_X_ExtMovePack1
+-YEP_FloorDamage
 *YEP_OptionsCore
 -YEP_AnimateTilesOption
 -YEP_EventChasePlayer
 -YEP_X_EventChaseStealth
+-YEP_EventClickTrigger
+-YEP_EventCopier
 -YEP_EventEncounterAid
 -YEP_EventHitboxResize
+-YEP_EventMiniLabel
 -YEP_EventMorpher
+-YEP_EventProximityActivate
+-YEP_EventRegionTrigger
 -YEP_EventSpawner
 -YEP_EventSpriteOffset
+-YEP_EventTimerControl
+-YEP_IconsOnEvents
 -YEP_BaseTroopEvents
+-YEP_ButtonCommonEvents
+-YEP_CreditsPage
 -YEP_DashToggle
+-YEP_DynamicTitleImages
+-YEP_ExternalLinks
 -YEP_FootstepSounds
 -YEP_GabWindow
 *YEP_GridFreeDoodads
 -YEP_X_ExtDoodadPack1
+-YEP_HelpFileAccess
+-YEP_KeyNameEntry
+-YEP_KeyboardConfig
 -YEP_MainMenuVar
+-YEP_MapGoldWindow
+-YEP_MapSelectEquip
+-YEP_MapSelectSkill
+-YEP_MapStatusWindow
 -YEP_PictureSpriteSheets
 -YEP_RegionEvents
 -YEP_RegionRestrictions
 -YEP_SaveEventLocations
 -YEP_SlipperyTiles
+-YEP_SmartJump
+-YEP_StopMapMovement
+-YEP_SwapEnemies
 
 ///////////////////////////////////////////////////////////////////////
 ==Almost Functional with UI issues==
@@ -236,7 +282,10 @@ et cetera) as well as your game as a whole are *not* considered to be
 var Imported = Imported || {};
 Imported.Fossil_Pre=true;
 var Fossil =Fossil || {}
-Fossil.version='0.2.04'
+Fossil.version='0.3.04'
+
+Fossil.isPlaytest=Utils.isOptionValid('test');
+Fossil.listPlugins=Fossil.isPlaytest;
 
 //Since the version number got reset with MZ, plugins that look for MV version number will get confused.  
 //We save the correct version number one in this half of the plugin sandwich, then restore it afterwards!
@@ -284,7 +333,7 @@ oldCommand = function (oldPluginCommand)
 	//initial params (unused in mz).
 	Fossil.Interpreter._params=[]
 	//apparently some MV people like to just read the whole thing raw.  :o
-	Fossil.Interpreter._params[0]=oldPluginCommand;
+	Fossil.Interpreter._params[0]=oldPluginCommand.trim();
     Fossil.Interpreter.pluginCommand(command, args);
     return true;
 	
@@ -390,6 +439,8 @@ Fossil_Sprite_Gauge.prototype.initialize = function(rect) {
 	Sprite_Gauge.prototype.initialize.call(this);
     this.initMembers();
     this.createBitmap();
+	this.autoHide=false;
+	this.autoHideTimer=-1;
 	
 };
 
@@ -410,6 +461,25 @@ Fossil_Sprite_Gauge.prototype.setupSize = function(x,y,barlength,thickness) {
 	this.createBitmap();//push our change in thickness
 };
 
+Fossil_Sprite_Gauge.prototype.update = function() {
+    Sprite.prototype.update.call(this);
+	//fossil gauges are persistent, rmmv gauges are not
+	//if we are being called by a rmmv function, we can set our 
+	//gauge to self-destruct after a frame
+	if (this.autoHide)
+	{
+		if(this.autoHideTimer<=0)
+		{
+			this.hide();
+		}else{
+			this.show()
+		}
+		
+		this.autoHideTimer--;
+	}
+	
+    this.updateBitmap();
+};
 
 //commment this out, but leave for injection
 Fossil_Sprite_Gauge.prototype.updateFlashing = function() {
@@ -435,7 +505,7 @@ Fossil_Sprite_Gauge.prototype.gaugeX = function() {
     }
 };
 
-Fossil_Sprite_Gauge.prototype.drawGauge = function() {
+Fossil_Sprite_Gauge.prototype.drawGauge = function() {	
     const gaugeX = this.gaugeX();
     const gaugeY = this.bitmapHeight() - this.gaugeHeight();
     const gaugewidth = this.bitmapWidth() - gaugeX;
@@ -565,6 +635,8 @@ Window_Base.prototype.drawGauge = function(x, y, width, rate, color1, color2) {
 	newGauge.hideValueText = true;
 	newGauge.hideLabelText=true;
 	newGauge.drawGauge();
+
+
 };
 
 //helper function to do all our fine positioning, on a per-window basis.
@@ -704,9 +776,23 @@ Window_Base.prototype.hpColor = function(actor) { return ColorManager.hpColor(ac
 Window_Base.prototype.mpColor = function(actor) { return ColorManager.mpColor(actor) }
 Window_Base.prototype.tpColor = function(actor) { return ColorManager.tpColor(actor) }
 
+
+/*
+This was in MV but isn't in MZ.  
+ */
+WindowLayer.prototype.move = function(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+};
+
+
 //dummy out a RMMV function that isn't present, isn't needed, and isn't spelled right
 Window_Base.prototype.updateButtonsVisiblity = function(){}
 
+//tell it to fetch face images in advance using the existing function
+Window_Base.prototype.reserveFaceImages=Window_StatusBase.prototype.loadFaceImages;
 
 //MZ uses rectangles instead of multiple numbers being passed in.
 //There's even a special check in the MZ code that checks if you forgot a rectangle.
@@ -842,8 +928,14 @@ Window_Command.prototype.initialize = function(rect) {
 		arguments[3]||rectA.height||(this.windowHeight ? this.windowHeight() : 0)||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight
 		);
 		rectFixWindowCommand.call(this,rect)
-		
+		//if we guessed at the number of rows as MV plugin, then we need to resize.
+		if(this._FossilGuessedVisibleRows && this._list)
+		{
+			this.move(this.x,this.y,this.width,this.fittingHeight(this.numVisibleRows()))
+			this._FossilGuessedVisibleRows=false;
+		}
 	}
+
 	
 };
 
@@ -961,6 +1053,33 @@ Window_StatusBase.prototype.initialize = function(rect) {
 		var rect = new Rectangle(arguments[0], arguments[1], arguments[2]||(this.windowWidth ? this.windowWidth() : 0) ||400,  arguments[3]||(this.windowHeight ? this.windowHeight() : 0)||Graphics.boxHeight);
 		rectFixWindowStatusBase.call(this,rect)
 		
+	}
+	
+};
+
+var rectFixWindowBattleStatus= Window_BattleStatus.prototype.initialize;
+Window_BattleStatus.prototype.initialize = function(rect) {
+	
+	if(arguments.length)
+	{
+		if (arguments[0].constructor.name=='Rectangle') // if our first argument is a rectangle this is MZ code
+		{
+			rectFixWindowBattleStatus.apply(this,arguments) 
+		}else{ //if not, I am assuming it is MV.
+			if(arguments.length==1)
+			{
+				console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
+			}
+			var rect = new Rectangle(arguments[0], arguments[1], arguments[2]||(this.windowWidth ? this.windowWidth() : 0) ||400,  arguments[3]||(this.windowHeight ? this.windowHeight() : 0)||Graphics.boxHeight);
+			rectFixWindowBattleStatus.call(this,rect)
+			
+		}
+	}else{
+		//0 length arguments, we lost it.
+		//call from our current scene using the Scene_Menu prototype 
+		//(in case we end up calling this from outside a menu scene)
+		var rectA= Scene_Battle.prototype.statusWindowRect.call(SceneManager._scene);
+		rectFixWindowBattleStatus.call(this,rectA);
 	}
 	
 };
@@ -1268,6 +1387,9 @@ Window_ShopBuy.prototype.initialize = function(rect) {
 		rectA.height||Graphics.boxHeight||400
 		);
 		
+		//set up our goods since MV set it up here.
+		this._shopGoods=this._shopGoods||arguments[3]
+		
 		rectFixWindowShopBuy.call(this,rect)
 		
 	}
@@ -1490,7 +1612,7 @@ Window_ActorCommand.prototype.initialize = function(rect) {
 //RMMV put drawActorName into Window_Base.  
 //RMMZ only puts it into Window_StatusBase.  hook into the new version.
 
-Window_Base.prototype.drawActorCharacter = function(actor, x, y) {	Window_StatusBase.prototype.drawActorCharacterapply(this,arguments) }
+Window_Base.prototype.drawActorCharacter = function(actor, x, y) {	Window_StatusBase.prototype.drawActorCharacter.apply(this,arguments) }
 Window_Base.prototype.drawActorClass = function(actor, x, y, width) {	Window_StatusBase.prototype.drawActorClass.apply(this,arguments) }
 Window_Base.prototype.drawActorFace = function( actor, x, y, width, height){	Window_StatusBase.prototype.drawActorFace.apply(this,arguments)}
 Window_Base.prototype.drawActorIcons = function(actor, x, y, width) {	Window_StatusBase.prototype.drawActorIcons.apply(this,arguments) }
@@ -1525,6 +1647,9 @@ Window_Selectable.prototype.resetScroll = function() {
 Window_Selectable.prototype.isCursorVisible = function() {
 	return true; //am gonna trust RMMZ to keep the cursor visible.
 };
+
+//define the old RMMV isContentsArea using MZ's definitions. 
+Window_Selectable.prototype.isContentsArea=function(x,y){return this.innerRect.contains(x, y)};
 
 //hook the old slot system into the new
 Window_EquipSlot.prototype.slotName = function(index) {
@@ -1603,6 +1728,7 @@ Window_Selectable.prototype.gaugeBackColor = function() {
 Window_Command.prototype.numVisibleRows = function() {
 	if (!this._list)
 	{
+		this._FossilGuessedVisibleRows=true;
 		return 7;//default to 7 if we don't know how many rows we need.  Might as well hope we're lucky :)
 	}
     return Math.ceil(this.maxItems() / this.maxCols());
@@ -1841,6 +1967,22 @@ ImageManager.loadNormalBitmap = function(url, hue) {
     return cache[url];
 
 };
+// we now 'load' images instead of 'reserve' them.  Do the needful.
+ImageManager.reserveAnimation = ImageManager.loadAnimation;
+ImageManager.reserveBattleback1 = ImageManager.loadBattleback1;
+ImageManager.reserveBattleback2 = ImageManager.loadBattleback2;
+ImageManager.reserveCharacter = ImageManager.loadCharacter;
+ImageManager.reserveEnemy = ImageManager.loadEnemy;
+ImageManager.reserveFace = ImageManager.loadFace;
+ImageManager.reserveParallax = ImageManager.loadParallax;
+ImageManager.reservePicture = ImageManager.loadPicture;
+ImageManager.reserveSvActor = ImageManager.loadSvActor;
+ImageManager.reserveSvEnemy = ImageManager.loadSvEnemy;
+ImageManager.reserveSystem = ImageManager.loadSystem;
+ImageManager.reserveTileset = ImageManager.loadTileset;
+ImageManager.reserveTitle1 = ImageManager.loadTitle1;
+ImageManager.reserveTitle2 = ImageManager.loadTitle2;
+
 
 //This rotate hue method from RMMV is very inefficient.
 //However, because some old plugins directly blt images together
@@ -1997,6 +2139,17 @@ Sprite_Animation.prototype.targetSpritePosition = function(sprite) {
 	}
     return sprite.worldTransform.apply(point);
 };
+
+//this was reassigned to Sprite_Battleback in MZ.
+Spriteset_Battle.prototype.battleback1Bitmap=function()
+{
+	return ImageManager.loadBattleback1(Sprite_Battleback.prototype.battleback1Name());
+}
+
+Spriteset_Battle.prototype.battleback2Bitmap=function()
+{
+	return ImageManager.loadBattleback2(Sprite_Battleback.prototype.battleback2Name());
+}
 
 //make characters be able to request animations again!
 //uses the new ones (obvs)
@@ -2316,3 +2469,103 @@ if(Fossil.pluginNameList.contains('YEP_X_MoreCurrencies'))
 	Yanfly.Icon = Yanfly.Icon || {};
 }
 
+if(Fossil.pluginNameList.contains('Gimmer_MirrorMirrorOnTheWall'))
+{
+	//give it a shadertilemap to play with - this object doesn't exist in RMMZ but it's basically
+	//been subsumed by tilemap.
+	
+	function ShaderTilemap() {
+		Tilemap.apply(this, arguments);
+		this.roundPixels = true;
+	}
+	ShaderTilemap.prototype = Object.create(Tilemap.prototype);
+	ShaderTilemap.prototype.constructor = ShaderTilemap;
+	//account for the rmmz ._bitmaps vs rmmv .bitmaps on our tilemap.
+	Object.defineProperty(ShaderTilemap.prototype, "bitmaps", {
+		get: function() {
+			return this._bitmaps;
+		},
+		set: function(value) {
+			this._bitmaps = value;
+		},
+		configurable: true
+	});
+	
+	//give it a useless refreshtileset function
+	Tilemap.prototype.refreshTileset = function() {
+
+	};
+	//add this weird follower reversal function from RMMV
+	Game_Followers.prototype.reverseEach = function(callback, thisObject) {
+		this._data.reverse();
+		this._data.forEach(callback, thisObject);
+		this._data.reverse();
+	};
+	
+}
+
+
+//some things (like Gimmer's drunk filter Gimmer_WibblyWobbly) 
+//will ask for the tone filter when they want the basecolorfilter.  Redirect it.
+/* Object.defineProperty(Spriteset_Map.prototype, "_toneFilter", {
+	get: function() {
+		return this._baseColorFilter;
+	},
+	set: function(value) {
+		this._baseColorFilter = value;
+	},
+	configurable: true
+}); */
+
+
+//some things (like Gimmer's drunk filter Gimmer_WibblyWobbly) 
+//will ask for the AudioManager's ._sourceNode
+//problem is it can now have more than one, and it's an array in ._sourceNodes
+//we'll just return the first sourcenode in this case.
+
+/* 
+Object.defineProperty(WebAudio.prototype, "._sourceNode", {
+	get: function() {
+		return this._sourceNodes[0];
+	},
+	set: function(value) {
+		this._sourceNodes[0] = value;
+	},
+	
+	configurable: true
+}); */
+
+if(Fossil.pluginNameList.contains('YEP_JobPoints'))
+{
+	//this got moved from window_base to window_statusbase.
+	//since YEP_jobpoints wants to meddle only with Window_Base.prototype.drawActorSimpleStatus
+	//set up something in advance.
+	Fossil.WSBdrawActorSimpleStatus=Window_StatusBase.prototype.drawActorSimpleStatus;
+	Window_Base.prototype.drawActorSimpleStatus = function(actor, x, y) {
+		Fossil.WSBdrawActorSimpleStatus.apply(this,arguments)
+		//this actually draws the job and does nothing else.
+		//use the same params as icon drawing, which means that it draws the job points
+		//two lines below the level.
+		Window_Base.prototype.drawActorClass.call(this,actor, x, y + this.lineHeight() * 2.5)
+	};
+	
+	
+}
+
+
+
+if(Fossil.pluginNameList.contains('YEP_MapStatusWindow'))
+{
+	//this blurs the line between Scene_Map and Scene_Battle.
+	//hand Scene_Map the needed function
+	Scene_Map.prototype.windowAreaHeight = Scene_Battle.prototype.windowAreaHeight;
+
+}
+
+if(Fossil.pluginNameList.contains('YEP_KeyNameEntry'))
+{
+	//copied out of rpg_windows from MV
+	Window_ChoiceList.prototype.textWidthEx = function(text) {
+		return this.drawTextEx(text, 0, this.contents.height);
+	};
+}

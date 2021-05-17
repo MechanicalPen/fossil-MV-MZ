@@ -7,7 +7,7 @@
  * @target MZ 
  * @help Fossil_Post goes between your RMMV plugins and your RMMZ plugins.
  
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.2.04
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.3.01
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER MV 
@@ -27,7 +27,7 @@ or 'The FOSSIL TEAM', and link back to the forum thread or github.
 var Imported = Imported || {};
 Imported.Fossil_Post=true;
 var Fossil =Fossil || {}
-Fossil.postVersion='0.2.04'
+Fossil.postVersion='0.3.04'
 if(Fossil.version!==Fossil.postVersion)
 {
 	console.log('Version mismatch!  Fossil_Post version is '+Fossil.postVersion +', but Fossil_Pre is version '+Fossil.version)
@@ -72,7 +72,10 @@ if(Imported.MOG_BattleHud)
 {
 	//command129 now takes in params as argument, it previously used ._params[]
 	//do the same thing.
-	
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized MOG_BattleHud")
+	}
 	var fixGameInterpretercommand129=Game_Interpreter.prototype.command129;
 	Game_Interpreter.prototype.command129 = function() {
 		this._params=arguments[0];
@@ -89,6 +92,10 @@ if(Imported.MOG_BattleHud)
 
 if(Imported.MOG_TreasurePopup)
 {
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized MOG_TreasurePopup")
+	}
 	//same with command 125, 126, 127, and 128
 	var fixGameInterpretercommand125MOGTP=Game_Interpreter.prototype.command125;
 	Game_Interpreter.prototype.command125 = function() {
@@ -155,6 +162,10 @@ if(Imported.MOG_TreasurePopup)
 
 if(Imported.MOG_ChronoEngine)
 {
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized MOG_ChronoEngine")
+	}
 	var fixGameInterpretercommand212CE=Game_Interpreter.prototype.command212;
 	Game_Interpreter.prototype.command212 = function() {
 		this._params=arguments[0];
@@ -202,6 +213,10 @@ if(Imported.MOG_ChronoEngine)
 //we check
 if(Imported.MOG_ATB_Gauge && !Imported.MOG_ATB)
 {
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized MOG_ATB_Gauge, MOG ATB not detected.")
+	}
 	//mog named this the same thing for both MV and MZ, so check version with a unique function
 	if(ATB_Gauge.prototype.needCreateSkillIcon)
 	{
@@ -210,7 +225,10 @@ if(Imported.MOG_ATB_Gauge && !Imported.MOG_ATB)
 /* 			Game_BattlerBase.prototype.isMaxAtb = function() {
 				return this.isATBCharging()
 			}; */
-
+			if(Fossil.listPlugins)
+			{
+				console.log("Linking MOG_ATB_Gauge with YEP_X_BattleSysATB")
+			}
 			
 			Fossil.fixSpriteSetSetupATB = Scene_Battle.prototype.createSpriteset;
 			Scene_Battle.prototype.createSpriteset = function() {
@@ -258,7 +276,10 @@ if(Imported.MOG_ATB_Gauge && !Imported.MOG_ATB)
 /* 			Game_BattlerBase.prototype.isMaxAtb = function() {
 				return this.isATBCharging()
 			}; */
-
+			if(Fossil.listPlugins)
+			{
+				console.log("Linking MOG_ATB_Gauge with YEP_X_BattleSysCTB")
+			}
 			
 			Fossil.fixSpriteSetSetupATB = Scene_Battle.prototype.createSpriteset;
 			Scene_Battle.prototype.createSpriteset = function() {
@@ -314,7 +335,10 @@ if(Imported.MOG_ATB_Gauge && !Imported.MOG_ATB)
 	
 if(Imported.YEP_GridFreeDoodads && !!DoodadManager)  //Only tweak the UI of doodads if the UI is loaded and the plugin exists
 {
-
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_GridFreeDoodads")
+	}
 	// inject the fake RPGMAKER_VERSION when it's trying to save, so the doodad function uses the full path.
 	// I was hoping that I only had to spoof RPGM version once, but sadly that's not the case :(
 	Fossil.saveDoodadFakeVersion=StorageManager.saveDoodadSettings 
@@ -390,6 +414,10 @@ if(Imported.YEP_X_ExtDoodadPack1 && !!DoodadManager)
 
 if(Imported.YEP_SkillCore)
 {
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_SkillCore")
+	}
 	// Gauge swapping using the MV commands is totally unworkable because 
 	// the basic drawactorhp, drawactormp, etc were all removed in RMMZ
 	// but, once more, we have a nice opportunity to use the existing 
@@ -435,6 +463,10 @@ Scene_MenuBase.prototype.helpAreaTop= function()
 
 if(Imported.YEP_EquipCore)
 {
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_EquipCore")
+	}
 	//if we're using equip core, then the help bar is at the top!
 	//As mentioned elsewhere, the help bar is half size because of touch controls.
 	Scene_Base.prototype.isBottomHelpMode = function() {
@@ -451,6 +483,10 @@ if(Imported.YEP_EquipCore)
 
 if(Imported.YEP_X_EquipCustomize)
 {
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_X_EquipCustomize")
+	}
 	//fix the window Y location
 	Fossil.moveEquipCustomizeWindow=Scene_EquipCustomize.prototype.setCustomizedItem;
 	Scene_EquipCustomize.prototype.setCustomizedItem = function() 
@@ -472,7 +508,10 @@ if(Imported.YEP_X_EquipCustomize)
 
 if(Imported.AnimatedSVEnemies)
 {
-
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized Rexal's AnimatedSVEnemies")
+	}
 	//rexal spent a lot of effort setting a battleSprite, then at the last moment
 	//RMMZ decides to undo the work.
 	//Well, this un-undoes it :)
@@ -501,6 +540,10 @@ if(Imported.AnimatedSVEnemies)
 
 if(Imported.Galv_MessageCaptions)
 {
+	if(Fossil.listPlugins)
+	{
+		console.log('Fossilized Galv_MessageCaptions')
+	}
 	// parameter passing is handled differently between these. 
 	// RMMV attaches it to the object, RMMZ passes it as an argument.
 	// I also need to make it return true.
@@ -559,6 +602,10 @@ if( typeof(Window_Hidden) !== 'undefined')
 
 if(Imported.YEP_StatusMenuCore)
 {
+	if(Fossil.listPlugins)
+	{
+		console.log('Fossilized YEP_StatusMenuCore')
+	}
 	//add xp bars 
 	Fossil.AddSprite_GaugeCurrentValueXP= Sprite_Gauge.prototype.currentValue;
 
@@ -676,6 +723,11 @@ if(Imported.YEP_StatusMenuCore)
 
 if(Imported.YEP_OptionsCore)
 {
+	
+	if(Fossil.listPlugins)
+	{
+		console.log('Fossilized YEP_OptionsCore')
+	}
 	//tell it to redraw the gauges every frame, like in RMMV 
 	//(since they can be scrolled up and down this is needed)
 	var eraseGaugesdrawAllItems = Window_Selectable.prototype.drawAllItems;
@@ -702,6 +754,12 @@ if(Imported.YEP_OptionsCore)
 
 if(Fossil.pluginNameList.contains('HO_AchievementSystem'))
 {
+	
+	if(Fossil.listPlugins)
+	{
+		console.log('Fossilized HO_AchievementSystem')
+	}
+	
 	//when we change panes, erase gauges.  
 	Fossil.eraseAchievementDataGauges=Window_AchievementData.prototype.updateItem;
 	Window_AchievementData.prototype.updateItem = function()
@@ -719,6 +777,10 @@ if(Fossil.pluginNameList.contains('HO_AchievementSystem'))
 
 if(Imported.YEP_SelfSwVar)
 {
+	if(Fossil.listPlugins)
+	{
+		console.log('Fossilized YEP_SelfSwVar')
+	}
 	//fix a whole lot of command injections
 	
 	var fixGameInterpretercommand101Self=Game_Interpreter.prototype.command101;
@@ -867,6 +929,10 @@ if(Imported.YEP_SelfSwVar)
 
 if(Imported["SumRndmDde Summon Core"])
 {
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized SumRndmDde Summon Core")
+	}
 	Sprite_Summon.prototype.setupIntroAnimation = function(){
 		if(this._actor.introAnimation())
 		{
@@ -942,6 +1008,10 @@ if(Imported["SumRndmDde Summon Core"])
 
 if(Imported.YEP_BattleEngineCore)
 {
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_BattleEngineCore")
+	}
 	//if we don't have improved battle backs imported, then get rid of this function
 	//which is moving our battlebacks
 	if (!Imported.YEP_ImprovedBattlebacks) {
@@ -1172,15 +1242,20 @@ if(Imported.YEP_BattleEngineCore)
 			}
 		};
 		
-		Fossil.hideEnemySelectWindow=Scene_Battle.prototype.createEnemyWindow
-		Scene_Battle.prototype.createEnemyWindow = function() 
-		{
-			Fossil.hideEnemySelectWindow.apply(this,arguments)
-			
-			this._enemyWindow.move(0,0,0,0);//we want this to be invisible but usable.
- 			
-		};
 	}
+	Fossil.hideEnemySelectWindow=Scene_Battle.prototype.createEnemyWindow
+	Scene_Battle.prototype.createEnemyWindow = function() 
+	{
+		Fossil.hideEnemySelectWindow.apply(this,arguments)
+		if(!Yanfly.Param.BECShowSelectBox)
+		{
+			this._enemyWindow.move(0,0,0,0);//we want this to be invisible but usable.
+		}else{
+			this._enemyWindow.move(this._enemyWindow.x,this._actorCommandWindow.y,this._enemyWindow.width,this._actorCommandWindow.height);
+		}
+		
+	};
+	
 	
 	if(Imported.YEP_X_VisualHpGauge)
 	{
@@ -1291,7 +1366,10 @@ if(Imported.YEP_BattleEngineCore)
 
 	if(Imported.YEP_X_TurnOrderDisplay)
 	{
-
+		if(Fossil.listPlugins)
+		{
+			console.log("Fossilized YEP_X_TurnOrderDisplay")
+		}
 		//increase the icon size parameter so it scales properly on screen.
 		//basically it didn't used to include the window frame size, but now it does.
 		//4 pixel frame around image, 8 pixel frame around window, present on BOTH sides
@@ -1350,6 +1428,10 @@ if(Imported.YEP_BattleEngineCore)
 
 if(Imported.YEP_X_InBattleStatus)
 {
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_X_InBattleStatus")
+	}
 	//import all the status window functions into the inbattlestatelist.
      for (var i in Window_StatusBase.prototype) 
 	{
@@ -1376,6 +1458,10 @@ if(Imported.YEP_X_InBattleStatus)
 
 if(Imported.YEP_X_PartyLimitGauge)
 {
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_X_PartyLimitGauge")
+	}
 	//this expects the windowlayer to have a .x of 0, but in RMMZ the window layer has a .x of 4 by default
 	//to avoid causing lasting issues, we'll set it and then refresh it
 	Fossil.fixWindow_PartyLimitGaugeupdateOpacity=Window_PartyLimitGauge.prototype.updateOpacity;
@@ -1421,7 +1507,10 @@ if(Imported.YEP_X_PartyLimitGauge)
 
 if(Imported.YEP_X_ItemUpgrades)
 {
-	
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_X_ItemUpgrades")
+	}
 	
 	//there's a one-character typo at line 320.  It says
 	//item.types.contain
@@ -1451,7 +1540,10 @@ if(Imported.YEP_X_ItemUpgrades)
 
 if(Imported["SumRndmDde Shaking Text"])
 {
-	
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized SumRndmDde Shaking Text")
+	}
 		//remove iteration from textState so we don't double-tap it.
 	Fossil.fixWindow_MessageCreateShakingCharacter = Window_Message.prototype.createShakingCharacter;
 	Window_Message.prototype.createShakingCharacter = function(textState, c, w, h) {
@@ -1476,9 +1568,12 @@ if(Imported["SumRndmDde Shaking Text"])
 			 //control character means we never advanced.
 		}else{
 			//our shakey characters are too far to the right by half a slot.  Correct this.
+			//also shift the y up a tiny bit.
 			textState.x +=w/2;
+			textState.y -=h/4
 			Fossil.fixWindow_MessageCreateShakingCharacter.call(this,textState, c, w, h)
 			textState.x +=w/2;
+			textState.y +=h/4
 		}
 	}
 	
@@ -1495,6 +1590,10 @@ if(Imported["SumRndmDde Shaking Text"])
 
 if(Imported.YEP_Footsteps)
 {
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_Footsteps")
+	}
 	Fossil.fixplayFootstepSound =Game_CharacterBase.prototype.playFootstepSound
 	Game_CharacterBase.prototype.playFootstepSound = function(volume, pitch, pan) 
 	{
@@ -1528,7 +1627,10 @@ if(Imported.YEP_Footsteps)
 
 if(Imported.YEP_X_ItemDiscard)
 {
-	//
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_X_ItemDiscard")
+	}
 	Fossil.fixWindow_ItemActionCommandCreateDiscardCommandName =Window_ItemActionCommand.prototype.createDiscardCommandName;
 	Window_ItemActionCommand.prototype.createDiscardCommandName = function() 
 	{
@@ -1547,7 +1649,10 @@ if(Imported.YEP_X_ItemDiscard)
 
 if(Imported.YEP_X_ItemRequirements)
 {
-	
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_X_ItemRequirements")
+	}
 	//this is bugged; it runs an eval (which is supposed to be caught in 'value'), but 
 	//doesn't actually catch the true/false in 'value'.
 	//I'm checking to see if 'value' ever gets referenced in the provided code
@@ -1571,6 +1676,10 @@ if(Imported.YEP_X_ItemRequirements)
 //if we have imported the STV_BeastBook plugin
 if (Fossil.pluginNameList.contains('STV_BeastBook') &&(typeof(Scene_BeastBook)!=='undefined'))
 {
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized STV_BeastBook")
+	}
 	Fossil.fixWindow_BeastBook_updateStatus= Window_BeastBook_Info.prototype.setBeast
      Window_BeastBook_Info.prototype.setBeast  = function(beast) 
 	{
@@ -1585,6 +1694,10 @@ if (Fossil.pluginNameList.contains('STV_BeastBook') &&(typeof(Scene_BeastBook)!=
 
 if(Imported.YEP_ShopMenuCore)
 {
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_ShopMenuCore")
+	}
 	//unique windowtype in YEP_Shop_Menu_Core needs to be given a rect.
 	Window_ShopCategory.prototype.initialize = function() 
 	{
@@ -1596,12 +1709,12 @@ if(Imported.YEP_ShopMenuCore)
 	};
 	
 	
-	//put shopgoods into this becuase it didn't get handed off for some reason.
+	//put shopgoods into this if it didn't get handed off due to lazy initialization
 	
 	Fossil.GiveShopGoodsToShopBuyWindow=Window_ShopBuy.prototype.initialize
 	Window_ShopBuy.prototype.initialize =function()
 	{
-		this._shopGoods=arguments[3];//grab the shop goods.
+		this._shopGoods=this._shopGoods||arguments[3];//grab the shop goods.
 		Fossil.GiveShopGoodsToShopBuyWindow.apply(this,arguments);
 	}
 	
@@ -1624,12 +1737,20 @@ if(Imported.YEP_ShopMenuCore)
 
 if(Imported.YEP_X_Subclass)
 {
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_X_Subclass")
+	}
 	//YEP is trying to overwrite the wrong function, correct it.
 	Window_StatusBase.prototype.drawActorClass = Window_Base.prototype.drawActorClass;
 }
 
 if(Fossil.pluginNameList.contains('KMS_Minimap'))
 {
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized KMS_Minimap")
+	}
 	Fossil.fixKMSMiniMapUpdate=Spriteset_Map.prototype.update;
 	//fading is accomplished in a different way, but we can 
 	//still create a fake fadesprite to pass in the info about the opacity
@@ -1647,8 +1768,231 @@ if(Fossil.pluginNameList.contains('KMS_Minimap'))
 //defaults go somewhere else now!
 if(Fossil.pluginNameList.contains('Olivia_AntiPlayerStress'))
 {
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized Olivia_AntiPlayerStress")
+	}
 	AudioManager._bgmVolume = Olivia.AntiPlayerStress.DefaultVolume;
 	AudioManager._bgsVolume = Olivia.AntiPlayerStress.DefaultVolume;
 	AudioManager._meVolume = Olivia.AntiPlayerStress.DefaultVolume;
 	AudioManager._seVolume = Olivia.AntiPlayerStress.DefaultVolume;
+}
+
+
+if(Fossil.pluginNameList.contains('Gimmer_WibblyWobbly'))
+{
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized Gimmer_WibblyWobbly")
+	}
+	//now that we have multiple source nodes the attached value is ._sourceNodes
+	//and it's an array!
+	//things that reference ._sourceNode should just reference ._sourceNodes[0] instead.
+	//ez pzy
+	Fossil.fixDrunkUpdate=Spriteset_Map.prototype.updateDrunk 
+	Spriteset_Map.prototype.updateDrunk = function()
+	{
+		if(AudioManager._bgmBuffer)
+		{
+			AudioManager._bgmBuffer._sourceNode = AudioManager._bgmBuffer._sourceNodes[0]
+		}
+		Fossil.fixDrunkUpdate.apply(this,arguments);
+	}
+	
+}
+
+if(Fossil.pluginNameList.contains('Gimmer_LicenseBoard'))
+{
+	//give the license board window  all the parts a MZ window needs!
+	
+	Window_LicenseBoard.prototype._createAllParts = function() {
+		Window.prototype._createAllParts.apply(this,arguments);
+		this._windowCursorSprite=this._cursorSprite
+
+		//giving it a default to prevent it from crashing when window_selectable tries
+		//to draw everything.
+		this.boardName=0;
+	}
+	Window_LicenseBoard.prototype._createArrowSprites = function() 
+	{
+		this._downArrowSprite = new Sprite();
+		this.addChild(this._downArrowSprite);
+		this._upArrowSprite = new Sprite();
+		this.addChild(this._upArrowSprite);
+		this._leftArrowSprite = new Sprite();
+		this.addChild(this._leftArrowSprite);
+		this._rightArrowSprite = new Sprite();
+		this.addChild(this._rightArrowSprite);
+	};
+	//technically plugin works but is unusably ugly.  I'll come back to this later.
+	
+}
+
+if(Fossil.pluginNameList.contains('Gimmer_Core'))
+{
+	//give the popup window  all the parts a MZ window needs!
+	
+	Window_Popup.prototype._createAllParts = function() {
+		Window.prototype._createAllParts.apply(this,arguments);
+		this._windowCursorSprite=this._cursorSprite
+		this._windowBackSprite=this._backSprite;
+		this._windowBackSprite.alpha = 1;
+		this._index=0;
+	}
+	//not sure if it works but it doesn't crash anymore.
+	
+//this._dimmerSprite is the new name for this._backSprite.  Set it appropriately.
+
+	/* Object.defineProperty(Window_Popup.prototype, "_backSprite", {
+	get: function() {
+		return this._dimmerSprite;
+	},
+	set: function(value) {
+		this._dimmerSprite = value;
+	},
+	configurable: true
+}); */
+//doesn't seem to work but kept for posterity
+}
+
+if(Imported.YEP_Z_PassiveCases)
+{
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_Z_PassiveCases")
+	}
+	//bugfix:
+	//   Alive Actors/Enemies/Allies/Foes <= x, etc don't work
+	//because the functions they invoke return arrays instead of numbers
+	//like unit.aliveMembers() gives a list of which units are alive
+	//not a count
+	//if we get an array, it has a length, and that's the value we want.
+	Fossil.fixforceNumberParamType=DataManager.numberParameterCheck;
+	DataManager.numberParameterCheck = function(check, user) {
+		var paramVal=Fossil.fixforceNumberParamType.apply(this,arguments);
+		//falsey param values give us a 0. (for empty lists and such)
+		if (!paramVal)
+		{
+			return 0
+		}
+		//if it has a length then return the length
+		if (paramVal.length)
+		{
+			return paramVal.length;
+		}else{
+			return paramVal;
+		}
+		
+	}
+	
+}
+
+if(Fossil.pluginNameList.contains('YEP_JobPoints'))
+{
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_JobPoints")
+	}
+	//this got moved from window_base to window_statusbase.
+	//Any MV redefinitions got caught in windowbase, now reapply to statusbase
+	//Fossil.FixStatusBaseDrawActorSimpleStatus=Window_Base.prototype.drawActorSimpleStatus;
+	
+	//remove the reference to drawing the actor class since we don't attach the jp there.
+	Yanfly.JP.Window_Base_drawActorClass=function(){}
+	//transfer the changes we made to Window_Base to Window_StatusBase so they get run.
+	Window_StatusBase.prototype.drawActorSimpleStatus = Window_Base.prototype.drawActorSimpleStatus;
+
+}
+
+if(Imported.YEP_PartySystem)
+{
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_PartySystem")
+	}
+	//give the partydetail the properties of a status windows.
+	 for (var i in Window_StatusBase.prototype) 
+	{
+        //if (Object.hasOwnProperty.call(Window_StatusBase.prototype, i)) 
+		//{
+			if(Window_PartyDetail.prototype[i]==undefined)
+			{
+				Window_PartyDetail.prototype[i] = Window_StatusBase.prototype[i];
+			}
+        //}
+    } 
+	
+	Fossil.FixPartyDetailGaugeRefresh=Window_PartyDetail.prototype.refresh;
+	Window_PartyDetail.prototype.refresh = function() {
+		if (this._additionalSprites)
+		{
+			Window_StatusBase.prototype.hideAdditionalSprites.call(this);
+		}else{
+			this._additionalSprites={}
+		}
+		Fossil.FixPartyDetailGaugeRefresh.apply(this,arguments);
+	};
+}
+
+
+if(Imported.YEP_KeyboardConfig)
+{
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_KeyboardConfig")
+	}
+	//yanfly hardcoded in the old horizontal spacing formula used in RMMV into 
+	//the formula used to calculate the x-offset of larger-than-normal keys
+	//this reverses the x offset calculation in order to get the index,
+	//then reapplies the new formula to get the correct x offset.
+ 	Fossil.FixWindowKeyConfig=Window_KeyConfig.prototype.itemRect;
+	Window_KeyConfig.prototype.itemRect = function(index) 
+	{
+		var rectA=Fossil.FixWindowKeyConfig.apply(this,arguments);
+		var baseRect=Window_Selectable.prototype.itemRect.call(this, index);
+		if(rectA.width>baseRect.width)
+		{
+
+			rectA.x-=this._scrollX+this.spacing();
+			rectA.x/=(baseRect.width + this.spacing())
+			rectA.x*=this.itemWidth();
+			rectA.x=Math.floor(rectA.x);
+			rectA.x+=this.scrollBaseX()
+			rectA.x+=this.colSpacing()/2;
+
+		}
+		return rectA;
+	} 
+	
+}
+
+if(Imported.MatchCardLottery)
+{
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized MatchCardLottery")
+	}
+	//due to order of operations we end up needing to define the command window size first
+	//then resize it once we know how big it needs to be
+	//so here's the resize.
+	Fossil.fixMatchCardReplayCommandWindowSize=Window_MatchCardReplayCommand.prototype.makeCommandList ;
+	Window_MatchCardReplayCommand.prototype.makeCommandList = function (x, y) {
+		Fossil.fixMatchCardReplayCommandWindowSize.apply(this,arguments);
+		if(this._FossilGuessedVisibleRows)
+		{
+			this.move(this.x,this.y,this.width,this.fittingHeight(this.numVisibleRows()))
+			this._FossilGuessedVisibleRows=false;
+		}
+	};
+}
+
+if(Imported.StatPolygon)
+{
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized StatPolygon")
+	}
+	//we don't need this function, so make it do nothing
+	Bitmap.prototype._setDirty=function(){}
+	
 }
