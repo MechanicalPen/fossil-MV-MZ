@@ -20,6 +20,7 @@ This should be reasonably plug-and-play.  There aren't really parameters to conf
 In addition, some plugins in the list, like YEP_MessageCore or WAY_Core, require dedicated fossil layers.  See the list in the header of Fossil_Pre, or on the rpgmaker forum ( https://forums.rpgmakerweb.com/index.php?threads/135523/ )
 
 **Invoking MV Plugin Commands**
+
 You can invoke MV plugin commands using MZ's plugin command interface (OldPluginCommand in Fossil_Pre).
 
 Alternatively, you can put the command into a script using the oldCommand function.  For instance, 
@@ -28,7 +29,7 @@ oldCommand('somePlugin arguments et cetera');
 
 
 
-Terms of use:
+**Terms of Use:**
 
 All unique code in FOSSIL is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License ( https://creativecommons.org/licenses/by-sa/4.0/ ).  The remainder is taken from RPG Maker MV and RPG Maker MZ, and is covered under the appropriate licenses. No code from any existing plugin was used. Credit Restart, 'FOSSIL' or 'FOSSIL Team', and link back to the github or the forum thread.
 
