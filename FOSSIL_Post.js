@@ -1235,8 +1235,7 @@ if(Imported.YEP_BattleEngineCore)
 			{
 				this.resetTextColor();
 				const name = this._enemies[index];
-				const rect = this.itemLineRect(index);
-				this.drawText(name, rect.x, rect.y, rect.width);
+				c
 			}else{
 				Fossil.fixDrawBattleEnemyFakeSelectionControl.call(this,index)
 			}
@@ -1995,4 +1994,94 @@ if(Imported.StatPolygon)
 	//we don't need this function, so make it do nothing
 	Bitmap.prototype._setDirty=function(){}
 	
+}
+
+if(Imported.YEP_QuestJournal)
+{
+	if(Fossil.listPlugins)
+	{
+		console.log("Fossilized YEP_QuestJournal")
+	}
+	//yanfly used a custom drawQuestTextEx which was just MV's drawTextEx with one line added.
+	//replace with MZ version.
+	Window_QuestData.prototype.drawQuestTextEx=function(text,x,y)
+	{
+		const rect = this.baseTextRect();
+		this.contents.clear();
+
+		//contents of the MZ Window_Base.prototype.drawTextEx
+		this.resetFontSettings();
+		const textState = Window_Base.prototype.createTextState.call(this,text,x,y,rect.width);
+		//loop through if we have wordwarp to make it work.
+		if(this._wordWrap)
+		{	
+			while (textState.index < textState.text.length) 
+			{
+				this.processCharacter(textState);
+				this.flushTextState(textState);
+			}
+		}else{			
+			this.processAllText(textState);
+		}
+		//count how many newlines we have.  Add a buffer.
+		this._fossilLineCount=(textState.text.split('\n').length||2)+2;
+		this._allTextHeight=this._fossilLineCount*Window_Scrollable.prototype.itemHeight.call(this)
+		this._text=textState.text;
+		return textState.outputWidth; 
+	}
+	
+	Fossil.fixWindowQuestDataRefresh=Window_QuestData.prototype.refresh
+	Window_QuestData.prototype.refresh=function()
+	{
+		//this.paint();
+		Fossil.fixWindowQuestDataRefresh.apply(this,arguments);
+		this.cursorFixed(true);
+	}
+	
+	Window_QuestData.prototype.updateKeyScrolling=function(){}
+ 
+   	Window_QuestData.prototype.maxItems=function()
+	{
+		return 1;
+	} 
+	
+	Window_QuestData.prototype.itemHeight = function() {
+		return this._allTextHeight|| Window_Scrollable.prototype.itemHeight.call(this); 
+	}; 
+	Window_QuestData.prototype.overallHeight = function()
+	{
+		return this._allTextHeight+48;
+	}
+	
+	Window_QuestData.prototype.contentsHeight=function()
+	{
+	return Math.max( this.overallHeight(),Window_Selectable.prototype.contentsHeight.call(this))
+	}
+	
+	if(Imported.YEP_X_MapQuestWindow)
+	{
+		//slimmed down compared to the above ^
+		Window_MapActiveQuest.prototype.drawQuestTextEx=function(text,x,y)
+		{
+			const rect = this.baseTextRect();
+			//contents of the MZ Window_Base.prototype.drawTextEx
+			this.resetFontSettings();
+			const textState = Window_Base.prototype.createTextState.call(this,text,x,y,rect.width);
+			//loop through if we have wordwarp to make it work.
+			if(this._wordWrap)
+			{	
+				while (textState.index < textState.text.length) 
+				{
+					this.processCharacter(textState);
+					this.flushTextState(textState);
+				}
+			}else{			
+				this.processAllText(textState);
+			}
+			//count how many newlines we have.  Add a buffer.
+			this._fossilLineCount=(textState.text.split('\n').length||2);
+			this._allTextHeight=this._fossilLineCount*Window_Scrollable.prototype.itemHeight.call(this)
+			return textState.outputWidth; 
+		}
+	}
 }

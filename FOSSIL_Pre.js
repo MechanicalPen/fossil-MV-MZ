@@ -203,6 +203,8 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 *YEP_MoveRouteCore
 -YEP_X_ExtMovePack1
 -YEP_FloorDamage
+-YEP_QuestJournal
+-YEP_X_MapQuestWindow
 *YEP_OptionsCore
 -YEP_AnimateTilesOption
 -YEP_EventChasePlayer
