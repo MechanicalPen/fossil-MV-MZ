@@ -14,7 +14,7 @@
 
  * @help Fossil_Pre goes at the start, before all other plugins.
  
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.3.04
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.3.05
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER 
@@ -232,6 +232,7 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 *YEP_GridFreeDoodads
 -YEP_X_ExtDoodadPack1
 -YEP_HelpFileAccess
+-YEP_IconBalloons
 -YEP_KeyNameEntry
 -YEP_KeyboardConfig
 -YEP_MainMenuVar
@@ -243,6 +244,7 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -YEP_RegionEvents
 -YEP_RegionRestrictions
 -YEP_SaveEventLocations
+-YEP_ScaleSprites
 -YEP_SlipperyTiles
 -YEP_SmartJump
 -YEP_StopMapMovement
@@ -284,7 +286,7 @@ et cetera) as well as your game as a whole are *not* considered to be
 var Imported = Imported || {};
 Imported.Fossil_Pre=true;
 var Fossil =Fossil || {}
-Fossil.version='0.3.04'
+Fossil.version='0.3.05'
 
 Fossil.isPlaytest=Utils.isOptionValid('test');
 Fossil.listPlugins=Fossil.isPlaytest;
@@ -1951,6 +1953,16 @@ Sprite_Base.prototype.isAnimationPlaying = function() {
 //but RMMZ uses a spinner instead!
 Graphics.updateLoading = function() {
 }
+
+
+//create empty dummy functions for animations and balloons.
+Sprite_Character.prototype.updateAnimation=function(){}
+Sprite_Character.prototype.setupAnimation=function(){}
+Sprite_Character.prototype.endAnimation=function(){}
+Sprite_Character.prototype.setupBalloon=function(){}
+Sprite_Character.prototype.startBalloon=function(){}
+Sprite_Character.prototype.updateBalloon=function(){this.setupBalloon();}
+Sprite_Character.prototype.endBalloon=function(){}
 
 
 

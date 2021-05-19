@@ -27,7 +27,7 @@ or 'The FOSSIL TEAM', and link back to the forum thread or github.
 var Imported = Imported || {};
 Imported.Fossil_Post=true;
 var Fossil =Fossil || {}
-Fossil.postVersion='0.3.04'
+Fossil.postVersion='0.3.05'
 if(Fossil.version!==Fossil.postVersion)
 {
 	console.log('Version mismatch!  Fossil_Post version is '+Fossil.postVersion +', but Fossil_Pre is version '+Fossil.version)
@@ -44,15 +44,19 @@ if(!Imported.Fossil_Pre)
 
 Utils.RPGMAKER_VERSION=Utils.MZ_VERSION
 
-//remove any legacy animation stuff, as well as anything hooked into it.
+//re-remove any legacy animation stuff, as well as anything hooked into it.
 Sprite_Character.prototype.updateAnimation=function(){}
 Sprite_Character.prototype.setupAnimation=function(){}
 Sprite_Character.prototype.endAnimation=function(){}
-//and speech balloons
-Sprite_Character.prototype.setupBalloon=function(){}
-Sprite_Character.prototype.updateBalloon=function(){}
-Sprite_Character.prototype.startBalloon=function(){}
-Sprite_Character.prototype.endBalloon=function(){}
+
+if(!Imported.YEP_IconBalloons)
+{
+	//and re-remove speech balloons
+	Sprite_Character.prototype.setupBalloon=function(){}
+	Sprite_Character.prototype.updateBalloon=function(){}
+	Sprite_Character.prototype.startBalloon=function(){}
+	Sprite_Character.prototype.endBalloon=function(){}
+}
 
 //hue is now done as a sprite property rather than upon bitmap loading.  This uses the new RMMZ version.
 var updateSpriteBaseHue = Sprite_Base.prototype.initialize
@@ -2084,4 +2088,24 @@ if(Imported.YEP_QuestJournal)
 			return textState.outputWidth; 
 		}
 	}
+}
+
+
+if(Imported.YEP_IconBalloons)
+{
+	//and inject this in.
+	Fossil.UpdateSpriteCharacterMVBalloons=Sprite_Character.prototype.update;
+	Sprite_Character.prototype.update=function()
+	{
+		Fossil.UpdateSpriteCharacterMVBalloons.apply(this,arguments);
+		this.updateBalloon();
+	}
+	//tie icon balloons to their targets
+	Fossil.startIconBalloonAssignTarget=Sprite_Character.prototype.startIconBalloon;
+	Sprite_Character.prototype.startIconBalloon=function()
+	{
+		Fossil.startIconBalloonAssignTarget.apply(this,arguments);
+		this._iconBalloonSprite._target=this;
+	}
+	
 }
