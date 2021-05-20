@@ -2118,4 +2118,12 @@ if(Imported.YEP_IconBalloons)
 	Window_CommonEventMenu.prototype.drawItemBackground = function (){}
 	//remove the added item height
 	Window_CommonEventMenu.prototype.itemHeight=function(){return this.lineHeight()}
+	
+	
+	//scootch the cursor down a little bit.
+	Window_CommonEventMenu.prototype.setCursorRect = function(x, y, width, height) {
+		y+=2;
+		Window.prototype.setCursorRect.apply(this,arguments);
+    }
+
 } 
