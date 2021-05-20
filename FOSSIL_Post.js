@@ -2109,3 +2109,13 @@ if(Imported.YEP_IconBalloons)
 	}
 	
 }
+
+
+
+ if(Imported.YEP_CommonEventMenu)
+{
+	//those black rectangles are ugly on this menu, and don't exist in MV.  Remove them.
+	Window_CommonEventMenu.prototype.drawItemBackground = function (){}
+	//remove the added item height
+	Window_CommonEventMenu.prototype.itemHeight=function(){return this.lineHeight()}
+} 
