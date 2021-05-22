@@ -82,6 +82,11 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 
 -Reval's Animated Enemies
 
+-SE_Core
+-SE_EventChance
+-SE_DashStamina
+-SE_Minimap
+
 -Shaz_TileChanger
 
 -SRD_SummonCore
@@ -167,6 +172,7 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -YEP_X_ItemUpgradeSlots
 -YEP_ItemSynthesis
 *YEP_ShopMenuCore
+-YEP_X_CondShopPrices
 -YEP_HideShowItems
 -YEP_X_MoreCurrencies
 *YEP_SkillCore
@@ -223,6 +229,9 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -YEP_IconsOnEvents
 -YEP_BaseTroopEvents
 -YEP_ButtonCommonEvents
+*YEP_CommonEventMenu
+-YEP_X_CEMSetupPack1
+-YEP_X_CEMSetupPack2
 -YEP_CreditsPage
 -YEP_DashToggle
 -YEP_DynamicTitleImages
@@ -1202,7 +1211,7 @@ Window_Help.prototype.initialize = function(rect) {
 	}else{ //if not, I am assuming it is MV.
 		if(arguments.length==1)
 		{
-			console.log("Only one argument and not a rectangle. Could be help window inheriting form something that isn't updating, or it could just be RMMV behavior (it takes one number indicating how many lines of text there are)")
+			console.log("Only one argument and not a rectangle. Could be help window inheriting from something that isn't updating, or it could just be RMMV behavior (it takes one number indicating how many lines of text there are)")
 		}
 		//RMMV passes this in with a single argument, which is how many lines of text
 		//there are
@@ -2583,3 +2592,4 @@ if(Fossil.pluginNameList.contains('YEP_KeyNameEntry'))
 		return this.drawTextEx(text, 0, this.contents.height);
 	};
 }
+

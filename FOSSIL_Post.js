@@ -210,6 +210,16 @@ if(Imported.MOG_ChronoEngine)
 		Fossil.fix__mog_toolSys_gPlayer_updateNonmoving.call(this,this.fixMogArgs[0],this.fixMogArgs[1]);
 	}
 
+	//add in the item core + chrono engine compatibility fix.
+	if(Imported.YEP_ItemCore)
+	{
+		Fossil.fix_mog_toolSys_gmap_setup = Game_Map.prototype.setup;
+		Game_Map.prototype.setup = function(mapId) {
+			if ($gameSystem._toolsData.length == 0) {this.dataMapToolClear()}
+			Fossil.fix_mog_toolSys_gmap_setup.apply(this,arguments)
+		}
+				
+	}
 }
 
 
@@ -2127,3 +2137,11 @@ if(Imported.YEP_IconBalloons)
     }
 
 } 
+
+if(Imported.SE_Minimap)
+{
+
+	Window_Minimap.prototype.updatePadding = function() {
+		this.padding = 0;
+	};
+}
