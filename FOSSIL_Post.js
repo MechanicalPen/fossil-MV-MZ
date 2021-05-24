@@ -7,7 +7,7 @@
  * @target MZ 
  * @help Fossil_Post goes between your RMMV plugins and your RMMZ plugins.
  
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.3.01
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.3.06
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER MV 
@@ -27,7 +27,7 @@ or 'The FOSSIL TEAM', and link back to the forum thread or github.
 var Imported = Imported || {};
 Imported.Fossil_Post=true;
 var Fossil =Fossil || {}
-Fossil.postVersion='0.3.05'
+Fossil.postVersion='0.3.06'
 if(Fossil.version!==Fossil.postVersion)
 {
 	console.log('Version mismatch!  Fossil_Post version is '+Fossil.postVersion +', but Fossil_Pre is version '+Fossil.version)
@@ -2144,4 +2144,123 @@ if(Imported.SE_Minimap)
 	Window_Minimap.prototype.updatePadding = function() {
 		this.padding = 0;
 	};
+}
+
+
+if(Imported['VE - Basic Module'])
+{
+	//revert this.
+	Sprite_Battler.prototype.mainSprite = function() {
+        return this;
+    };
+	
+	//make the item() function return this the action instead of crashing.
+	Fossil.FixGetAllElementsVE=VictorEngine.getAllElements;
+    VictorEngine.getAllElements = function(subject, action) {
+		action.item=function(){return this;}
+		return Fossil.FixGetAllElementsVE(subject,action);
+    };
+	
+	VictorEngine.waitAnimation=function(animationId)
+	{
+		return Fossil.guessAnimationEnd(animationId);
+	}
+	
+	
+	//skipping VE_ActionDodge because I can't figure out 
+	//how to get elemental-based dodges to work in my MV project
+	
+	if(Imported['VE - Charge Actions'])
+	{
+		//make the update charge action decrement properly
+		Fossil.fixVEUpdateChargeAction=Game_BattlerBase.prototype.updateChargeAction;
+		Game_BattlerBase.prototype.updateChargeAction = function(){
+			//instead of having a null current action, we have a current action 
+			//with an item Id of zero.
+			if(this.currentAction() && this.currentAction()._item._itemId==0)
+			{
+				this._chargeAction.turns = this._chargeAction.turns -1;
+			}
+			Fossil.fixVEUpdateChargeAction.apply(this,arguments);
+		}
+		
+	}
+	
+	if(Imported['VE - Materia System'])	
+	{
+		
+		//does not crash for me but is real ugly.
+		
+		Window_MateriaEquip.prototype.updateCursor = function() 
+		{
+			Window_Selectable.prototype.refreshCursor.apply(this,arguments)
+		};
+		
+		//fix for the the windowcursorsprite->cursorsprite rename
+		//and the fact that it's no longer a child.  Basically just use the generic createallparts.
+		Window_MateriaEquip.prototype._createAllParts = function() 
+		{
+			Window.prototype._createAllParts.call(this);
+		}
+		
+	}
+	
+}
+/* 
+// the same fix works for both yanfly and hime's battleweather plugins.
+if(Imported.YEP_WeatherInBattle || Imported.BattleWeather)
+{
+	Fossil.FixYEPWIBcommand236 =Game_Interpreter.prototype.command236 
+	Game_Interpreter.prototype.command236 = function() {
+	this._params=arguments[0];
+    return Fossil.FixYEPWIBcommand236.apply(this,arguments)
+	};
+	
+} */
+
+if(Imported.EquipSlotsCore)
+{
+	//prevent a crash if the actor doesn't have any equipment slots.
+	Fossil.fixWindowEquipItemIncludes=Window_EquipItem.prototype.includes;
+	Window_EquipItem.prototype.includes = function(item) {
+		if(this._actor.equipSlotList().length==0){return false}
+		return Fossil.fixWindowEquipItemIncludes.apply(this,arguments)
+	};
+	
+	Fossil.FixForceChangeEquip=Game_Actor.prototype.forceChangeEquip;
+	Game_Actor.prototype.forceChangeEquip = function(slotId, item) {
+		if( this._equips.length==0){return false}
+		Fossil.FixForceChangeEquip.apply(this,arguments)
+	};
+	
+	Fossil.FixChangeEquip=Game_Actor.prototype.changeEquip;
+	Game_Actor.prototype.changeEquip = function(slotId, item) 
+	{
+		if( this._equips.length==0){return false}
+		Fossil.FixChangeEquip.apply(this,arguments)
+	};
+
+}
+
+if(Imported.YEP_X_AreaOfEffect)
+{
+	//we need to move the 'create aoe sprites'
+	//it's currently in Spriteset_Battle.prototype.createBattleback
+	//but it needs to be in Spriteset_Battle.prototype.createBattleField
+	
+	Fossil.yanflycreateAoeSprites =Spriteset_Battle.prototype.createAoeSprites;
+	
+	//neutralize the current call in createBattleback.
+	Spriteset_Battle.prototype.createAoeSprites = function(){}
+	
+	Fossil.createBattleFieldAddAoeSprites=Spriteset_Battle.prototype.createBattleField;
+	
+	Spriteset_Battle.prototype.createBattleField = function() {
+
+		Fossil.createBattleFieldAddAoeSprites.apply(this,arguments);
+		Fossil.yanflycreateAoeSprites.apply(this,arguments);
+	};
+
+
+		
 }

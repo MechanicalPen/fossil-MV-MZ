@@ -14,7 +14,7 @@
 
  * @help Fossil_Pre goes at the start, before all other plugins.
  
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.3.05
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.3.06
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER 
@@ -44,6 +44,20 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 
 -Gimmer_MirrorMirrorOnTheWall
 -Gimmer_WibblyWobbly
+
+-HIME_BattleWeather
+-HIME_GuestFollowers Note: plugin commands ONLY work with oldCommand()
+-HIME_HiddenShopGoods
+-HIME_ScopeCore
+-HIME_ScopeChangeRules
+-HIME_EquipSlotsCore
+-HIME_EnemyReinforcements
+-HIME_RandomEncounterEvents
+-HIME_EnemyLevels
+-HIME_EnemyClasses
+-HIME_EnemyEquips
+-HIME_SideviewActorEnemies
+-HIME_MoreEnemyDrops
 
 -Irina_AutoMessageColor
 
@@ -96,6 +110,29 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 
 -STV_BeastBook
 -STV_MonsterCards
+
+-UNCO_AmmunitionSystem
+-UNCO_X_Crafting
+
+*VE_Basic Module
+-VE_ActionConditions
+-VE_ActionStates
+-VE_ActionStrengthen
+-VE_ArrowCursor
+-VE_BattleAdvantage
+-VE_CharacterFrames
+-VE_ChargeActions
+-VE_DirectCommands
+-VE_CommandReplace
+-VE_CooperationSkills
+-VE_CounterActions
+-VE_CriticalHitEffects
+-VE_DiagonalMovement
+-VE_EquipSet
+-VE_EnemySkill
+-VE_FollowUpSkills
+-VE_Masters
+-VE_PassiveStates 
 
 -VLUE Game Time MV 1.1c
 -VLUE questsystem
@@ -156,11 +193,16 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -YEP_ForceAdvantage
 -YEP_HitAccuracy
 -YEP_HitDamageSounds
+-YEP_LevelUpGrowthEffects
+-YEP_LifeSteal
+-YEP_OverkillBonus
 *YEP_TargetCore (Tell me if you have odd interactions with action sequences)
+-YEP_X_AreaOfEffect
 -YEP_X_SelectionControl	
 -YEP_Taunt
 -YEP_VictoryAftermath
 -YEP_X_AftermathLevelUp
+-YEP_WeatherInBattle
 *YEP_ItemCore
 -YEP_X_AttachAugments
 -YEP_X_ItemDisassemble
@@ -249,7 +291,9 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -YEP_MapSelectEquip
 -YEP_MapSelectSkill
 -YEP_MapStatusWindow
+-YEP_MusicMenu
 -YEP_PictureSpriteSheets
+-YEP_PictureCommonEvents
 -YEP_RegionEvents
 -YEP_RegionRestrictions
 -YEP_SaveEventLocations
@@ -295,7 +339,7 @@ et cetera) as well as your game as a whole are *not* considered to be
 var Imported = Imported || {};
 Imported.Fossil_Pre=true;
 var Fossil =Fossil || {}
-Fossil.version='0.3.05'
+Fossil.version='0.3.06'
 
 Fossil.isPlaytest=Utils.isOptionValid('test');
 Fossil.listPlugins=Fossil.isPlaytest;
@@ -338,6 +382,12 @@ oldCommand = function (oldPluginCommand)
 	const args = oldPluginCommand.split(" ");
     const command = args.shift();
 	
+	//use the game map one if it exists.
+	if($gameMap._interpreter)
+	{
+		Fossil.Interpreter=$gameMap._interpreter
+	}
+	
 	if(!Fossil.Interpreter)
 	{
 		//we need to have this be persistent since sometimes people put stuff into the interpreter.
@@ -345,7 +395,7 @@ oldCommand = function (oldPluginCommand)
 	}
 	//initial params (unused in mz).
 	Fossil.Interpreter._params=[]
-	//apparently some MV people like to just read the whole thing raw.  :o
+	//apparently some MV people like to just read the whole parameter list raw, so add it back.
 	Fossil.Interpreter._params[0]=oldPluginCommand.trim();
     Fossil.Interpreter.pluginCommand(command, args);
     return true;
@@ -356,6 +406,30 @@ PluginManager.registerCommand('FOSSIL_Pre', 'useOldPlugin' , args => {
 	const oldPluginCommand = String(args.OldPluginCommand );
 	oldCommand(oldPluginCommand)
 });
+
+//alter the 'executeCommand' function so it stores the parameters taken in as an argument into ._params
+//rmmv code expects this and it will save a ton of one-off fixes.
+Game_Interpreter.prototype.executeCommand = function() {
+    const command = this.currentCommand();
+    if (command) {
+		if(command.parameters)
+		{
+			this._params = command.parameters
+		}
+        this._indent = command.indent;
+        const methodName = "command" + command.code;
+        if (typeof this[methodName] === "function") {
+            if (!this[methodName](command.parameters)) {
+                return false;
+            }
+        }
+        this._index++;
+    } else {
+        this.terminate();
+    }
+    return true;
+};
+
 
 
 //alter our buttondata in order to include an option for no button type being provided
@@ -400,6 +474,37 @@ Sprite_Enemy.prototype.updateBitmap = function()
 	}
 	
 }
+//we can't just grab the animation duration in RMMZ the way we do in RMMV
+//because effekseer doesn't let us just grab animation.frames.length
+//so we have this horrible hack where we check for the last sound or the end
+//of the last flash instead.
+//if you want to extend an animation, 
+//just set a flash of duration 1 frame at the end point
+Fossil.guessAnimationEnd = function (animation)
+{
+	//take in either the animation ID or the animation object.
+	if(typeof(animation)=='number')
+	{
+		animation=$dataAnimations[animation]
+	}
+	var flashEnd=0;
+	var soundEnd =0;
+	var flashList =animation.flashTimings;
+	if(flashList.length)
+	{
+		var flashEnd = flashList[flashList.length-1].frame+flashList[flashList.length-1].duration;
+	}
+	var soundList = animation.soundTimings;
+	//I can't tell how long a sound is so let's say 10 frames arbitrarily.
+	if (soundList.length)
+	{
+		soundEnd = soundList[soundList.length-1].frame+10 ;
+	}
+	
+	return Math.max(flashEnd,soundEnd,1);
+}
+
+
 
 //Making custom gauges is more difficult in MZ, because they default is hard-coded to be
 //only for a few specific battler stats.
