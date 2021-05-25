@@ -7,7 +7,7 @@
  * @target MZ 
  * @help Fossil_Post goes between your RMMV plugins and your RMMZ plugins.
  
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.3.06
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.3.07
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER MV 
@@ -27,7 +27,7 @@ or 'The FOSSIL TEAM', and link back to the forum thread or github.
 var Imported = Imported || {};
 Imported.Fossil_Post=true;
 var Fossil =Fossil || {}
-Fossil.postVersion='0.3.06'
+Fossil.postVersion='0.3.07'
 if(Fossil.version!==Fossil.postVersion)
 {
 	console.log('Version mismatch!  Fossil_Post version is '+Fossil.postVersion +', but Fossil_Pre is version '+Fossil.version)
@@ -1950,10 +1950,8 @@ if(Imported.YEP_PartySystem)
 
 if(Imported.YEP_KeyboardConfig)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_KeyboardConfig")
-	}
+	Fossil.log("Fossilized YEP_KeyboardConfig")
+	
 	//yanfly hardcoded in the old horizontal spacing formula used in RMMV into 
 	//the formula used to calculate the x-offset of larger-than-normal keys
 	//this reverses the x offset calculation in order to get the index,
@@ -1981,10 +1979,8 @@ if(Imported.YEP_KeyboardConfig)
 
 if(Imported.MatchCardLottery)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized MatchCardLottery")
-	}
+	Fossil.log("Fossilized MatchCardLottery")
+	
 	//due to order of operations we end up needing to define the command window size first
 	//then resize it once we know how big it needs to be
 	//so here's the resize.
@@ -2001,10 +1997,9 @@ if(Imported.MatchCardLottery)
 
 if(Imported.StatPolygon)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized StatPolygon")
-	}
+
+	Fossil.log("Fossilized StatPolygon")
+
 	//we don't need this function, so make it do nothing
 	Bitmap.prototype._setDirty=function(){}
 	
@@ -2012,10 +2007,10 @@ if(Imported.StatPolygon)
 
 if(Imported.YEP_QuestJournal)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_QuestJournal")
-	}
+	
+	
+	Fossil.log("Fossilized YEP_QuestJournal")
+	
 	//yanfly used a custom drawQuestTextEx which was just MV's drawTextEx with one line added.
 	//replace with MZ version.
 	Window_QuestData.prototype.drawQuestTextEx=function(text,x,y)
@@ -2103,6 +2098,7 @@ if(Imported.YEP_QuestJournal)
 
 if(Imported.YEP_IconBalloons)
 {
+	Fossil.log("Fossilized YEP_IconBalloons")
 	//and inject this in.
 	Fossil.UpdateSpriteCharacterMVBalloons=Sprite_Character.prototype.update;
 	Sprite_Character.prototype.update=function()
@@ -2124,6 +2120,7 @@ if(Imported.YEP_IconBalloons)
 
  if(Imported.YEP_CommonEventMenu)
 {
+	Fossil.log("Fossilized YEP_CommonEventMenu")
 	//those black rectangles are ugly on this menu, and don't exist in MV.  Remove them.
 	Window_CommonEventMenu.prototype.drawItemBackground = function (){}
 	//remove the added item height
@@ -2140,7 +2137,7 @@ if(Imported.YEP_IconBalloons)
 
 if(Imported.SE_Minimap)
 {
-
+	Fossil.log("Fossilized SE_Minimap")
 	Window_Minimap.prototype.updatePadding = function() {
 		this.padding = 0;
 	};
@@ -2149,6 +2146,7 @@ if(Imported.SE_Minimap)
 
 if(Imported['VE - Basic Module'])
 {
+	Fossil.log("Fossilized VE - Basic Module")
 	//revert this.
 	Sprite_Battler.prototype.mainSprite = function() {
         return this;
@@ -2220,6 +2218,7 @@ if(Imported.YEP_WeatherInBattle || Imported.BattleWeather)
 
 if(Imported.EquipSlotsCore)
 {
+	Fossil.log("Fossilized EquipSlotsCore")
 	//prevent a crash if the actor doesn't have any equipment slots.
 	Fossil.fixWindowEquipItemIncludes=Window_EquipItem.prototype.includes;
 	Window_EquipItem.prototype.includes = function(item) {
@@ -2244,6 +2243,7 @@ if(Imported.EquipSlotsCore)
 
 if(Imported.YEP_X_AreaOfEffect)
 {
+	Fossil.log("Fossilized YEP_X_AreaOfEffect")
 	//we need to move the 'create aoe sprites'
 	//it's currently in Spriteset_Battle.prototype.createBattleback
 	//but it needs to be in Spriteset_Battle.prototype.createBattleField
@@ -2260,7 +2260,70 @@ if(Imported.YEP_X_AreaOfEffect)
 		Fossil.createBattleFieldAddAoeSprites.apply(this,arguments);
 		Fossil.yanflycreateAoeSprites.apply(this,arguments);
 	};
-
-
 		
+}
+
+
+if(Imported.DreamX_ChoiceHelp)
+{
+	Fossil.log("Fossilized DreamX_ChoiceHelp")
+	//the problem is that order of operations is different
+	//and the Window_Message.prototype.createSubWindows function that used to add a help window
+	//now no longer is called.
+	//so the help window gets referenced without being created, and causes a crash.
+	//
+	//Instead, I'm going to add the help window when it gets asked for and 
+	//if it doesn't already exist.
+	Fossil.addDreamXHelpWindow=Window_Message.prototype.helpWindow;
+	Window_Message.prototype.helpWindow = function () {
+		
+		if(!this._helpWindow)
+		{
+			this._choiceWindow=this._choiceWindow||{} //give a dummy choice window
+			this._choiceWindow.setHelpWindow=function(){};
+			//choicewindow never gets called anyway since it's renamed in RMMZ to choicelist
+			this.createSubWindows()
+		}
+		
+		return Fossil.addDreamXHelpWindow.apply(this,arguments);
+        
+    };
+	
+	Fossil.setHelpChoiceListWindow=Scene_Message.prototype.createChoiceListWindow;
+	Scene_Message.prototype.createChoiceListWindow = function() {
+		Fossil.setHelpChoiceListWindow.apply(this,arguments);
+		this._choiceListWindow._helpWindow = this._messageWindow._helpWindow;
+		this._choiceListWindow.callUpdateHelp();
+	};
+	//make this do nothing.
+	//might have compatibily issues in the future with other things that muck around
+	//with the Window_Message.prototype.createSubWindows function, but
+	//hopefully nothing unmanageable.
+	DreamX.ChoiceHelp.Window_Message_createSubWindows=function(){};
+
+		//this does the things that dreamX wants when he initMembers in terminateMessage.
+	Window_Message.prototype.fakeInitMembers = function() {
+		this._background = 0;
+		this._positionType = 2;
+		this._waitCount = 0;
+		this._faceBitmap = null;
+		this._textState = null;
+		this.clearFlags();
+	};
+	
+	
+	
+	Fossil.swapInFakeInitWindowMessageTerminateMessage=Window_Message.prototype.terminateMessage
+	Window_Message.prototype.terminateMessage = function () {
+		var realInitMembers = Window_Message.prototype.initMembers
+		
+		Window_Message.prototype.initMembers=Window_Message.prototype.fakeInitMembers;
+		
+		Fossil.swapInFakeInitWindowMessageTerminateMessage.apply(this,arguments)
+        
+        Window_Message.prototype.initMembers= realInitMembers;
+    };
+	
+	
+	
 }

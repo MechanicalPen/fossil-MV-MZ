@@ -1,6 +1,6 @@
  /*:
  * @plugindesc Fossil is an interoperability layer for RMMZ, designed to make MV plugins work with in MZ. Fossil_Pre goes at the start of your plugin list.
- * So far, we support over 100 plugins.  You can help!
+ * So far, we support over 250 plugins.  You can help!
  * @author FOSSIL TEAM
  * @target MZ  
 
@@ -14,7 +14,7 @@
 
  * @help Fossil_Pre goes at the start, before all other plugins.
  
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.3.06
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.3.07
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER 
@@ -31,6 +31,8 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 ==Fully Functional==  
 (Alphabetical by plugin maker, then roughly by plugin order)
 ///////////////////////////////////////////////////////////////////////
+
+-DreamX_ChoiceHelp
 
 -GALV_Questlog
 -GALV_TimedMessagePopups
@@ -339,10 +341,19 @@ et cetera) as well as your game as a whole are *not* considered to be
 var Imported = Imported || {};
 Imported.Fossil_Pre=true;
 var Fossil =Fossil || {}
-Fossil.version='0.3.06'
+Fossil.version='0.3.07'
 
 Fossil.isPlaytest=Utils.isOptionValid('test');
 Fossil.listPlugins=Fossil.isPlaytest;
+
+//a variation of console.log for listing plugins
+//basically reduces the if statements I need to write/
+Fossil.log=function(inputText){
+	if(Fossil.listPlugins)
+	{
+		console.log(inputText)
+	}
+}
 
 //Since the version number got reset with MZ, plugins that look for MV version number will get confused.  
 //We save the correct version number one in this half of the plugin sandwich, then restore it afterwards!
