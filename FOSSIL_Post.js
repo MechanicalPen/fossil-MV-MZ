@@ -6,6 +6,7 @@
  * @author FOSSIL TEAM
  * @target MZ 
  * @help Fossil_Post goes between your RMMV plugins and your RMMZ plugins.
+ * @base Fossil_Pre
  
 Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.3.07
 
@@ -40,6 +41,18 @@ if(!Imported.Fossil_Pre)
 	console.log('Fossil_Post WARNING: You forgot to import the first half of this plugin!')
 	
 }
+
+
+//MV style window functions
+Fossil.MV=Fossil.MV||{};
+Fossil.MV.drawItemBackground = function (){}
+Fossil.MV.itemHeight=function(){return this.lineHeight()}	
+//scootch the cursor down a little bit.
+Fossil.MV.setCursorRect = function(x, y, width, height) {
+	y+=2;
+	Window.prototype.setCursorRect.apply(this,arguments);
+}
+
 
 
 Utils.RPGMAKER_VERSION=Utils.MZ_VERSION
@@ -2146,6 +2159,7 @@ if(Imported.SE_Minimap)
 
 if(Imported['VE - Basic Module'])
 {
+	
 	Fossil.log("Fossilized VE - Basic Module")
 	//revert this.
 	Sprite_Battler.prototype.mainSprite = function() {
@@ -2184,10 +2198,10 @@ if(Imported['VE - Basic Module'])
 		
 	}
 	
+
 	if(Imported['VE - Materia System'])	
 	{
 		
-		//does not crash for me but is real ugly.
 		
 		Window_MateriaEquip.prototype.updateCursor = function() 
 		{
@@ -2201,20 +2215,63 @@ if(Imported['VE - Basic Module'])
 			Window.prototype._createAllParts.call(this);
 		}
 		
+		//those black rectangles are ugly on this menu, and don't exist in MV.  Remove them.
+
+		//restore MV look (no black rectangles, closer clustered items)
+		//might be overkill but w/e
+		Window_MateriaStatus.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+		Window_MateriaStatus.prototype.itemHeight=Fossil.MV.itemHeight;
+		Window_MateriaStatus.prototype.setCursorRect=Fossil.MV.setCursorRect;
+		Window_MateriaList.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+		Window_MateriaList.prototype.itemHeight=Fossil.MV.itemHeight;
+		Window_MateriaList.prototype.setCursorRect=Fossil.MV.setCursorRect;
+		Window_MateriaItem.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+		Window_MateriaItem.prototype.itemHeight=Fossil.MV.itemHeight;
+		Window_MateriaItem.prototype.setCursorRect=Fossil.MV.setCursorRect;
+		Window_MateriaShop.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+		Window_MateriaShop.prototype.itemHeight=Fossil.MV.itemHeight;
+		Window_MateriaShop.prototype.setCursorRect=Fossil.MV.setCursorRect;
+		Window_MateriaEquip.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+
+		//replace with MZ versions
+		Window_MateriaEquip.prototype.cursorDown =Window_Selectable.prototype.cursorDown;
+		Window_MateriaEquip.prototype.cursorUp =Window_Selectable.prototype.cursorUp;
+		Window_MateriaEquip.prototype.cursorRight =Window_Selectable.prototype.cursorRight;
+		Window_MateriaEquip.prototype.cursorLeft =Window_Selectable.prototype.cursorLeft;
+		
+		//no smoothness to our scrolling!
+		Window_MateriaEquip.prototype.smoothSelect = function(index) 
+		{
+			Window_Selectable.prototype.select.apply(this,arguments)
+			this.reselect();
+			this.refresh();
+		};	
+		
+		Window_MateriaEquip.prototype.scrollTo = function(index) {
+			Window_Selectable.prototype.scrollTo.apply(this,arguments)
+			this.reselect();
+			this.refresh();
+		};
+		Window_MateriaEquip.prototype.smoothScrollTo = function(index) {
+			Window_Selectable.prototype.scrollTo.apply(this,arguments)
+			this.reselect();
+			this.refresh();
+		};
+		
+		Fossil.fixCursorLevel=Scene_MateriaEquip.prototype.create
+		Scene_MateriaEquip.prototype.create=function(){
+			Fossil.fixCursorLevel.apply(this,arguments)
+			//layer cursor sprite on top by adding it to the top of the list
+			//(don't worry, addchild removes it from its current location)
+			this._equipWindow._cursorSprite.parent.addChild(this._equipWindow._cursorSprite)
+		}
+		
 	}
 	
 }
-/* 
-// the same fix works for both yanfly and hime's battleweather plugins.
-if(Imported.YEP_WeatherInBattle || Imported.BattleWeather)
-{
-	Fossil.FixYEPWIBcommand236 =Game_Interpreter.prototype.command236 
-	Game_Interpreter.prototype.command236 = function() {
-	this._params=arguments[0];
-    return Fossil.FixYEPWIBcommand236.apply(this,arguments)
-	};
-	
-} */
+
+
+
 
 if(Imported.EquipSlotsCore)
 {
@@ -2316,11 +2373,18 @@ if(Imported.DreamX_ChoiceHelp)
 	Fossil.swapInFakeInitWindowMessageTerminateMessage=Window_Message.prototype.terminateMessage
 	Window_Message.prototype.terminateMessage = function () {
 		var realInitMembers = Window_Message.prototype.initMembers
-		
 		Window_Message.prototype.initMembers=Window_Message.prototype.fakeInitMembers;
 		
+		
+        //make fake help and choice windows if they don't exist in the current scene
+		this._helpWindow=this._helpWindow||{'FossilFake':true};
+		this._choiceWindow=this._choiceWindow||{'FossilFake':true};
 		Fossil.swapInFakeInitWindowMessageTerminateMessage.apply(this,arguments)
-        
+		
+		if(this._helpWindow.FossilFake){this._helpWindow =undefined}
+		if(this._choiceWindow.FossilFake){this._choiceWindow =undefined}
+		
+		
         Window_Message.prototype.initMembers= realInitMembers;
     };
 	

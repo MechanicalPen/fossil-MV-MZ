@@ -134,6 +134,7 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -VE_EnemySkill
 -VE_FollowUpSkills
 -VE_Masters
+-VE_MateriaSystem
 -VE_PassiveStates 
 
 -VLUE Game Time MV 1.1c
@@ -799,6 +800,8 @@ Window_Base.prototype.drawActorHp = function(actor, x, y, width) {
 	newGauge._gaugeColor1=color1;
 	newGauge._gaugeColor2=color2;
 	newGauge._valueColor2 = ColorManager.hpColor(actor);	
+	newGauge.drawLabel();
+	newGauge.drawValue();
 };
 
 Window_Base.prototype.drawActorMp = function(actor, x, y, width) {
@@ -811,7 +814,8 @@ Window_Base.prototype.drawActorMp = function(actor, x, y, width) {
 	newGauge._gaugeColor1=color1;
 	newGauge._gaugeColor2=color2;
 	newGauge._valueColor2 = ColorManager.mpCostColor(actor);
-	
+	newGauge.drawLabel();
+	newGauge.drawValue();
 };
 Window_Base.prototype.drawActorTp = function(actor, x, y, width) {
     width = width || 186;
@@ -824,8 +828,8 @@ Window_Base.prototype.drawActorTp = function(actor, x, y, width) {
 	newGauge._gaugeColor1=color1;
 	newGauge._gaugeColor2=color2;
 	newGauge._valueColor2 = ColorManager.tpCostColor(actor);
-	
-	
+	newGauge.drawLabel();
+	newGauge.drawValue();
 };
 
 //text handling tweak; in rmmv putting in no text would have no width.
