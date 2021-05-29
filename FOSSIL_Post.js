@@ -89,10 +89,8 @@ if(Imported.MOG_BattleHud)
 {
 	//command129 now takes in params as argument, it previously used ._params[]
 	//do the same thing.
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized MOG_BattleHud")
-	}
+		Fossil.log("Fossilized MOG_BattleHud")
+	
 	var fixGameInterpretercommand129=Game_Interpreter.prototype.command129;
 	Game_Interpreter.prototype.command129 = function() {
 		this._params=arguments[0];
@@ -109,10 +107,9 @@ if(Imported.MOG_BattleHud)
 
 if(Imported.MOG_TreasurePopup)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized MOG_TreasurePopup")
-	}
+
+	Fossil.log("Fossilized MOG_TreasurePopup")
+
 	//same with command 125, 126, 127, and 128
 	var fixGameInterpretercommand125MOGTP=Game_Interpreter.prototype.command125;
 	Game_Interpreter.prototype.command125 = function() {
@@ -179,10 +176,9 @@ if(Imported.MOG_TreasurePopup)
 
 if(Imported.MOG_ChronoEngine)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized MOG_ChronoEngine")
-	}
+
+	Fossil.log("Fossilized MOG_ChronoEngine")
+	
 	var fixGameInterpretercommand212CE=Game_Interpreter.prototype.command212;
 	Game_Interpreter.prototype.command212 = function() {
 		this._params=arguments[0];
@@ -240,22 +236,18 @@ if(Imported.MOG_ChronoEngine)
 //we check
 if(Imported.MOG_ATB_Gauge && !Imported.MOG_ATB)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized MOG_ATB_Gauge, MOG ATB not detected.")
-	}
+
+	Fossil.log("Fossilized MOG_ATB_Gauge, MOG ATB not detected.")
+
 	//mog named this the same thing for both MV and MZ, so check version with a unique function
 	if(ATB_Gauge.prototype.needCreateSkillIcon)
 	{
 		if(Imported.YEP_X_BattleSysATB)
 		{
-/* 			Game_BattlerBase.prototype.isMaxAtb = function() {
-				return this.isATBCharging()
-			}; */
-			if(Fossil.listPlugins)
-			{
-				console.log("Linking MOG_ATB_Gauge with YEP_X_BattleSysATB")
-			}
+
+			
+			Fossil.log("Linking MOG_ATB_Gauge with YEP_X_BattleSysATB")
+			
 			
 			Fossil.fixSpriteSetSetupATB = Scene_Battle.prototype.createSpriteset;
 			Scene_Battle.prototype.createSpriteset = function() {
@@ -303,10 +295,9 @@ if(Imported.MOG_ATB_Gauge && !Imported.MOG_ATB)
 /* 			Game_BattlerBase.prototype.isMaxAtb = function() {
 				return this.isATBCharging()
 			}; */
-			if(Fossil.listPlugins)
-			{
-				console.log("Linking MOG_ATB_Gauge with YEP_X_BattleSysCTB")
-			}
+			
+			Fossil.log("Linking MOG_ATB_Gauge with YEP_X_BattleSysCTB")
+			
 			
 			Fossil.fixSpriteSetSetupATB = Scene_Battle.prototype.createSpriteset;
 			Scene_Battle.prototype.createSpriteset = function() {
@@ -362,10 +353,9 @@ if(Imported.MOG_ATB_Gauge && !Imported.MOG_ATB)
 	
 if(Imported.YEP_GridFreeDoodads && !!DoodadManager)  //Only tweak the UI of doodads if the UI is loaded and the plugin exists
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_GridFreeDoodads")
-	}
+
+	Fossil.log("Fossilized YEP_GridFreeDoodads")
+
 	// inject the fake RPGMAKER_VERSION when it's trying to save, so the doodad function uses the full path.
 	// I was hoping that I only had to spoof RPGM version once, but sadly that's not the case :(
 	Fossil.saveDoodadFakeVersion=StorageManager.saveDoodadSettings 
@@ -428,9 +418,9 @@ if(Imported.YEP_GridFreeDoodads && !!DoodadManager)  //Only tweak the UI of dood
  
 if(Imported.YEP_X_ExtDoodadPack1 && !!DoodadManager)
 {
-	//while this was an issue in the MV version as well
+	//while this was a readability issue in the MV version as well
 	//the party member names being hard to read is worse in MZ by default
-	//this extends the first textbox and scrunches the other ones so they're all legible. :)
+	//this extends the first textbox and scrunches the other ones so they're all legible. 
 	var updatePartyWindowTextSize = Window_GFD_SettingsParty.prototype.itemRect 
 	Window_GFD_SettingsParty.prototype.itemRect = function() {
 		this._textWidth=(this._textWidth-40)||80;
@@ -441,10 +431,9 @@ if(Imported.YEP_X_ExtDoodadPack1 && !!DoodadManager)
 
 if(Imported.YEP_SkillCore)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_SkillCore")
-	}
+
+	Fossil.log("Fossilized YEP_SkillCore")
+
 	// Gauge swapping using the MV commands is totally unworkable because 
 	// the basic drawactorhp, drawactormp, etc were all removed in RMMZ
 	// but, once more, we have a nice opportunity to use the existing 
@@ -485,15 +474,19 @@ Scene_MenuBase.prototype.helpAreaTop= function()
 		return 0;
 	}
 	
+	if(Imported.JKMail && this.constructor.name=="Scene_Mail")
+	{
+		return 0;
+	}
+	
 	return Fossil.moveHelpWindowForYEP.call(this,arguments);
 }
 
 if(Imported.YEP_EquipCore)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_EquipCore")
-	}
+
+	Fossil.log("Fossilized YEP_EquipCore")
+	
 	//if we're using equip core, then the help bar is at the top!
 	//As mentioned elsewhere, the help bar is half size because of touch controls.
 	Scene_Base.prototype.isBottomHelpMode = function() {
@@ -510,10 +503,9 @@ if(Imported.YEP_EquipCore)
 
 if(Imported.YEP_X_EquipCustomize)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_X_EquipCustomize")
-	}
+
+	Fossil.log("Fossilized YEP_X_EquipCustomize")
+	
 	//fix the window Y location
 	Fossil.moveEquipCustomizeWindow=Scene_EquipCustomize.prototype.setCustomizedItem;
 	Scene_EquipCustomize.prototype.setCustomizedItem = function() 
@@ -535,10 +527,9 @@ if(Imported.YEP_X_EquipCustomize)
 
 if(Imported.AnimatedSVEnemies)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized Rexal's AnimatedSVEnemies")
-	}
+
+	Fossil.log("Fossilized Rexal's AnimatedSVEnemies")
+	
 	//rexal spent a lot of effort setting a battleSprite, then at the last moment
 	//RMMZ decides to undo the work.
 	//Well, this un-undoes it :)
@@ -567,10 +558,9 @@ if(Imported.AnimatedSVEnemies)
 
 if(Imported.Galv_MessageCaptions)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log('Fossilized Galv_MessageCaptions')
-	}
+
+	Fossil.log('Fossilized Galv_MessageCaptions')
+
 	// parameter passing is handled differently between these. 
 	// RMMV attaches it to the object, RMMZ passes it as an argument.
 	// I also need to make it return true.
@@ -613,7 +603,7 @@ if( typeof(Window_Hidden) !== 'undefined')
 		}else{ //if not, I am assuming it is MV.
 			if(arguments.length==1)
 			{
-				console.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
+				Fossil.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
 			}
 			var rect = new Rectangle(
 			arguments[0], 
@@ -629,10 +619,9 @@ if( typeof(Window_Hidden) !== 'undefined')
 
 if(Imported.YEP_StatusMenuCore)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log('Fossilized YEP_StatusMenuCore')
-	}
+
+	Fossil.log('Fossilized YEP_StatusMenuCore')
+
 	//add xp bars 
 	Fossil.AddSprite_GaugeCurrentValueXP= Sprite_Gauge.prototype.currentValue;
 
@@ -751,10 +740,8 @@ if(Imported.YEP_StatusMenuCore)
 if(Imported.YEP_OptionsCore)
 {
 	
-	if(Fossil.listPlugins)
-	{
-		console.log('Fossilized YEP_OptionsCore')
-	}
+	Fossil.log('Fossilized YEP_OptionsCore')
+	
 	//tell it to redraw the gauges every frame, like in RMMV 
 	//(since they can be scrolled up and down this is needed)
 	var eraseGaugesdrawAllItems = Window_Selectable.prototype.drawAllItems;
@@ -782,10 +769,8 @@ if(Imported.YEP_OptionsCore)
 if(Fossil.pluginNameList.contains('HO_AchievementSystem'))
 {
 	
-	if(Fossil.listPlugins)
-	{
-		console.log('Fossilized HO_AchievementSystem')
-	}
+	Fossil.log('Fossilized HO_AchievementSystem')
+	
 	
 	//when we change panes, erase gauges.  
 	Fossil.eraseAchievementDataGauges=Window_AchievementData.prototype.updateItem;
@@ -804,10 +789,8 @@ if(Fossil.pluginNameList.contains('HO_AchievementSystem'))
 
 if(Imported.YEP_SelfSwVar)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log('Fossilized YEP_SelfSwVar')
-	}
+	Fossil.log('Fossilized YEP_SelfSwVar')
+	
 	//fix a whole lot of command injections
 	
 	var fixGameInterpretercommand101Self=Game_Interpreter.prototype.command101;
@@ -956,10 +939,8 @@ if(Imported.YEP_SelfSwVar)
 
 if(Imported["SumRndmDde Summon Core"])
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized SumRndmDde Summon Core")
-	}
+	Fossil.log("Fossilized SumRndmDde Summon Core")
+	
 	Sprite_Summon.prototype.setupIntroAnimation = function(){
 		if(this._actor.introAnimation())
 		{
@@ -1035,10 +1016,8 @@ if(Imported["SumRndmDde Summon Core"])
 
 if(Imported.YEP_BattleEngineCore)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_BattleEngineCore")
-	}
+	Fossil.log("Fossilized YEP_BattleEngineCore")
+	
 	//if we don't have improved battle backs imported, then get rid of this function
 	//which is moving our battlebacks
 	if (!Imported.YEP_ImprovedBattlebacks) {
@@ -1392,10 +1371,8 @@ if(Imported.YEP_BattleEngineCore)
 
 	if(Imported.YEP_X_TurnOrderDisplay)
 	{
-		if(Fossil.listPlugins)
-		{
-			console.log("Fossilized YEP_X_TurnOrderDisplay")
-		}
+		Fossil.log("Fossilized YEP_X_TurnOrderDisplay")
+		
 		//increase the icon size parameter so it scales properly on screen.
 		//basically it didn't used to include the window frame size, but now it does.
 		//4 pixel frame around image, 8 pixel frame around window, present on BOTH sides
@@ -1454,10 +1431,8 @@ if(Imported.YEP_BattleEngineCore)
 
 if(Imported.YEP_X_InBattleStatus)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_X_InBattleStatus")
-	}
+	Fossil.log("Fossilized YEP_X_InBattleStatus")
+	
 	//import all the status window functions into the inbattlestatelist.
      for (var i in Window_StatusBase.prototype) 
 	{
@@ -1484,10 +1459,8 @@ if(Imported.YEP_X_InBattleStatus)
 
 if(Imported.YEP_X_PartyLimitGauge)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_X_PartyLimitGauge")
-	}
+	Fossil.log("Fossilized YEP_X_PartyLimitGauge")
+	
 	//this expects the windowlayer to have a .x of 0, but in RMMZ the window layer has a .x of 4 by default
 	//to avoid causing lasting issues, we'll set it and then refresh it
 	Fossil.fixWindow_PartyLimitGaugeupdateOpacity=Window_PartyLimitGauge.prototype.updateOpacity;
@@ -1533,10 +1506,8 @@ if(Imported.YEP_X_PartyLimitGauge)
 
 if(Imported.YEP_X_ItemUpgrades)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_X_ItemUpgrades")
-	}
+	Fossil.log("Fossilized YEP_X_ItemUpgrades")
+	
 	
 	//there's a one-character typo at line 320.  It says
 	//item.types.contain
@@ -1566,10 +1537,8 @@ if(Imported.YEP_X_ItemUpgrades)
 
 if(Imported["SumRndmDde Shaking Text"])
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized SumRndmDde Shaking Text")
-	}
+	Fossil.log("Fossilized SumRndmDde Shaking Text")
+	
 		//remove iteration from textState so we don't double-tap it.
 	Fossil.fixWindow_MessageCreateShakingCharacter = Window_Message.prototype.createShakingCharacter;
 	Window_Message.prototype.createShakingCharacter = function(textState, c, w, h) {
@@ -1616,10 +1585,8 @@ if(Imported["SumRndmDde Shaking Text"])
 
 if(Imported.YEP_Footsteps)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_Footsteps")
-	}
+	Fossil.log("Fossilized YEP_Footsteps")
+	
 	Fossil.fixplayFootstepSound =Game_CharacterBase.prototype.playFootstepSound
 	Game_CharacterBase.prototype.playFootstepSound = function(volume, pitch, pan) 
 	{
@@ -1653,10 +1620,8 @@ if(Imported.YEP_Footsteps)
 
 if(Imported.YEP_X_ItemDiscard)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_X_ItemDiscard")
-	}
+	Fossil.log("Fossilized YEP_X_ItemDiscard")
+	
 	Fossil.fixWindow_ItemActionCommandCreateDiscardCommandName =Window_ItemActionCommand.prototype.createDiscardCommandName;
 	Window_ItemActionCommand.prototype.createDiscardCommandName = function() 
 	{
@@ -1675,10 +1640,8 @@ if(Imported.YEP_X_ItemDiscard)
 
 if(Imported.YEP_X_ItemRequirements)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_X_ItemRequirements")
-	}
+	Fossil.log("Fossilized YEP_X_ItemRequirements")
+	
 	//this is bugged; it runs an eval (which is supposed to be caught in 'value'), but 
 	//doesn't actually catch the true/false in 'value'.
 	//I'm checking to see if 'value' ever gets referenced in the provided code
@@ -1702,10 +1665,8 @@ if(Imported.YEP_X_ItemRequirements)
 //if we have imported the STV_BeastBook plugin
 if (Fossil.pluginNameList.contains('STV_BeastBook') &&(typeof(Scene_BeastBook)!=='undefined'))
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized STV_BeastBook")
-	}
+	Fossil.log("Fossilized STV_BeastBook")
+	
 	Fossil.fixWindow_BeastBook_updateStatus= Window_BeastBook_Info.prototype.setBeast
      Window_BeastBook_Info.prototype.setBeast  = function(beast) 
 	{
@@ -1720,10 +1681,8 @@ if (Fossil.pluginNameList.contains('STV_BeastBook') &&(typeof(Scene_BeastBook)!=
 
 if(Imported.YEP_ShopMenuCore)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_ShopMenuCore")
-	}
+	Fossil.log("Fossilized YEP_ShopMenuCore")
+	
 	//unique windowtype in YEP_Shop_Menu_Core needs to be given a rect.
 	Window_ShopCategory.prototype.initialize = function() 
 	{
@@ -1763,20 +1722,16 @@ if(Imported.YEP_ShopMenuCore)
 
 if(Imported.YEP_X_Subclass)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_X_Subclass")
-	}
+	Fossil.log("Fossilized YEP_X_Subclass")
+	
 	//YEP is trying to overwrite the wrong function, correct it.
 	Window_StatusBase.prototype.drawActorClass = Window_Base.prototype.drawActorClass;
 }
 
 if(Fossil.pluginNameList.contains('KMS_Minimap'))
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized KMS_Minimap")
-	}
+	Fossil.log("Fossilized KMS_Minimap")
+	
 	Fossil.fixKMSMiniMapUpdate=Spriteset_Map.prototype.update;
 	//fading is accomplished in a different way, but we can 
 	//still create a fake fadesprite to pass in the info about the opacity
@@ -1794,10 +1749,8 @@ if(Fossil.pluginNameList.contains('KMS_Minimap'))
 //defaults go somewhere else now!
 if(Fossil.pluginNameList.contains('Olivia_AntiPlayerStress'))
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized Olivia_AntiPlayerStress")
-	}
+	Fossil.log("Fossilized Olivia_AntiPlayerStress")
+	
 	AudioManager._bgmVolume = Olivia.AntiPlayerStress.DefaultVolume;
 	AudioManager._bgsVolume = Olivia.AntiPlayerStress.DefaultVolume;
 	AudioManager._meVolume = Olivia.AntiPlayerStress.DefaultVolume;
@@ -1807,10 +1760,9 @@ if(Fossil.pluginNameList.contains('Olivia_AntiPlayerStress'))
 
 if(Fossil.pluginNameList.contains('Gimmer_WibblyWobbly'))
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized Gimmer_WibblyWobbly")
-	}
+	
+	Fossil.log("Fossilized Gimmer_WibblyWobbly")
+	
 	//now that we have multiple source nodes the attached value is ._sourceNodes
 	//and it's an array!
 	//things that reference ._sourceNode should just reference ._sourceNodes[0] instead.
@@ -1883,10 +1835,9 @@ if(Fossil.pluginNameList.contains('Gimmer_Core'))
 
 if(Imported.YEP_Z_PassiveCases)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_Z_PassiveCases")
-	}
+	
+	Fossil.log("Fossilized YEP_Z_PassiveCases")
+	
 	//bugfix:
 	//   Alive Actors/Enemies/Allies/Foes <= x, etc don't work
 	//because the functions they invoke return arrays instead of numbers
@@ -1915,10 +1866,9 @@ if(Imported.YEP_Z_PassiveCases)
 
 if(Fossil.pluginNameList.contains('YEP_JobPoints'))
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_JobPoints")
-	}
+	
+	Fossil.log("Fossilized YEP_JobPoints")
+	
 	//this got moved from window_base to window_statusbase.
 	//Any MV redefinitions got caught in windowbase, now reapply to statusbase
 	//Fossil.FixStatusBaseDrawActorSimpleStatus=Window_Base.prototype.drawActorSimpleStatus;
@@ -1932,10 +1882,9 @@ if(Fossil.pluginNameList.contains('YEP_JobPoints'))
 
 if(Imported.YEP_PartySystem)
 {
-	if(Fossil.listPlugins)
-	{
-		console.log("Fossilized YEP_PartySystem")
-	}
+	
+	Fossil.log("Fossilized YEP_PartySystem")
+	
 	//give the partydetail the properties of a status windows.
 	 for (var i in Window_StatusBase.prototype) 
 	{
@@ -2034,7 +1983,7 @@ if(Imported.YEP_QuestJournal)
 		//contents of the MZ Window_Base.prototype.drawTextEx
 		this.resetFontSettings();
 		const textState = Window_Base.prototype.createTextState.call(this,text,x,y,rect.width);
-		//loop through if we have wordwarp to make it work.
+		//loop through if we have wordwrap to make it work.
 		if(this._wordWrap)
 		{	
 			while (textState.index < textState.text.length) 
@@ -2060,7 +2009,14 @@ if(Imported.YEP_QuestJournal)
 		this.cursorFixed(true);
 	}
 	
-	Window_QuestData.prototype.updateKeyScrolling=function(){}
+	//Window_QuestData.prototype.updateKeyScrolling=function(){}
+	Window_QuestData.prototype.scrollOriginDown = function(speed) {
+	  this.scrollBy(0,speed)
+	};
+
+	Window_QuestData.prototype.scrollOriginUp = function(speed) {
+		this.scrollBy(0,-speed)
+	};
  
    	Window_QuestData.prototype.maxItems=function()
 	{
@@ -2079,6 +2035,15 @@ if(Imported.YEP_QuestJournal)
 	{
 	return Math.max( this.overallHeight(),Window_Selectable.prototype.contentsHeight.call(this))
 	}
+	
+	//adjust this so the mousewheel works.
+	Window_QuestData.prototype.smoothScrollDown = function(n) {
+		this.smoothScrollBy(0, this.lineHeight()*2 * n);
+	};
+
+	Window_QuestData.prototype.smoothScrollUp = function(n) {
+		this.smoothScrollBy(0, -this.lineHeight()*2 * n);
+	};
 	
 	if(Imported.YEP_X_MapQuestWindow)
 	{
@@ -2389,5 +2354,139 @@ if(Imported.DreamX_ChoiceHelp)
     };
 	
 	
+	
+}
+
+if(Imported.JKMail)
+{
+	Fossil.log('Fossilized JK_MailSystem')
+	//add a dummy function for this thing to release reservations on
+	//since the cache no longer requires that.
+	ImageManager.releaseReservation=function(){};
+	//this plugin used a custom drawMailTextEx which doesn't print anything in MZ
+	//this is due to a lack of text flushing.
+	//force a text flush
+	Window_Mail.prototype.drawMailTextEx=function(text,x,y)
+	{
+		const rect = this.baseTextRect();
+		if(y==0){
+		this.contents.clear()
+		this._text = "";
+		this._fossilLineCount=0}
+
+		//contents of the MZ Window_Base.prototype.drawTextEx
+		this.resetFontSettings();
+		const textState = Window_Base.prototype.createTextState.call(this,text,x,y,rect.width);
+		//loop through if we have wordwrap to make it work.
+		if(this._wordWrap)
+		{	
+			while (textState.index < textState.text.length) 
+			{
+				this.processCharacter(textState);
+				this.flushTextState(textState);
+			}
+		}else{			
+			this.processAllText(textState);
+		}
+		//count how many newlines we have.  Add a buffer.
+		this._fossilLineCount+=(textState.text.split('\n').length||2)+2;
+		//this._allTextHeight=this._fossilLineCount*Window_Scrollable.prototype.itemHeight.call(this)
+		this._text=this._text +textState.text;//extend the text because of having two calls to this.
+		return textState.outputHeight; 
+	}
+	
+	Fossil.fixWindowMailRefresh=Window_Mail.prototype.refresh
+	Window_Mail.prototype.refresh=function()
+	{
+		//this.paint();
+		Fossil.fixWindowMailRefresh.apply(this,arguments);
+		this.cursorFixed(true);
+	}
+	
+	//Window_Mail.prototype.updateKeyScrolling=function(){}
+ 
+   	Window_Mail.prototype.maxItems=function()
+	{
+		return 1;
+	} 
+	
+ 	Window_Mail.prototype.itemHeight = function() {
+		return this._allTextHeight|| Window_Scrollable.prototype.itemHeight.call(this); 
+	};  
+	Window_Mail.prototype.overallHeight = function()
+	{
+		//make the minimum height 480 pixels, to ensure that windows are initialized to a decent size.
+		//since we can't compare against undefined we have a ||0 in there.
+		return Math.max(this._allTextHeight+48||0,480);
+	}
+	
+	Window_Mail.prototype.contentsHeight=function()
+	{
+	return Math.max( this.overallHeight(),Window_Selectable.prototype.contentsHeight.call(this))
+	}
+	
+	//remove added MZ padding on item height
+	Window_MailAttachment.prototype.itemHeight=function()
+	{
+		return Window_Scrollable.prototype.itemHeight.call(this)
+	}
+	//those black rectangles are ugly on this menu, and don't exist in MV.  Remove them.
+	Window_MailAttachment.prototype.drawItemBackground = function (){}
+	
+	Window_Mail.prototype.scrollOriginDown = function(speed) {
+		this.scrollBy(0,speed)
+	};
+
+	Window_Mail.prototype.scrollOriginUp = function(speed) {
+		this.scrollBy(0,-speed)
+	};
+	
+	//adjust this so the mousewheel works.
+	Window_Mail.prototype.smoothScrollDown = function(n) {
+		this.smoothScrollBy(0, this.lineHeight()*2 * n);
+	};
+
+	Window_Mail.prototype.smoothScrollUp = function(n) {
+		this.smoothScrollBy(0, -this.lineHeight()*2 * n);
+	};
+
+	
+	Fossil.refreshMailScrollLevel=Scene_Mail.prototype.changeMailSelection
+	Scene_Mail.prototype.changeMailSelection=function(index){
+		Fossil.refreshMailScrollLevel.apply(this,arguments);
+		this._mailWindow.resetScroll();
+	}
+	
+	
+		//window_mail appears to be assuming that this returns the text height for all text?
+		//instead of just a single line, but only in the .drawmail command.
+ 	Window_Mail.prototype.calcTextHeight = function(textState) {
+		//if we have word wrap or have a properly formatted text state just use the base window one
+		const fmtStr = new RegExp("<(?:" + JKMail.Param.WordWrapText + ")>", "i");
+		const wordwrap = this._item._message.match(fmtStr);
+		if (wordwrap || textState.x!==undefined){return Window_Base.prototype.calcTextHeight.apply(this,arguments)}
+		//otherwise add a little twist: we are multiplying by the number of lines
+		//to get the total text height
+		const lineSpacing = this.lineHeight() - $gameSystem.mainFontSize();
+		const lastFontSize = this.contents.fontSize;
+		const lines = textState.text.slice(textState.index).split("\n");
+		const textHeight = this.maxFontSizeInLine(lines[0]) + lineSpacing;
+		this.contents.fontSize = lastFontSize;
+		return textHeight*lines.length;
+	}; 
+
+	//prevent if from crashing if we try to select mail and there's no mail
+	Fossil.preventDrawMailSubjectCrash=Window_Mail.prototype.drawMail 
+	Window_Mail.prototype.drawMail = function(){
+		if(!this._item){return};
+		Fossil.preventDrawMailSubjectCrash.apply(this,arguments);
+	}
+
+	//Window_mail.prototype.drawMail doesn't create a full textState, 
+	//it just creates an object with only one or two properties
+	//make the other ones.
+/* 	Window_Mail.prototype.calcTextHeight = function(textState) {
+		return Window_Base.prototype.calcTextHeight.call(this,textState);
+	}; */
 	
 }

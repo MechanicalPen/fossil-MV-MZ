@@ -66,6 +66,8 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -Jay_BattleVAManager
 -Jay_FocusedSoundEffects
 
+-JK_MailSystem
+
 -KMS_SpiralEncount
 -KMS_WaterMapEffect
 -KMS_Minimap
@@ -345,12 +347,13 @@ var Fossil =Fossil || {}
 Fossil.version='0.3.07'
 
 Fossil.isPlaytest=Utils.isOptionValid('test');
-Fossil.listPlugins=Fossil.isPlaytest;
+Fossil.giveWarnings=Fossil.isPlaytest;
 
-//a variation of console.log for listing plugins
-//basically reduces the if statements I need to write/
+//a variation of console.log for listing plugins and throwing out warnings about windows and such
+//this way it won't be chatty during real games, just during playtests.
+//basically reduces the if statements I need to write
 Fossil.log=function(inputText){
-	if(Fossil.listPlugins)
+	if(Fossil.giveWarnings)
 	{
 		console.log(inputText)
 	}
@@ -369,8 +372,12 @@ Graphics.BLEND_ADD = PIXI.BLEND_MODES["ADD"];
 Graphics.BLEND_MULTIPLY = PIXI.BLEND_MODES["MULTIPLY"];
 Graphics.BLEND_SCREEN = PIXI.BLEND_MODES["SCREEN"];
 
-
-
+//this looks like it just need to return an arbitrary unique positive integer
+//this is a MV function that I've just ported over.
+Utils._id = 1;
+Utils.generateRuntimeId = function(){
+    return Utils._id++;
+};
 
 //get a list of what plugins we have installed.  This is necessary because
 //we are acting BEFORE we can see that handy Imported convention, and because
@@ -380,7 +387,7 @@ Graphics.BLEND_SCREEN = PIXI.BLEND_MODES["SCREEN"];
 Fossil.pluginNameList =  $plugins.map(a => a.status && a.name ); 
 if (Fossil.pluginNameList[0] !== 'FOSSIL_Pre')
 {
-	console.log('FOSSIL_Pre should probably be your first plugin')
+	Fossil.log('FOSSIL_Pre should probably be your first plugin')
 	
 }
 if (!Fossil.pluginNameList.contains('FOSSIL_Post'))
@@ -937,7 +944,6 @@ Window_Base.prototype.initialize = function(rect) {
 	if(this.constructor.name == 'Window_Hidden')
 	{
 		//special case for DTextPicture.  Code is wrapped, window is hidden.
-		console.log('hide')
 		//if you don't have a backsprite it crashes.
 		Window.prototype._createAllParts.call(this);
 	}
@@ -2713,3 +2719,37 @@ if(Fossil.pluginNameList.contains('YEP_KeyNameEntry'))
 	};
 }
 
+if(Fossil.pluginNameList.contains('pixi-tilemap2'))
+{
+	//this is the plugin used by C47 to alter pixi to create a second tilemap.
+	//tell it about the rename for pixi's renderer
+	Object.defineProperty(PIXI, "CanvasRenderer", {
+			get: function() {
+				return this.Renderer;
+			},
+			set: function(value) {
+				this.Renderer = value;
+			},
+			configurable: true
+		});
+	
+	//give it a shadertilemap to play with - this object doesn't exist in RMMZ but it's basically
+	//been subsumed by tilemap.
+	
+	function ShaderTilemap() {
+		Tilemap.apply(this, arguments);
+		this.roundPixels = true;
+	}
+	ShaderTilemap.prototype = Object.create(Tilemap.prototype);
+	ShaderTilemap.prototype.constructor = ShaderTilemap;
+	//account for the rmmz ._bitmaps vs rmmv .bitmaps on our tilemap.
+	Object.defineProperty(ShaderTilemap.prototype, "bitmaps", {
+		get: function() {
+			return this._bitmaps;
+		},
+		set: function(value) {
+			this._bitmaps = value;
+		},
+		configurable: true
+	});
+}
