@@ -8,7 +8,7 @@
  * @help Fossil_Post goes between your RMMV plugins and your RMMZ plugins.
  * @base Fossil_Pre
  
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.3.07
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.3.08
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER MV 
@@ -28,7 +28,7 @@ or 'The FOSSIL TEAM', and link back to the forum thread or github.
 var Imported = Imported || {};
 Imported.Fossil_Post=true;
 var Fossil =Fossil || {}
-Fossil.postVersion='0.3.07'
+Fossil.postVersion='0.3.08'
 if(Fossil.version!==Fossil.postVersion)
 {
 	console.log('Version mismatch!  Fossil_Post version is '+Fossil.postVersion +', but Fossil_Pre is version '+Fossil.version)
@@ -2482,11 +2482,31 @@ if(Imported.JKMail)
 		Fossil.preventDrawMailSubjectCrash.apply(this,arguments);
 	}
 
-	//Window_mail.prototype.drawMail doesn't create a full textState, 
-	//it just creates an object with only one or two properties
-	//make the other ones.
-/* 	Window_Mail.prototype.calcTextHeight = function(textState) {
-		return Window_Base.prototype.calcTextHeight.call(this,textState);
-	}; */
 	
 }
+
+
+
+if(Fossil.pluginNameList.contains('YEP_X_ChangeBattleEquip') ||
+	Fossil.pluginNameList.contains('YEP_X_ActorPartySwitch') ||
+	Fossil.pluginNameList.contains('YEP_RowFormat')
+	)
+{
+
+	
+	Fossil.fixstoreBattleSpriteset=Game_Temp.prototype.storeBattleSpriteset ;
+	Game_Temp.prototype.storeBattleSpriteset = function() {
+		Fossil.fixstoreBattleSpriteset.apply(this,arguments);
+		SceneManager.fossilHoldOnToScene=true;
+	}
+	
+	Fossil.fixrestoreBattleSpriteset=Game_Temp.prototype.restoreBattleSpriteset;
+	Game_Temp.prototype.restoreBattleSpriteset = function() {
+		SceneManager.fossilHoldOnToScene=false;
+		Fossil.fixrestoreBattleSpriteset.apply(this,arguments)
+	}
+	
+}
+
+
+

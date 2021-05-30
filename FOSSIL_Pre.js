@@ -14,7 +14,7 @@
 
  * @help Fossil_Pre goes at the start, before all other plugins.
  
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.3.07
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.3.08
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER 
@@ -138,6 +138,7 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -VE_Masters
 -VE_MateriaSystem
 -VE_PassiveStates 
+-VE_SpritesInWindows
 
 -VLUE Game Time MV 1.1c
 -VLUE questsystem
@@ -228,10 +229,12 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -YEP_PartyLimitGauge
 -YEP_X_SkillCooldowns
 -YEP_X_SkillCostItems
+-YEP_Z_SkillRewards
 -YEP_InstantCast
 -YEP_SkillLearnSystem 
 -YEP_SkillMasteryLevels
 *YEP_EquipCore
+-YEP_X_ChangeBattleEquip
 -YEP_X_EquipCustomize
 -YEP_EquipRequirements
 -YEP_WeaponUnleash
@@ -252,6 +255,9 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -YEP_X_EquipSkillTiers
 -YEP_JobPoints
 -YEP_PartySystem
+-YEP_X_ActorPartySwitch
+-YEP_RepelLureEncounters
+-YEP_RowFormation
 -YEP_StealSnatch
 *YEP_MoveRouteCore
 -YEP_X_ExtMovePack1
@@ -344,7 +350,7 @@ et cetera) as well as your game as a whole are *not* considered to be
 var Imported = Imported || {};
 Imported.Fossil_Pre=true;
 var Fossil =Fossil || {}
-Fossil.version='0.3.07'
+Fossil.version='0.3.08'
 
 Fossil.isPlaytest=Utils.isOptionValid('test');
 Fossil.giveWarnings=Fossil.isPlaytest;
@@ -2380,10 +2386,6 @@ ImageCache.prototype={};
 
 
 
-
-
-
-
 if (Fossil.pluginNameList.contains('YEP_BattleEngineCore'))
 {
 	// selection help is broken because the interface with MZ changed
@@ -2459,8 +2461,6 @@ if (Fossil.pluginNameList.contains('YEP_BattleEngineCore'))
 		
 	}
 
-
-	
 	//setting flags for phase changes
 	BattleManager.startEndPhase = function()
 	{
@@ -2538,14 +2538,7 @@ if(Fossil.pluginNameList.includes('YEP_X_InBattleStatus'))
 
 }
 
-//battle log needs a padded rect definition?
-/* Window_BattleLog.prototype.itemRectForText = function(index) {
-	return Window_Selectable.prototype.itemRectWithPadding.call(this,index)
-};
-//and an item rect.  Am guessing it's still selectalbe that it likes
-Window_BattleLog.prototype.itemRect = function(index) {
-	return Window_Selectable.prototype.itemRect.call(this,index)
-};  */
+
 
 if(Fossil.pluginNameList.includes('SRD_ShakingText'))
 {
@@ -2719,37 +2712,26 @@ if(Fossil.pluginNameList.contains('YEP_KeyNameEntry'))
 	};
 }
 
-if(Fossil.pluginNameList.contains('pixi-tilemap2'))
+
+
+if(Fossil.pluginNameList.contains('YEP_X_ChangeBattleEquip') ||
+	Fossil.pluginNameList.contains('YEP_X_ActorPartySwitch') ||
+	Fossil.pluginNameList.contains('YEP_RowFormat')
+	)
 {
-	//this is the plugin used by C47 to alter pixi to create a second tilemap.
-	//tell it about the rename for pixi's renderer
-	Object.defineProperty(PIXI, "CanvasRenderer", {
-			get: function() {
-				return this.Renderer;
-			},
-			set: function(value) {
-				this.Renderer = value;
-			},
-			configurable: true
-		});
-	
-	//give it a shadertilemap to play with - this object doesn't exist in RMMZ but it's basically
-	//been subsumed by tilemap.
-	
-	function ShaderTilemap() {
-		Tilemap.apply(this, arguments);
-		this.roundPixels = true;
+	//we don't want to destroy scenes if we don't want to, so rewrite this function to make sure it will
+	//check to see if it needs to hold onto things.
+	SceneManager.onBeforeSceneStart = function() {
+		if (this._previousScene) {
+			if(!this.fossilHoldOnToScene)
+			{
+				this._previousScene.destroy();
+			}
+			this._previousScene = null;
+		}
+		if (Graphics.effekseer) {
+			Graphics.effekseer.stopAll();
+		}
 	}
-	ShaderTilemap.prototype = Object.create(Tilemap.prototype);
-	ShaderTilemap.prototype.constructor = ShaderTilemap;
-	//account for the rmmz ._bitmaps vs rmmv .bitmaps on our tilemap.
-	Object.defineProperty(ShaderTilemap.prototype, "bitmaps", {
-		get: function() {
-			return this._bitmaps;
-		},
-		set: function(value) {
-			this._bitmaps = value;
-		},
-		configurable: true
-	});
-}
+};
+	
