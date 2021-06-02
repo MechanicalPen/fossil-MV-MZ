@@ -6415,6 +6415,7 @@ if(typeof(scriptUrls)!=="undefined")
 		throw new Error('FOSSIL needs to be the first plugin.  If FOSSIL is not the first plugin, everything will break!'); 
 	}
 	Fossil.pluginNameList =  $plugins.filter(plugin => plugin.status).map(a => a.name );
+	
 	if(Fossil.pluginNameList.contains('FOSSIL_Pre')||Fossil.pluginNameList.contains('FOSSIL_Post'))
 	{
 		throw new Error('The new version of FOSSIL only requires a single plugin.'); 
@@ -6494,13 +6495,18 @@ if(typeof(scriptUrls)=="undefined")
 	Fossil.alterPluginManager = function()
 	{
 		PluginManager.setup = function(plugins) {
-			//FOSSIL is the first plugin, and no longer gets called here.
-			plugins=plugins.splice(1)
+			
+			console.log($plugins.length)
+			//plugins=plugins.splice(1)
 			for (const plugin of plugins) {
-				if (plugin.status && !this._scripts.includes(plugin.name)) {
-					this.setParameters(plugin.name, plugin.parameters);
-					this.loadScript(plugin.name);
-					this._scripts.push(plugin.name);
+				//FOSSIL does not get processed like a normal plugin
+				if(plugin.name!=='FOSSIL')
+				{
+					if (plugin.status && !this._scripts.includes(plugin.name)) {
+						this.setParameters(plugin.name, plugin.parameters);
+						this.loadScript(plugin.name);
+						this._scripts.push(plugin.name);
+					}
 				}
 			}
 			
@@ -6513,6 +6519,7 @@ if(typeof(scriptUrls)=="undefined")
 			FinalScript.src='data: text/javascript;base64,'+btoa(
 					'var tempFunc=Fossil.finalFixes.toString();'+
 					'tempFunc=tempFunc.substring(tempFunc.indexOf("{")+1,tempFunc.length-1);'+
+					'tempFunc+=" if(Fossil.chattyOutput){console.log('+ "'"+'finalFixes Here'+"'"+')}";  '+
 					'eval.call(window,tempFunc);'
 					)
 			document.body.insertBefore(FinalScript, null);
@@ -6567,6 +6574,7 @@ if(typeof(scriptUrls)=="undefined")
 					script.src='data: text/javascript;base64,'+btoa(
 					'var tempFunc=Fossil.preList['+preFixIndex+'].preFunction.toString();'+
 					'tempFunc=tempFunc.substring(tempFunc.indexOf("{")+1,tempFunc.length-1);'+
+					'tempFunc+=" if(Fossil.chattyOutput){console.log('+"Fossil.preList["+preFixIndex+"].pluginName"+"+'fixes Here'"+')}";  '+
 					'eval.call(window,tempFunc);'
 					)
 					document.body.appendChild(script);
