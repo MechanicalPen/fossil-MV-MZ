@@ -2901,7 +2901,6 @@ fossilDynamicFixes=function(){
 		//create a copy of the current namebox definition, so we can undo the changes messagecore
 		//makes to it.
 		MZ_Window_NameBox=Window_NameBox;
-		Fossil.backupcommand101messagecore=Game_Interpreter.prototype.command101
 	})
 
 
@@ -5350,13 +5349,28 @@ fossilDynamicFixes=function(){
 
 	Fossil.loadPostFix(['YEP_MessageCore','YEP_X_ExtMesPack1','YEP_X_ExtMesPack2','YEP_X_MessageBacklog'],function()
 	{
+		console.log('hi')
 		//revert the namebox changes from messagecore, restoring to stock rmmz
 		Window_NameBox= MZ_Window_NameBox;
 		MZ_Window_NameBox=undefined;//clean up after ourselves.
-		//yanfly just replaces the command101 function outright.
-		//we actually don't want that, because we lose the new noteboxes.  Revert it.
-		Game_Interpreter.prototype.command101=Fossil.backupcommand101messagecore;
 
+			//we need to pass in the ._params yanfly's message creation command wants
+			var fixMessageCoreCommand101Params=Game_Interpreter.prototype.command101
+			Game_Interpreter.prototype.command101 = function(params) {
+				this._params=arguments[0];
+				
+				//cancel things as per MZ idiom.
+				if ($gameMessage.isBusy()) 
+				{
+					return false;
+				}
+				//create the name box outside of yanfly's code
+				$gameMessage.setSpeakerName(params[4]);
+				
+				fixMessageCoreCommand101Params.call(this);
+			} 
+			
+		
 		
 		//because Window_Message.prototype.createSubWindows never happens, the name windows
 		//never get created by message core.  That's generally good, but it means that we have
