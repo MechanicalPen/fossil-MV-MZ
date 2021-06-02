@@ -2215,8 +2215,7 @@ fossilStaticFixes = function(){
 	// MZ's load process is different, and sadly since classes are immutable you can't 
 	// simply patch into main :(
 
-	//instead I'm sticking it into Scene_Boot
-	//and putting in an empty window.onload
+	//ATM I'm putting in an empty window.onload
 
 	 window.onload = function ()
 	 {
@@ -2937,7 +2936,6 @@ fossilDynamicFixes=function(){
 	//
 	Fossil.finalFixes=function()
 		{
-		console.log('final fixes enabled')
 		//force the help window to the top, for yanfly plugins that assume it'll be there
 		Fossil.moveHelpWindowForYEP=Scene_MenuBase.prototype.helpAreaTop;
 		Scene_MenuBase.prototype.helpAreaTop= function()
@@ -6496,8 +6494,7 @@ if(typeof(scriptUrls)=="undefined")
 	{
 		PluginManager.setup = function(plugins) {
 			
-			console.log($plugins.length)
-			//plugins=plugins.splice(1)
+			
 			for (const plugin of plugins) {
 				//FOSSIL does not get processed like a normal plugin
 				if(plugin.name!=='FOSSIL')
@@ -6574,7 +6571,7 @@ if(typeof(scriptUrls)=="undefined")
 					script.src='data: text/javascript;base64,'+btoa(
 					'var tempFunc=Fossil.preList['+preFixIndex+'].preFunction.toString();'+
 					'tempFunc=tempFunc.substring(tempFunc.indexOf("{")+1,tempFunc.length-1);'+
-					'tempFunc+=" if(Fossil.chattyOutput){console.log('+"Fossil.preList["+preFixIndex+"].pluginName"+"+'fixes Here'"+')}";  '+
+					'tempFunc+=" if(Fossil.chattyOutput){console.log('+"Fossil.preList["+preFixIndex+"].pluginName"+"+'PREFixes Here'"+')}";  '+
 					'eval.call(window,tempFunc);'
 					)
 					document.body.appendChild(script);
@@ -6604,6 +6601,7 @@ if(typeof(scriptUrls)=="undefined")
 					script.src='data: text/javascript;base64,'+btoa(
 					'var tempFunc=Fossil.postList['+postFixIndex+'].postFunction.toString();'+
 					'tempFunc=tempFunc.substring(tempFunc.indexOf("{")+1,tempFunc.length-1);'+
+					'tempFunc+=" if(Fossil.chattyOutput){console.log('+"Fossil.postList["+postFixIndex+"].pluginName"+"+'POSTFixes Here'"+')}";  '+
 					'eval.call(window,tempFunc);'
 					)
 					document.body.appendChild(script);
