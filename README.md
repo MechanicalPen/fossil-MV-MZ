@@ -1,23 +1,17 @@
 # fossil-MV-MZ
-Project Fossil (Fixing Old Software / Script Interoperability Layer) is a series of RPG Maker MZ plugins designed to expand the use and usefulness of RPG MAKER MV plugins, by allowing them to work in RPG MAKER MZ projects.
+Project Fossil (Fixing Old Software / Script Interoperability Layer) is a RPG Maker MZ plugin designed to expand the use and usefulness of RPG MAKER MV plugins, by allowing them to work in RPG MAKER MZ projects.
 
 How to use: 
 
-This should be reasonably plug-and-play.  There aren't really parameters to configure.
+This should be reasonably plug-and-play.  There aren't really parameters to configure.  
 
-**Recommended Plugin Order**
 
-1) Fossil_Pre (First plugin)
+**Required Plugin Order**
 
-2) All your MV plugins
+1) FOSSIL.js (First plugin)
 
-3) Fossil_Post
+2) All other plugins.
 
-4) All your MZ plugins
-
-5) Fossil_Final_Windows (Last plugin, only add if you have a mix of MV and MZ plugins and there are issues with window sizes)
-
-In addition, some plugins in the list, like YEP_MessageCore or WAY_Core, require dedicated fossil layers.  See the list in the header of Fossil_Pre, or on the rpgmaker forum ( https://forums.rpgmakerweb.com/index.php?threads/135523/ )
 
 **Invoking MV Plugin Commands**
 
@@ -27,7 +21,9 @@ Alternatively, you can put the command into a script using the oldCommand functi
 
 oldCommand('somePlugin arguments et cetera');
 
+**Mobile and Web Deployment Note**
 
+FOSSIL creates a 'FOSSILindex.html' file at runtime, and switches to use it instead of the original index.html.  This works seamlessly in both playtest and deploy on my computer.  However, it is possible this might not be possible in web or mobile environments (I can't test it).  However, if you just rename an existing FOSSILindex.html to index.html it'll bypass the html creation step and proceed onwards.   (Basically I need to replace 'main.js' in index.html with 'FOSSIL.js' so I can control when plugins are added).
 
 **Terms of Use:**
 
