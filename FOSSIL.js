@@ -1,5 +1,5 @@
 /*:
- * @plugindesc Fossil is an interoperability layer for RMMZ, designed to make MV plugins work with in MZ. 
+ * @plugindesc Fossil is an interoperability layer for RMMZ, designed to make MV plugins work in MZ. 
  * So far, we support over 250 plugins.  You can help!
  * @author FOSSIL TEAM
  * @target MZ  
@@ -328,13 +328,30 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 ///////////////////////////////////////////////////////////////////////
 -none ATM.
 
+///////////////////////////////////////////////////////////////////////
+Mobile and Web Deployment Note:
+///////////////////////////////////////////////////////////////////////
+FOSSIL creates a 'FOSSILindex.html' file at runtime, and switches to use it
+instead of the original index.html. This works seamlessly in both playtest
+and deploy on my computer. However, it is possible this might not be
+possible in web or mobile environments (I can't test it). However, if you
+just rename an existing FOSSILindex.html to index.html it'll bypass the
+html creation step and proceed onwards. 
 
-This is the 'pre' half of the plugin. Put it ABOVE the supported plugins.
+If you want to edit the index.html yourself directly, just replace
 
+'main.js'
 
+with
+
+'plugin/FOSSIL.js'
+
+Basically I replace 'main.js' in index.html with 'FOSSIL.js' so I can 
+control when plugins are added.
+
+///////////////////////////////////////////////////////////////////////
 Terms of use:
-
-
+///////////////////////////////////////////////////////////////////////
 All unique code in FOSSIL is licensed under a 
 Creative Commons Attribution-ShareAlike 4.0 International License.  The 
 remainder is taken from RPG Maker MV and RPG Maker MZ, and is covered under 
