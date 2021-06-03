@@ -386,9 +386,13 @@ fossilStaticFixes = function(){
 	Fossil.chattyOutput=Fossil.isPlaytest;
 	//if Fossil.chattyOutput is on, every patch will give a console.log message
 	//telling you it has executed.
-	//this is useful because the traceback on the console.log gives you the VM
-	//location that it's being run in in chrome.
+	//this is useful because the traceback on the console.log gives you the 
+	//VM location that it's being run in in chrome.
 	//turning this off means that FOSSIL won't say anything.
+	if(Fossil.chattyOutput)
+	{
+		console.log('Static PreFixes are here');
+	}
 
 	Fossil.log=function(inputText){
 		if(Fossil.chattyOutput)
@@ -5949,7 +5953,7 @@ fossilDynamicFixes=function(){
 		
 	})
 
-	Fossil.loadPostFix('JKMail',function()
+	Fossil.loadPostFix('JK_MailSystem',function()
 	{
 		//add a dummy function for this thing to release reservations on
 		//since the cache no longer requires that.
