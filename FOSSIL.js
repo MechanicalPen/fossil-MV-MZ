@@ -98,6 +98,10 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -MOG_ChronoToolHud
 -MOG_ChronoCT
 
+-Pv_BattleCommandCustomizer
+-Pv_ParticleCore (just add Pixi-particles to library folder, FOSSIL handles import)
+-Pv_SkillCategories
+
 -Reval's Animated Enemies
 
 -SE_Core
@@ -2553,6 +2557,10 @@ fossilStaticFixes = function(){
 			return new Rectangle(wx, wy, ww, wh);
 		};
 	}
+	
+	
+	
+	
 }
 
 
@@ -2928,7 +2936,18 @@ fossilDynamicFixes=function(){
 		MZ_Window_NameBox=Window_NameBox;
 	})
 
-
+	Fossil.loadPreFix('Pv_ParticleCore',function()
+	{
+		//import pixi particles
+			Fossil.particleScript = document.createElement("script");
+			Fossil.particleScript.type = "text/javascript";
+			Fossil.particleScript.async = false;
+			Fossil.particleScript.defer = true;
+			Fossil.particleScript.src='js/libs/pixi-particles.js'
+			document.body.appendChild(Fossil.particleScript);
+			Fossil.particleScript=undefined;//clean up after ourselves.
+			if(Fossil.chattyOutput){console.log('FOSSIL has imported pixi particles')}
+	})
 	//////////////////////////////////////////////////////////////////////
 	//PRE CHECK IS NOW COMPLETE
 	/////////////////////////////////////////////////////////////////////////////////////////////
