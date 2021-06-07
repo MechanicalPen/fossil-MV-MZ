@@ -32,7 +32,22 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 (Alphabetical by plugin maker, then roughly by plugin order)
 ///////////////////////////////////////////////////////////////////////
 
+-DreamX_AutoEquipOnEmpty
+-DreamX_BattleSE
+-DreamX_BattlerDeathEval
+-DreamX_CaptureEnemies
+-DreamX_ChangeSound
 -DreamX_ChoiceHelp
+-DreamX_Close
+-DreamX_CollapseAnimation
+-DreamX_CollisionExceptions
+-DreamX_ExtendedActionButton
+-DreamX_EXT_EventChasePlayer
+-DreamX_EnemyStateOverlays
+-DreamX_FollowerOptions
+-DreamX_GoldVariance
+-DreamX_RandomPrefixesSuffixes
+-DreamX_TouchSurpriseBattles
 
 -GALV_Questlog
 -GALV_TimedMessagePopups
@@ -551,13 +566,13 @@ fossilStaticFixes = function(){
 		var flashEnd=0;
 		var soundEnd =0;
 		var flashList =animation.flashTimings;
-		if(flashList.length)
+		if(flashList && flashList.length)
 		{
 			var flashEnd = flashList[flashList.length-1].frame+flashList[flashList.length-1].duration;
 		}
 		var soundList = animation.soundTimings;
 		//I can't tell how long a sound is so let's say 10 frames arbitrarily.
-		if (soundList.length)
+		if (soundList && soundList.length)
 		{
 			soundEnd = soundList[soundList.length-1].frame+10 ;
 		}
@@ -565,7 +580,38 @@ fossilStaticFixes = function(){
 		return Math.max(flashEnd,soundEnd,1);
 	}
 
+	//if a plugin is trying to find an animation's duration using animation.frames.length
+	//direct it to our best guess.
+	//we need to add a .frames.length property to each animation
+	Fossil.onLoadMainDatabase=DataManager.onLoad;
+	DataManager.onLoad = function(object) {
+		Fossil.onLoadMainDatabase.apply(this,arguments)
+		
+		if($dataAnimations==object)
+		{
+			for (var index=1;index<$dataAnimations.length;index++)
+			{
+				if ($dataAnimations[index])
+				{
+					if(!!$dataAnimations[index].frames)
+					{
+						//old logic from the isMVAnimation function
+						this._isMVAnimation==true;
+					}else{
+						//make a fake frames array of the proper length
+						$dataAnimations[index].frames=[]
+						$dataAnimations[index].frames.length=Fossil.guessAnimationEnd($dataAnimations[index])
 
+					}
+				}
+
+			}
+		}
+	}
+	//rewrite since we did the check earlier.
+	Spriteset_Base.prototype.isMVAnimation = function(animation) {
+		return this._isMVAnimation
+	};
 
 	//Making custom gauges is more difficult in MZ, because they default is hard-coded to be
 	//only for a few specific battler stats.
@@ -978,7 +1024,10 @@ fossilStaticFixes = function(){
 	//MZ uses rectangles instead of multiple numbers being passed in.
 	//There's even a special check in the MZ code that checks if you forgot a rectangle.
 	//But I figure, hey, why not make it flexible?  That way legacy code will still work. :)
-
+	
+	//put in an if(true) to make this foldable 
+	if(true)
+	{
 	var rectFixWindowBase= Window_Base.prototype.initialize;
 	Window_Base.prototype.initialize = function(rect) {
 		
@@ -1039,7 +1088,10 @@ fossilStaticFixes = function(){
 			var rect = new Rectangle(arguments[0], arguments[1], arguments[2]||400,  arguments[3]||Graphics.boxHeight);
 			rectFixWindowBase.call(this,rect)
 		}
-
+		
+		//account for another MV->MZ rename.  
+		this._windowFrameSprite=this._frameSprite
+		this._windowContentsSprite=this._contentsSprite
 	};
 
 	var rectFixWindowSelectable= Window_Selectable.prototype.initialize;
@@ -1116,7 +1168,7 @@ fossilStaticFixes = function(){
 			}
 		}
 
-		
+
 	};
 
 
@@ -1780,6 +1832,189 @@ fossilStaticFixes = function(){
 		
 	};
 
+	}//end of window rectangle section (and the if(true) that folds it)
+
+
+	//
+	//////////////////////////////////////////////////////////////
+		//GAME INTERPRETER COMMAND PARAMETER FIXES
+	//////////////////////////////////////////////////////////////
+	//
+	//another big ugly block.  This tests for (almost) every game interpreter command
+	//and checks to see if parameters were passed in.  if not, it uses the backup from _params.
+	//wrapped in an if(true) to make it fold.
+	if(true)
+	{
+		Fossil.setParamsForcommand101 = Game_Interpreter.prototype.command101;
+		Game_Interpreter.prototype.command101 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand101.call(this,params);}
+		Fossil.setParamsForcommand102 = Game_Interpreter.prototype.command102;
+		Game_Interpreter.prototype.command102 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand102.call(this,params);}
+		Fossil.setParamsForcommand103 = Game_Interpreter.prototype.command103;
+		Game_Interpreter.prototype.command103 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand103.call(this,params);}
+		Fossil.setParamsForcommand104 = Game_Interpreter.prototype.command104;
+		Game_Interpreter.prototype.command104 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand104.call(this,params);}
+		Fossil.setParamsForcommand105 = Game_Interpreter.prototype.command105;
+		Game_Interpreter.prototype.command105 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand105.call(this,params);}
+		Fossil.setParamsForcommand117 = Game_Interpreter.prototype.command117;
+		Game_Interpreter.prototype.command117 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand117.call(this,params);}
+		Fossil.setParamsForcommand119 = Game_Interpreter.prototype.command119;
+		Game_Interpreter.prototype.command119 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand119.call(this,params);}
+		Fossil.setParamsForcommand121 = Game_Interpreter.prototype.command121;
+		Game_Interpreter.prototype.command121 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand121.call(this,params);}
+		Fossil.setParamsForcommand122 = Game_Interpreter.prototype.command122;
+		Game_Interpreter.prototype.command122 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand122.call(this,params);}
+		Fossil.setParamsForcommand123 = Game_Interpreter.prototype.command123;
+		Game_Interpreter.prototype.command123 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand123.call(this,params);}
+		Fossil.setParamsForcommand124 = Game_Interpreter.prototype.command124;
+		Game_Interpreter.prototype.command124 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand124.call(this,params);}
+		Fossil.setParamsForcommand125 = Game_Interpreter.prototype.command125;
+		Game_Interpreter.prototype.command125 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand125.call(this,params);}
+		Fossil.setParamsForcommand126 = Game_Interpreter.prototype.command126;
+		Game_Interpreter.prototype.command126 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand126.call(this,params);}
+		Fossil.setParamsForcommand127 = Game_Interpreter.prototype.command127;
+		Game_Interpreter.prototype.command127 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand127.call(this,params);}
+		Fossil.setParamsForcommand128 = Game_Interpreter.prototype.command128;
+		Game_Interpreter.prototype.command128 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand128.call(this,params);}
+		Fossil.setParamsForcommand129 = Game_Interpreter.prototype.command129;
+		Game_Interpreter.prototype.command129 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand129.call(this,params);}
+		Fossil.setParamsForcommand132 = Game_Interpreter.prototype.command132;
+		Game_Interpreter.prototype.command132 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand132.call(this,params);}
+		Fossil.setParamsForcommand133 = Game_Interpreter.prototype.command133;
+		Game_Interpreter.prototype.command133 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand133.call(this,params);}
+		Fossil.setParamsForcommand134 = Game_Interpreter.prototype.command134;
+		Game_Interpreter.prototype.command134 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand134.call(this,params);}
+		Fossil.setParamsForcommand135 = Game_Interpreter.prototype.command135;
+		Game_Interpreter.prototype.command135 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand135.call(this,params);}
+		Fossil.setParamsForcommand136 = Game_Interpreter.prototype.command136;
+		Game_Interpreter.prototype.command136 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand136.call(this,params);}
+		Fossil.setParamsForcommand137 = Game_Interpreter.prototype.command137;
+		Game_Interpreter.prototype.command137 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand137.call(this,params);}
+		Fossil.setParamsForcommand138 = Game_Interpreter.prototype.command138;
+		Game_Interpreter.prototype.command138 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand138.call(this,params);}
+		Fossil.setParamsForcommand139 = Game_Interpreter.prototype.command139;
+		Game_Interpreter.prototype.command139 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand139.call(this,params);}
+		Fossil.setParamsForcommand140 = Game_Interpreter.prototype.command140;
+		Game_Interpreter.prototype.command140 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand140.call(this,params);}
+		Fossil.setParamsForcommand201 = Game_Interpreter.prototype.command201;
+		Game_Interpreter.prototype.command201 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand201.call(this,params);}
+		Fossil.setParamsForcommand202 = Game_Interpreter.prototype.command202;
+		Game_Interpreter.prototype.command202 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand202.call(this,params);}
+		Fossil.setParamsForcommand203 = Game_Interpreter.prototype.command203;
+		Game_Interpreter.prototype.command203 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand203.call(this,params);}
+		Fossil.setParamsForcommand204 = Game_Interpreter.prototype.command204;
+		Game_Interpreter.prototype.command204 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand204.call(this,params);}
+		Fossil.setParamsForcommand205 = Game_Interpreter.prototype.command205;
+		Game_Interpreter.prototype.command205 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand205.call(this,params);}
+		Fossil.setParamsForcommand211 = Game_Interpreter.prototype.command211;
+		Game_Interpreter.prototype.command211 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand211.call(this,params);}
+		Fossil.setParamsForcommand212 = Game_Interpreter.prototype.command212;
+		Game_Interpreter.prototype.command212 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand212.call(this,params);}
+		Fossil.setParamsForcommand213 = Game_Interpreter.prototype.command213;
+		Game_Interpreter.prototype.command213 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand213.call(this,params);}
+		Fossil.setParamsForcommand216 = Game_Interpreter.prototype.command216;
+		Game_Interpreter.prototype.command216 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand216.call(this,params);}
+		Fossil.setParamsForcommand223 = Game_Interpreter.prototype.command223;
+		Game_Interpreter.prototype.command223 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand223.call(this,params);}
+		Fossil.setParamsForcommand224 = Game_Interpreter.prototype.command224;
+		Game_Interpreter.prototype.command224 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand224.call(this,params);}
+		Fossil.setParamsForcommand225 = Game_Interpreter.prototype.command225;
+		Game_Interpreter.prototype.command225 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand225.call(this,params);}
+		Fossil.setParamsForcommand230 = Game_Interpreter.prototype.command230;
+		Game_Interpreter.prototype.command230 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand230.call(this,params);}
+		Fossil.setParamsForcommand231 = Game_Interpreter.prototype.command231;
+		Game_Interpreter.prototype.command231 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand231.call(this,params);}
+		Fossil.setParamsForcommand232 = Game_Interpreter.prototype.command232;
+		Game_Interpreter.prototype.command232 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand232.call(this,params);}
+		Fossil.setParamsForcommand233 = Game_Interpreter.prototype.command233;
+		Game_Interpreter.prototype.command233 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand233.call(this,params);}
+		Fossil.setParamsForcommand234 = Game_Interpreter.prototype.command234;
+		Game_Interpreter.prototype.command234 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand234.call(this,params);}
+		Fossil.setParamsForcommand235 = Game_Interpreter.prototype.command235;
+		Game_Interpreter.prototype.command235 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand235.call(this,params);}
+		Fossil.setParamsForcommand236 = Game_Interpreter.prototype.command236;
+		Game_Interpreter.prototype.command236 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand236.call(this,params);}
+		Fossil.setParamsForcommand241 = Game_Interpreter.prototype.command241;
+		Game_Interpreter.prototype.command241 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand241.call(this,params);}
+		Fossil.setParamsForcommand242 = Game_Interpreter.prototype.command242;
+		Game_Interpreter.prototype.command242 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand242.call(this,params);}
+		Fossil.setParamsForcommand245 = Game_Interpreter.prototype.command245;
+		Game_Interpreter.prototype.command245 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand245.call(this,params);}
+		Fossil.setParamsForcommand246 = Game_Interpreter.prototype.command246;
+		Game_Interpreter.prototype.command246 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand246.call(this,params);}
+		Fossil.setParamsForcommand249 = Game_Interpreter.prototype.command249;
+		Game_Interpreter.prototype.command249 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand249.call(this,params);}
+		Fossil.setParamsForcommand250 = Game_Interpreter.prototype.command250;
+		Game_Interpreter.prototype.command250 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand250.call(this,params);}
+		Fossil.setParamsForcommand261 = Game_Interpreter.prototype.command261;
+		Game_Interpreter.prototype.command261 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand261.call(this,params);}
+		Fossil.setParamsForcommand281 = Game_Interpreter.prototype.command281;
+		Game_Interpreter.prototype.command281 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand281.call(this,params);}
+		Fossil.setParamsForcommand282 = Game_Interpreter.prototype.command282;
+		Game_Interpreter.prototype.command282 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand282.call(this,params);}
+		Fossil.setParamsForcommand283 = Game_Interpreter.prototype.command283;
+		Game_Interpreter.prototype.command283 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand283.call(this,params);}
+		Fossil.setParamsForcommand284 = Game_Interpreter.prototype.command284;
+		Game_Interpreter.prototype.command284 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand284.call(this,params);}
+		Fossil.setParamsForcommand285 = Game_Interpreter.prototype.command285;
+		Game_Interpreter.prototype.command285 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand285.call(this,params);}
+		Fossil.setParamsForcommand301 = Game_Interpreter.prototype.command301;
+		Game_Interpreter.prototype.command301 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand301.call(this,params);}
+		Fossil.setParamsForcommand302 = Game_Interpreter.prototype.command302;
+		Game_Interpreter.prototype.command302 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand302.call(this,params);}
+		Fossil.setParamsForcommand303 = Game_Interpreter.prototype.command303;
+		Game_Interpreter.prototype.command303 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand303.call(this,params);}
+		Fossil.setParamsForcommand311 = Game_Interpreter.prototype.command311;
+		Game_Interpreter.prototype.command311 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand311.call(this,params);}
+		Fossil.setParamsForcommand312 = Game_Interpreter.prototype.command312;
+		Game_Interpreter.prototype.command312 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand312.call(this,params);}
+		Fossil.setParamsForcommand313 = Game_Interpreter.prototype.command313;
+		Game_Interpreter.prototype.command313 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand313.call(this,params);}
+		Fossil.setParamsForcommand314 = Game_Interpreter.prototype.command314;
+		Game_Interpreter.prototype.command314 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand314.call(this,params);}
+		Fossil.setParamsForcommand315 = Game_Interpreter.prototype.command315;
+		Game_Interpreter.prototype.command315 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand315.call(this,params);}
+		Fossil.setParamsForcommand316 = Game_Interpreter.prototype.command316;
+		Game_Interpreter.prototype.command316 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand316.call(this,params);}
+		Fossil.setParamsForcommand317 = Game_Interpreter.prototype.command317;
+		Game_Interpreter.prototype.command317 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand317.call(this,params);}
+		Fossil.setParamsForcommand318 = Game_Interpreter.prototype.command318;
+		Game_Interpreter.prototype.command318 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand318.call(this,params);}
+		Fossil.setParamsForcommand319 = Game_Interpreter.prototype.command319;
+		Game_Interpreter.prototype.command319 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand319.call(this,params);}
+		Fossil.setParamsForcommand320 = Game_Interpreter.prototype.command320;
+		Game_Interpreter.prototype.command320 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand320.call(this,params);}
+		Fossil.setParamsForcommand321 = Game_Interpreter.prototype.command321;
+		Game_Interpreter.prototype.command321 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand321.call(this,params);}
+		Fossil.setParamsForcommand322 = Game_Interpreter.prototype.command322;
+		Game_Interpreter.prototype.command322 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand322.call(this,params);}
+		Fossil.setParamsForcommand323 = Game_Interpreter.prototype.command323;
+		Game_Interpreter.prototype.command323 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand323.call(this,params);}
+		Fossil.setParamsForcommand324 = Game_Interpreter.prototype.command324;
+		Game_Interpreter.prototype.command324 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand324.call(this,params);}
+		Fossil.setParamsForcommand325 = Game_Interpreter.prototype.command325;
+		Game_Interpreter.prototype.command325 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand325.call(this,params);}
+		Fossil.setParamsForcommand326 = Game_Interpreter.prototype.command326;
+		Game_Interpreter.prototype.command326 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand326.call(this,params);}
+		Fossil.setParamsForcommand331 = Game_Interpreter.prototype.command331;
+		Game_Interpreter.prototype.command331 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand331.call(this,params);}
+		Fossil.setParamsForcommand332 = Game_Interpreter.prototype.command332;
+		Game_Interpreter.prototype.command332 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand332.call(this,params);}
+		Fossil.setParamsForcommand333 = Game_Interpreter.prototype.command333;
+		Game_Interpreter.prototype.command333 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand333.call(this,params);}
+		Fossil.setParamsForcommand334 = Game_Interpreter.prototype.command334;
+		Game_Interpreter.prototype.command334 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand334.call(this,params);}
+		Fossil.setParamsForcommand335 = Game_Interpreter.prototype.command335;
+		Game_Interpreter.prototype.command335 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand335.call(this,params);}
+		Fossil.setParamsForcommand336 = Game_Interpreter.prototype.command336;
+		Game_Interpreter.prototype.command336 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand336.call(this,params);}
+		Fossil.setParamsForcommand337 = Game_Interpreter.prototype.command337;
+		Game_Interpreter.prototype.command337 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand337.call(this,params);}
+		Fossil.setParamsForcommand339 = Game_Interpreter.prototype.command339;
+		Game_Interpreter.prototype.command339 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand339.call(this,params);}
+		Fossil.setParamsForcommand342 = Game_Interpreter.prototype.command342;
+		Game_Interpreter.prototype.command342 = function(params) {if(!params){params=this._params};return Fossil.setParamsForcommand342.call(this,params);}
+
+	}
 
 
 	/*
@@ -1807,6 +2042,20 @@ fossilStaticFixes = function(){
 
 	Window_BattleEnemy.prototype.windowHeight = function() {
 		return this.fittingHeight(this.numVisibleRows());
+	};
+
+	//there's a similar RMMZ function restricted to Window_ShopNumber, but 
+	//it doesn't take in any arguments (it just draws a line based on existing
+	//window components.  As such I'm just importing the RMMV function here.
+	Window_Status.prototype.drawHorzLine = function(y) {
+		var lineY = y + this.lineHeight() / 2 - 1;
+		this.contents.paintOpacity = 48;
+		this.contents.fillRect(0, lineY, this.contentsWidth(), 2, this.lineColor());
+		this.contents.paintOpacity = 255;
+	};
+	
+	Window_Status.prototype.lineColor = function() {
+		return this.normalColor();
 	};
 
 
@@ -2481,7 +2730,8 @@ fossilStaticFixes = function(){
 		Scene_Battle.prototype.selectActorSelection = function() {
 			this.startActorSelection()
 		}
-		// selection help is broken because the interface with MZ changed
+		// Seems to be fixed as per version 0.4, but leaving code here
+/* 		// selection help is broken because the interface with MZ changed
 		// if enabled it requires target selection for every ability, regardless of
 		// whether or not this selection is needed.
 		// so for instance guard will ask which ally to use it on, and regardless 
@@ -2497,7 +2747,7 @@ fossilStaticFixes = function(){
 			}
 			PluginManager.parameters('YEP_BattleEngineCore')['Select Help Window']="false";
 			
-		}
+		} */
 	}
 
 	if(Fossil.pluginNameList.contains('YEP_X_MoreCurrencies'))
@@ -3823,6 +4073,8 @@ fossilDynamicFixes=function(){
 
 
 
+
+
 	Fossil.loadPostFix('MOG_BattleHud',function()
 	{
 		//command129 now takes in params as argument, it previously used ._params[]
@@ -3830,7 +4082,6 @@ fossilDynamicFixes=function(){
 		
 		var fixGameInterpretercommand129=Game_Interpreter.prototype.command129;
 		Game_Interpreter.prototype.command129 = function() {
-			this._params=arguments[0];
 			fixGameInterpretercommand129.apply(this,arguments);
 			return this.commandReturnWorkaround
 		}
@@ -3848,7 +4099,6 @@ fossilDynamicFixes=function(){
 		//same with command 125, 126, 127, and 128
 		var fixGameInterpretercommand125MOGTP=Game_Interpreter.prototype.command125;
 		Game_Interpreter.prototype.command125 = function() {
-			this._params=arguments[0];
 			fixGameInterpretercommand125MOGTP.apply(this,arguments);
 			return this.commandReturnWorkaround
 		}
@@ -3861,7 +4111,6 @@ fossilDynamicFixes=function(){
 		
 		var fixGameInterpretercommand126MOGTP=Game_Interpreter.prototype.command126;
 		Game_Interpreter.prototype.command126 = function() {
-			this._params=arguments[0];
 			fixGameInterpretercommand126MOGTP.apply(this,arguments);
 			return this.commandReturnWorkaround
 		}
@@ -3874,7 +4123,6 @@ fossilDynamicFixes=function(){
 		//127
 			var fixGameInterpretercommand127MOGTP=Game_Interpreter.prototype.command127;
 		Game_Interpreter.prototype.command127 = function() {
-			this._params=arguments[0];
 			fixGameInterpretercommand127MOGTP.apply(this,arguments);
 			return this.commandReturnWorkaround
 		}
@@ -3886,7 +4134,6 @@ fossilDynamicFixes=function(){
 		
 		var fixGameInterpretercommand128MOGTP=Game_Interpreter.prototype.command128;
 		Game_Interpreter.prototype.command128 = function() {
-			this._params=arguments[0];
 			fixGameInterpretercommand128MOGTP.apply(this,arguments);
 			return this.commandReturnWorkaround
 		}
@@ -3914,7 +4161,6 @@ fossilDynamicFixes=function(){
 		
 		var fixGameInterpretercommand212CE=Game_Interpreter.prototype.command212;
 		Game_Interpreter.prototype.command212 = function() {
-			this._params=arguments[0];
 			fixGameInterpretercommand212CE.apply(this,arguments);
 			return this.commandReturnWorkaround
 		}
@@ -3927,7 +4173,6 @@ fossilDynamicFixes=function(){
 		
 		var fixGameInterpretercommand205CE=Game_Interpreter.prototype.command205;
 		Game_Interpreter.prototype.command205 = function() {
-			this._params=arguments[0];
 			fixGameInterpretercommand205CE.apply(this,arguments);
 			return this.commandReturnWorkaround
 		}
@@ -4253,7 +4498,6 @@ fossilDynamicFixes=function(){
 		// It makes the game repeat every choice box twice!  How horrifying :o
 		var fixGameInterpretercommand101=Game_Interpreter.prototype.command101;
 		Game_Interpreter.prototype.command101 = function() {
-			this._params=arguments[0];
 			fixGameInterpretercommand101.apply(this,arguments);
 			return this.commandReturnWorkaround
 		}
@@ -4433,7 +4677,8 @@ fossilDynamicFixes=function(){
 		}
 	})
 
-
+	//seems to be fixed without needing a special case now.
+/* 
 	Fossil.loadPostFix('YEP_SelfSwVar',function()
 	{
 
@@ -4580,7 +4825,7 @@ fossilDynamicFixes=function(){
 			this.commandReturnWorkaround=fixYanflySSVGame_Interpreter_command285.call(this,this._params);
 		}
 		
-	})
+	}) */
 
 
 	Fossil.loadPostFix('SRD_SummonCore',function()
@@ -5972,6 +6217,30 @@ fossilDynamicFixes=function(){
 		
 	})
 
+
+	Fossil.loadPostFix('DreamX_CollapseAnimation',function()
+	{
+		//add some animation handlers so it can pretend it knows if animations are playing.
+		Sprite_Battler.prototype.startAnimation = function() {
+			this._animationPlaying = true;
+		};
+
+		Sprite_Battler.prototype.isAnimationPlaying = function() {
+			return this._animationPlaying;
+		};
+
+		Sprite_Battler.prototype.endAnimation = function() {
+			this._animationPlaying = false;
+		};
+
+	})
+
+	Fossil.loadPostFix('DreamX_BattleHudOnMap',function()
+	{
+		//add this function to the map scene so it initializes, since dreamx provides no arguments.
+		Scene_Map.prototype.windowAreaHeight=Scene_Battle.prototype.windowAreaHeight;
+	})
+
 	Fossil.loadPostFix('JK_MailSystem',function()
 	{
 		//add a dummy function for this thing to release reservations on
@@ -6158,7 +6427,7 @@ fossilDynamicFixes=function(){
 
 	Fossil.loadPostFix(['YEP_MessageCore','YEP_X_ExtMesPack1','YEP_X_ExtMesPack2','YEP_X_MessageBacklog'],function()
 	{
-		console.log('hi')
+		
 		//revert the namebox changes from messagecore, restoring to stock rmmz
 		Window_NameBox= MZ_Window_NameBox;
 		MZ_Window_NameBox=undefined;//clean up after ourselves.
@@ -6166,8 +6435,7 @@ fossilDynamicFixes=function(){
 			//we need to pass in the ._params yanfly's message creation command wants
 			var fixMessageCoreCommand101Params=Game_Interpreter.prototype.command101
 			Game_Interpreter.prototype.command101 = function(params) {
-				this._params=arguments[0];
-				
+				params=params||this._params;//recover if it got stolen.
 				//cancel things as per MZ idiom.
 				if ($gameMessage.isBusy()) 
 				{
@@ -6176,7 +6444,7 @@ fossilDynamicFixes=function(){
 				//create the name box outside of yanfly's code
 				$gameMessage.setSpeakerName(params[4]);
 				
-				fixMessageCoreCommand101Params.call(this);
+				return fixMessageCoreCommand101Params.call(this,params);
 			} 
 			
 		
@@ -6680,6 +6948,11 @@ if(typeof(scriptUrls)=="undefined")
 	//but since we're in an if statement we can't.
 	//so instead, we push them up into the html layer from inside here.
 	//since if they're inline scripts they get instantly evaluated.
+	
+	//Q: What if we had them outside an if statement?  
+	//Then on the first execution of this file, when it's still being controlled by 
+	//the original main.js, the browser would detect an attempt to redefine these 
+	//const values before we got a chance to run any of this script.  No go.
 	
 	var script = document.createElement("script");
 	script.type = "text/javascript";
