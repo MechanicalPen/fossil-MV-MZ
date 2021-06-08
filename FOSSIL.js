@@ -64,6 +64,7 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 
 -HIME_BattleWeather
 -HIME_GuestFollowers Note: plugin commands ONLY work with oldCommand()
+-HIME_MenuMusic Note: plugin commands ONLY work with oldCommand()
 -HIME_HiddenShopGoods
 -HIME_ScopeCore
 -HIME_ScopeChangeRules
@@ -75,6 +76,7 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -HIME_EnemyEquips
 -HIME_SideviewActorEnemies
 -HIME_MoreEnemyDrops
+-HIME_FormulaEffects
 
 -Irina_AutoMessageColor
 
@@ -3223,6 +3225,7 @@ fossilDynamicFixes=function(){
 			{
 				return 0;
 			}
+
 			//this is for YEP_EquipCustomize
 			if(this.constructor.name =="Scene_EquipCustomize")
 			{
@@ -4676,39 +4679,13 @@ fossilDynamicFixes=function(){
 			Fossil.eraseAchievementDataGauges.call(this);
 		}
 	})
+	
 
-	//seems to be fixed without needing a special case now.
-/* 
 	Fossil.loadPostFix('YEP_SelfSwVar',function()
 	{
 
 		//fix a whole lot of command injections
 		
-		var fixGameInterpretercommand101Self=Game_Interpreter.prototype.command101;
-		Game_Interpreter.prototype.command101 = function() {
-			this._params=arguments[0];
-			fixGameInterpretercommand101Self.apply(this,arguments);
-			return this.commandReturnWorkaround
-		}
-		
-		var fixYanflySSVGame_Interpreter_command101 = Yanfly.SSV.Game_Interpreter_command101;
-		Yanfly.SSV.Game_Interpreter_command101=function()
-		{
-			this.commandReturnWorkaround=fixYanflySSVGame_Interpreter_command101.call(this,this._params);
-		}
-		
-		var fixGameInterpretercommand104Self=Game_Interpreter.prototype.command104;
-		Game_Interpreter.prototype.command104 = function() {
-			this._params=arguments[0];
-			fixGameInterpretercommand104Self.apply(this,arguments);
-			return this.commandReturnWorkaround
-		}
-		
-		var fixYanflySSVGame_Interpreter_command104 = Yanfly.SSV.Game_Interpreter_command104;
-		Yanfly.SSV.Game_Interpreter_command104=function()
-		{
-			this.commandReturnWorkaround=fixYanflySSVGame_Interpreter_command104.call(this,this._params);
-		}
 		
 		var fixGameInterpretercommand111Self=Game_Interpreter.prototype.command111;
 		Game_Interpreter.prototype.command111 = function() {
@@ -4761,6 +4738,7 @@ fossilDynamicFixes=function(){
 		{
 			this.commandReturnWorkaround=fixYanflySSVGame_Interpreter_command201.call(this,this._params);
 		}
+
 		var fixGameInterpretercommand202Self=Game_Interpreter.prototype.command202;
 		Game_Interpreter.prototype.command202 = function() {
 			this._params=arguments[0];
@@ -4825,8 +4803,7 @@ fossilDynamicFixes=function(){
 			this.commandReturnWorkaround=fixYanflySSVGame_Interpreter_command285.call(this,this._params);
 		}
 		
-	}) */
-
+	}) 
 
 	Fossil.loadPostFix('SRD_SummonCore',function()
 	{
@@ -6631,9 +6608,9 @@ fossilDynamicFixes=function(){
 
 	Fossil.loadPostFix('YEP_SaveCore',function()
 	{
-		Scene_File.prototype.createListWindow=Fossil.backupSceneFileCreateListWindow;
-		
-		
+		//Scene_File.prototype.createListWindow=Fossil.backupSceneFileCreateListWindow;
+
+				
 	})
 
 
