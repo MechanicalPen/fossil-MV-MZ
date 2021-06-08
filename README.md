@@ -15,11 +15,13 @@ This should be reasonably plug-and-play.  There aren't really parameters to conf
 
 **Invoking MV Plugin Commands**
 
-You can invoke MV plugin commands using MZ's plugin command interface (OldPluginCommand in Fossil_Pre).
+You can invoke MV plugin commands using MZ's plugin command interface (OldPluginCommand in FOSSIL).
 
 Alternatively, you can put the command into a script using the oldCommand function.  For instance, 
 
 oldCommand('somePlugin arguments et cetera');
+
+Finally, you can copy-paste an old-style plugin command from a MV project (or import a map containing it, if copy-paste between versions doesn't work for you - it's very flaky.)
 
 **Mobile and Web Deployment Note**
 
