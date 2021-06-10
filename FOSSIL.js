@@ -14,7 +14,7 @@
 
  * @help FOSSIL goes at the start, before all other plugins.
 
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.4.01
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.4.02
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER 
@@ -48,6 +48,13 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -DreamX_GoldVariance
 -DreamX_RandomPrefixesSuffixes
 -DreamX_TouchSurpriseBattles
+
+*FROG_Core
+-FROG_Magic
+-FROG_RaceCore
+-FROG_SkillTypeDupeFix
+*FROG_TalentCore
+-FROG_TriggerDistance
 
 -GALV_Questlog
 -GALV_TimedMessagePopups
@@ -88,6 +95,8 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -KMS_SpiralEncount
 -KMS_WaterMapEffect
 -KMS_Minimap
+
+-MechPen_FollowerSpace
 
 -mjshi's ChainCommand QTE plugin
 -mjshi's MatchCardLottery Minigame
@@ -187,6 +196,9 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -YEP_MessageEvalText 
 -YEP_X_MessageMacros1
 -YEP_SelfSwVar
+-YEP_SpecialParamFormula
+*YEP_SaveCore
+-YEP_X_NewGamePlus
 *YEP_BattleEngineCore (Note: Battle system must be 'turn-based' in System 1)
 -YEP_X_ActionSeqPack1
 -YEP_X_ActionSeqPack2
@@ -259,6 +271,7 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -YEP_X_ChangeBattleEquip
 -YEP_X_EquipCustomize
 -YEP_EquipRequirements
+-YEP_WeaponAnimation
 -YEP_WeaponUnleash
 *YEP_StatusMenuCore
 -YEP_X_ActorVariables
@@ -328,6 +341,7 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -YEP_MapStatusWindow
 -YEP_MusicMenu
 -YEP_PictureSpriteSheets
+-YEP_PatchNotes
 -YEP_PictureCommonEvents
 -YEP_RegionEvents
 -YEP_RegionRestrictions
@@ -391,7 +405,7 @@ et cetera) as well as your game as a whole are *not* considered to be
  //instead of mucking around with plugin order, this will inject the code to precisely where it needs to go
 //...hopefully.
 var Fossil =Fossil || {}
-Fossil.version='0.4.01'
+Fossil.version='0.4.02'
 
 //outer block testing scriptUrls exists so Fossil can act as a replacement for main.js
 //don't futz with it
@@ -468,6 +482,7 @@ fossilStaticFixes = function(){
 	//and (B) we'll have a fingerprint if someone wants to check if fossil is screwing with it
 	Utils.FAKE_VERSION='13.3.7';
 	//1337 seems fake enough.
+
 	
 	//if we are running MZ we have webgl.
 	Graphics.hasWebGL=function(){return true}
@@ -484,6 +499,56 @@ fossilStaticFixes = function(){
 	Utils.generateRuntimeId = function(){
 		return Utils._id++;
 	};
+
+
+	//Storagemanager now takes filenames instead of indexes.  Turn it into the proper format if it was not passed in right.
+		
+	StorageManager.remove = function(saveName) {
+		saveName=Fossil.convertFileIdToFileNameIfItWasNotPassedInRight(saveName)
+		if (this.isLocalMode()) {
+			return this.removeLocalFile(saveName);
+		} else {
+			return this.removeForage(saveName);
+		}
+	};
+
+	StorageManager.saveZip = function(saveName, zip) {
+		saveName=Fossil.convertFileIdToFileNameIfItWasNotPassedInRight(saveName)
+		if (this.isLocalMode()) {
+			return this.saveToLocalFile(saveName, zip);
+		} else {
+			return this.saveToForage(saveName, zip);
+		}
+	};
+
+	StorageManager.loadZip = function(saveName) {
+		saveName=Fossil.convertFileIdToFileNameIfItWasNotPassedInRight(saveName)
+		if (this.isLocalMode()) {
+			return this.loadFromLocalFile(saveName);
+		} else {
+			return this.loadFromForage(saveName);
+		}
+	};
+
+	StorageManager.exists = function(saveName) {
+		saveName=Fossil.convertFileIdToFileNameIfItWasNotPassedInRight(saveName)
+		if (this.isLocalMode()) {
+			return this.localFileExists(saveName);
+		} else {
+			return this.forageExists(saveName);
+		}
+	};
+
+	Fossil.convertFileIdToFileNameIfItWasNotPassedInRight=function(maybeFileName)
+	{
+		if(typeof(maybeFileName)=='string')
+		{
+			return maybeFileName
+		}else{
+			return DataManager.makeSavename(maybeFileName)
+		}
+	}
+
 
 	//alter the 'executeCommand' function so it stores the parameters taken in as an argument into ._params
 	//rmmv code expects to see a ._params, so hardcoding this here will save a ton of one-off fixes.
@@ -598,12 +663,12 @@ fossilStaticFixes = function(){
 					if(!!$dataAnimations[index].frames)
 					{
 						//old logic from the isMVAnimation function
-						this._isMVAnimation==true;
+						$dataAnimations[index]._isMVAnimation=true;
 					}else{
 						//make a fake frames array of the proper length
 						$dataAnimations[index].frames=[]
 						$dataAnimations[index].frames.length=Fossil.guessAnimationEnd($dataAnimations[index])
-
+						$dataAnimations[index]._isMVAnimation=false;
 					}
 				}
 
@@ -612,7 +677,7 @@ fossilStaticFixes = function(){
 	}
 	//rewrite since we did the check earlier.
 	Spriteset_Base.prototype.isMVAnimation = function(animation) {
-		return this._isMVAnimation
+		return animation._isMVAnimation
 	};
 
 	//Making custom gauges is more difficult in MZ, because they default is hard-coded to be
@@ -641,7 +706,6 @@ fossilStaticFixes = function(){
 		newGauge.drawGauge();
 		return newGauge;
 	};
-
 
 	//create a generic inner sprite for window_base, allowing us to put gauges in any window
 	Window_Base.prototype.fossilCreateInnerSprite = function(key, spriteClass) {
@@ -956,7 +1020,10 @@ fossilStaticFixes = function(){
 	\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 	*/
-
+	//several MV plugins want to know this.
+	Window_Base.prototype.standardBackOpacity = function() {
+		return 192;
+	};
 	// RMMZ puts color information into ColorManager.textColor() instead.
 	//so let's redirect any calls to the old windowbase solution to the new location
 	Window_Base.prototype.textColor = function(n) {
@@ -1837,6 +1904,7 @@ fossilStaticFixes = function(){
 	}//end of window rectangle section (and the if(true) that folds it)
 
 
+
 	//
 	//////////////////////////////////////////////////////////////
 		//GAME INTERPRETER COMMAND PARAMETER FIXES
@@ -2469,6 +2537,15 @@ fossilStaticFixes = function(){
 	};
 
 
+	//add this weird follower reversal function from RMMV
+	Game_Followers.prototype.reverseEach = function(callback, thisObject) {
+		this._data.reverse();
+		this._data.forEach(callback, thisObject);
+		this._data.reverse();
+	};
+	Game_Followers.prototype.forEach = function(callback, thisObject) {
+		this._data.forEach(callback, thisObject);
+	};
 
 	//some plugins try to deal with the pixi tilemap.  Normally this is just pushing a new value to it
 	//placeholder to avoid crashing.
@@ -2788,12 +2865,7 @@ fossilStaticFixes = function(){
 		Tilemap.prototype.refreshTileset = function() {
 
 		};
-		//add this weird follower reversal function from RMMV
-		Game_Followers.prototype.reverseEach = function(callback, thisObject) {
-			this._data.reverse();
-			this._data.forEach(callback, thisObject);
-			this._data.reverse();
-		};
+
 		
 	}
 
@@ -3171,7 +3243,7 @@ fossilDynamicFixes=function(){
 
 	Fossil.loadPreFix('YEP_SaveCore',function()
 	{
-		Fossil.backupSceneFileCreateListWindow=Scene_File.prototype.createListWindow;
+		//Fossil.backupSceneFileCreateListWindow=Scene_File.prototype.createListWindow;
 		
 		DataManager.isThisGameFile=DataManager.savefileExists;
 		DataManager.loadSavefileInfo =DataManager.savefileInfo;
@@ -3200,6 +3272,7 @@ fossilDynamicFixes=function(){
 			Fossil.particleScript=undefined;//clean up after ourselves.
 			if(Fossil.chattyOutput){console.log('FOSSIL has imported pixi particles')}
 	})
+	
 	//////////////////////////////////////////////////////////////////////
 	//PRE CHECK IS NOW COMPLETE
 	/////////////////////////////////////////////////////////////////////////////////////////////
@@ -4075,7 +4148,44 @@ fossilDynamicFixes=function(){
 	})
 
 
-
+	Fossil.loadPostFix('FROG_Magic',function()
+	{
+		Window_StatusBase.prototype.placeBasicGauges = function(actor, x, y) {
+			Fossil.tempActorTarget=actor;
+			this.placeGauge(actor, "hp", x, y);
+			//base the width on the width of the hp gauge.
+			var myWidth=this._additionalSprites["actor%1-gauge-%2".format(actor._actorId, "hp")].width;
+			//reduce the font a tad so it matches hp
+			this.changeFontSize($gameSystem.mainFontSize()-3)
+			//move to the right 2 pixels so MP and HP line up.
+			this.drawActorMp(actor, x+2, y + this.gaugeLineHeight(),myWidth);
+			this.changeFontSize($gameSystem.mainFontSize())
+			if ($dataSystem.optDisplayTp) {
+				this.placeGauge(actor, "tp", x, y + this.gaugeLineHeight() * 2);
+			}
+		};
+		
+		Fossil.relocateDrawActorMp
+		
+		Window_StatusBase.prototype.drawCurrentAndMax=
+		function(actormp, actormmp, x, y, width, mpColor, normalColor)
+		{
+			//erase the flexible gauge we just made
+			var gaugeId=[this.constructor.name.toString(),x,y,width].toString();
+			this._additionalSprites[gaugeId].hide();
+			
+			this._additionalSprites[gaugeId].hideValueText = true;
+			this._additionalSprites[gaugeId].hideLabelText=true;
+			this._additionalSprites[gaugeId].drawGauge();
+			//and replace with the rmmz stock gauge.
+			const key = "actor%1-gauge-%2".format(Fossil.tempActorTarget._actorId, "mp");
+			this.placeGauge(Fossil.tempActorTarget, "mp", x, y);
+			Fossil.tempActorTarget=undefined;
+			//hide the label.
+			this._additionalSprites[key].label=function(){return ""}
+		}
+		
+	})
 
 
 	Fossil.loadPostFix('MOG_BattleHud',function()
@@ -5458,7 +5568,7 @@ fossilDynamicFixes=function(){
 		Fossil.fixplayFootstepSound =Game_CharacterBase.prototype.playFootstepSound
 		Game_CharacterBase.prototype.playFootstepSound = function(volume, pitch, pan) 
 		{
-			Fossil.tempCoords=[this.x,this.y]
+			Fossil.tempCoord=[this.x,this.y]
 			
 			//fix the coordinates to identify the next tile (this is bugged in the base plugin)
 			//if someone includes a diagonal movement that expands the .direction() beyond the four
@@ -5527,6 +5637,33 @@ fossilDynamicFixes=function(){
 		
 	})
 
+	Fossil.loadPostFix('RuneSkills',function()
+	{
+		//runeskills sets up its database in isDatabaseLoaded by default
+		//problem: sometimes isN'TDatabaseLoaded!
+		//so we put it into DataManager.onLoad instead;
+		var fix_runeSkills_DataManager_isDatabaseLoaded = DataManager.isDatabaseLoaded;
+		DataManager.isDatabaseLoaded = function() {
+			RuneSkills.Skill=RuneSkills.Skill||'FossilFakeValue'
+			var tempVal =  fix_runeSkills_DataManager_isDatabaseLoaded.apply(this,arguments);
+			if (RuneSkills.Skill === 'FossilFakeValue') {RuneSkills.Skill=undefined};
+			return tempVal;
+		};
+		
+		var fix_runeSkillsInitInOnLoad = Scene_Boot.prototype.onDatabaseLoaded;
+		Scene_Boot.prototype.onDatabaseLoaded = function() {
+			fix_runeSkillsInitInOnLoad.call(this,arguments);
+			if(!RuneSkills.Skill){RuneSkills.initialize()}
+		};
+		
+		//resize so we are the right size
+		Fossil.fixWindow_RuneChoiceCommandListSize=Window_RuneChoice.prototype.makeCommandList;
+		Window_RuneChoice.prototype.makeCommandList = function() {
+			Fossil.fixWindow_RuneChoiceCommandListSize.apply(this,arguments)
+				this.move(this.x,this.y,this.width,SceneManager._scene.calcWindowHeight(this.maxItems(),true))
+		}
+		
+	})
 
 	Fossil.loadPostFix('STV_BeastBook',function()
 	{
@@ -6603,14 +6740,242 @@ fossilDynamicFixes=function(){
 	})
 
 
-
-
-
-	Fossil.loadPostFix('YEP_SaveCore',function()
+	Fossil.loadPostFix('YEP_WeaponAnimation',function()
 	{
-		//Scene_File.prototype.createListWindow=Fossil.backupSceneFileCreateListWindow;
+		//use the new setHue function to tint.
+		Fossil.updateWeaponSpriteHue = Sprite_Weapon.prototype.loadCustomBitmap 
+		Sprite_Weapon.prototype.loadCustomBitmap = function() {
+			Fossil.updateWeaponSpriteHue.apply(this,arguments);
+			this.setHue(this.parent._battler.getUniqueWeaponHue());
+		};
+		
+		
+	})
 
+	Fossil.loadPostFix('FROG_TalentCore',function()
+	{
+		Scene_Talents.prototype.helpAreaTop= function()
+		{return 0}
+		
+		Fossil.fixMaxColsTalentCheckCommandWindow=Window_TalentCheckCommand.prototype.maxCols 
+		Window_TalentCheckCommand.prototype.maxCols = function () {
+			if (!this._list)
+			{
+				return 2
+			}else{
+				return Fossil.fixMaxColsTalentCheckCommandWindow.call(this,arguments)
+			}
+		};
+		
+		
+	})
+
+	Fossil.loadPostFix(['YEP_SaveCore','YEP_X_Autosave','YEP_X_NewGamePlus'],function()
+	{
+
+
+		//based on StorageManager.loadObject but omitting the json conversion.
+		StorageManager.load = function(savefileId) {
+			const saveName = DataManager.makeSavename(savefileId);
+			this.loadZip(saveName)
+			.then(zip => this.zipToJson(zip))
+			.then(saveinfo=>{Fossil.backupwindowref._saveContents=saveinfo;
+			Fossil.oldSaveDrawContents.call(Fossil.backupwindowref,Fossil.backupdyvalue)}
+			)
+			return false;
+		}
+		//StorageManager.save =StorageManager.saveObject
+		StorageManager.save = function(savefileId, object) {
+		const saveName = DataManager.makeSavename(savefileId);
+		return this.jsonToZip(json)
+			.then(zip => this.saveZip(saveName, zip));
+		};
+
+		Fossil.oldSaveDrawContents=Window_SaveInfo.prototype.drawContents;
+
+		Window_SaveInfo.prototype.drawContents=function(dy){
+			Fossil.backupdyvalue=dy;
+			Fossil.backupwindowref=this;
+			//there probably shouldn't be a race condition from this,
+			//two assignments should easily outpace a file loading and unzipping
+		}
+
+
+		Scene_File.prototype.firstSavefileIndex= function()
+		{
+			return Scene_Load.prototype.firstSavefileId.apply(this,arguments);
+		}
+
+
+		//make this thinner
+		Fossil.thinSaveFileWindowInit= Window_SavefileList.prototype.initialize;
+			Window_SavefileList.prototype.initialize = function(x,y,width,height) 
+			{
+				Fossil.thinSaveFileWindowInit.call(this, new Rectangle(x,y,Math.round(width*3/4),height))
+			}
+
+
+		Scene_File.prototype.mainAreaTop = function() {return 0}
+
+
+		 //copied out of Window_ChoiceList.prototype.initialize
+		Window_SaveConfirm.prototype.initialize = function() {
+			//taking the init from Scene_Title.prototype.commandWindowRect
+			//then making the width fit the text you entered.
+			var ww = Graphics.boxWidth-12
+			var wh = Window_Selectable.prototype.fittingHeight(3);
+			var wx = (Graphics.boxWidth - ww) / 2 ;
+			var wy = Graphics.boxHeight - wh - 96 ;
+			rect = new Rectangle(wx, wy, ww, wh);
+			Window_TitleCommand.prototype.initialize.call(this, rect);
+			ww = Window_Base.prototype.textWidthEx.call(this,Yanfly.Param.SaveConfirmLoadTx )+64
+			var wx = (Graphics.boxWidth - ww) / 2 ;
+			this.move(wx,wy,ww,wh);
+			this.refresh();
+		};
+		Window_SaveConfirm.prototype.selectLast=function()
+		{
+			
+		}
+
+		
+		Window_SaveConfirm.prototype.setData=function(text)
+		{
+			var ww = Window_Base.prototype.textWidthEx.call(this,text)+48
+			var wx = (Graphics.boxWidth - ww) / 2 ;
+			var wh = Window_Selectable.prototype.fittingHeight(3);
+			var wy = Graphics.boxHeight - wh - 96 ;
+			this.move(wx,wy,ww,wh)
+			//stolen from Window_Help.prototype.refresh 
+			this.refresh();
+			this._text=text;
+			const rect = this.baseTextRect();
+			this.drawTextEx(this._text, rect.x, rect.y, rect.width);
+		}
+
+
+
+		if(Imported.YEP_X_Autosave)
+		{
+			if(Fossil.chattyOutput)
+			{
+			console.log('YEP_X_Autosave is currently not supported in FOSSIL, since MZ has a built-in autosave.')
+			}
+			if(Yanfly.Param.AutosaveOnMapLoad)
+			{
+				if(Fossil.chattyOutput)
+				{
+				console.log('Auto Save On Map load in YEP_X_Autosave has been disabled. MZ has that already.')
+				}
+				Yanfly.Param.AutosaveOnMapLoad=false;
+			}
+		}
 				
+				
+		Fossil.fixSaveFileListIndex=Window_SavefileList.prototype.drawItem
+		Window_SavefileList.prototype.drawItem = function(index){
+			index--;
+			Fossil.tempSaveFileIndex=1;
+			Fossil.fixSaveFileListIndex.call(this,index)
+		}
+
+		Window_SavefileList.prototype.itemRect = function(index) {
+			//have to adjust the off-by-one here.
+			index+= Fossil.tempSaveFileIndex||0;
+			Fossil.tempSaveFileIndex=0;
+			const maxCols = this.maxCols();
+			const itemWidth = this.itemWidth();
+			const itemHeight = this.itemHeight();
+			const colSpacing = this.colSpacing();
+			const rowSpacing = this.rowSpacing();
+			const col = index % maxCols;
+			const row = Math.floor(index / maxCols);
+			const x = col * itemWidth + colSpacing / 2 - this.scrollBaseX();
+			const y = row * itemHeight + rowSpacing / 2 - this.scrollBaseY();
+			const width = itemWidth - colSpacing;
+			const height = itemHeight - rowSpacing;
+			return new Rectangle(x, y, width, height);
+		};
+
+		Fossil.fixSaveInfoOffByOne=Window_SaveInfo.prototype.savefileId 
+		Window_SaveInfo.prototype.savefileId = function() {
+		  return Fossil.fixSaveInfoOffByOne.apply(this,arguments)-1;
+		};
+
+		Fossil.fixSaveActionOffByOne=Window_SaveAction.prototype.savefileId 
+		Window_SaveAction.prototype.savefileId = function() {
+			return Fossil.fixSaveActionOffByOne.apply(this,arguments)-1;
+		};
+
+		Fossil.fixonSaveSuccessOffByOne=Scene_File.prototype.onSaveSuccess 
+		Scene_File.prototype.onSaveSuccess = function() {
+			Fossil.fixonSaveSuccessOffByOne.apply(this,arguments)
+			if (!Yanfly.Param.SavePop) {
+				this._actionWindow._currentFile++;
+				this._infoWindow._currentFile++;
+				this._infoWindow.updateIndex();
+			}
+		}
+
+		Fossil.fixperformActionDeleteOffByOne=Scene_File.prototype.performActionDelete
+		Scene_File.prototype.performActionDelete = function() {
+			Fossil.fixperformActionDeleteOffByOne.apply(this,arguments)
+			if (!Yanfly.Param.SavePop) {
+				this._actionWindow._currentFile++;
+				this._infoWindow._currentFile++;
+				this._infoWindow.updateIndex();
+			}	
+		}
+
+		Fossil.fixSaveActionFirstSaveLoad=Scene_File.prototype.create 
+		Scene_File.prototype.create = function() {
+			Fossil.fixSaveActionFirstSaveLoad.apply(this,arguments)
+			this._infoWindow.updateIndex();
+			this._listWindow._autosave = $gameSystem.isAutosaveEnabled();
+		}
+		//I believe no wait is needed now that we're handling async right
+		Fossil.updateIndexNoWait=Window_SaveInfo.prototype.updateIndex 
+		Window_SaveInfo.prototype.updateIndex =function()
+		{
+			Fossil.updateIndexNoWait.apply(this,arguments);
+			this._waitTime=1;
+		}
+
+		Scene_File.prototype.performActionSave = function ()
+		{
+			Scene_Save.prototype.executeSave.call(this,this.savefileId());
+			
+		}
+		
+		if(Imported.YEP_X_NewGamePlus)
+		{
+			//Due to the async loading (and promises being truthy), without this code
+			//we end up with
+			// 1) Select New Game +
+			// 2) New Game is created
+			// 3) New Game gets modifications applied
+			// 4) New game gets thrown out and original savegame is loaded.
+			// 5) Save game starts.
+			// What we do instead here is remove the original Scene_File.prototype.startNewGamePlus
+			//so it's more
+			// 1) select new game plus
+			// 2) nothing happens
+			// 3) ...
+			// 4) savegame is loaded
+			// 5) newgame is created
+			// 6) new game gets modifications applied
+			// 7) start new game+
+			Fossil.startNewGamePlusAfterFileLoads=DataManager.correctDataErrors 
+			DataManager.correctDataErrors = function() {
+				Fossil.startNewGamePlusAfterFileLoads.apply(this,arguments);
+				Fossil.startNewGamePlus.call(SceneManager._scene);
+			};
+			
+			
+			Fossil.startNewGamePlus=Scene_File.prototype.startNewGamePlus
+			Scene_File.prototype.startNewGamePlus=function(){}
+		}
+
 	})
 
 
@@ -6681,6 +7046,7 @@ fossilDynamicFixes=function(){
 //if you just want to fix plugins, there's nothing here for you to do.  Go up^ to that block.
 if(typeof(scriptUrls)!=="undefined")
 {
+	
 	if($plugins[0].name!=='FOSSIL')
 	{
 		throw new Error('FOSSIL needs to be the first plugin.  If FOSSIL is not the first plugin, everything will break!'); 
@@ -6702,6 +7068,11 @@ if(typeof(scriptUrls)!=="undefined")
 	//NOTE FOR DEVELOPERS: If you just replace index.html with the new file
 	//you skip this entire setup step.
 	//
+	if(Fossil.pluginNameList.contains('YEP_GridFreeDoodads'))
+	{
+		//stop it from popping open the console.  Rude!
+		Utils.RPGMAKER_VERSION="1.6.1";
+	}
 
 	Fossil.loadTextFile = function(name, src) {
 		const xhr = new XMLHttpRequest();
