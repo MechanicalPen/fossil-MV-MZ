@@ -1,4 +1,5 @@
 # fossil-MV-MZ
+![Fossil Project Logo](https://raw.githubusercontent.com/FossilMZ/fossil-MV-MZ/main/FossilLogo128px.png)
 Project Fossil (Fixing Old Software / Script Interoperability Layer) is a RPG Maker MZ plugin designed to expand the use and usefulness of RPG MAKER MV plugins, by allowing them to work in RPG MAKER MZ projects.
 
 How to use: 
