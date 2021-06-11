@@ -14,7 +14,7 @@
 
  * @help FOSSIL goes at the start, before all other plugins.
 
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 0.4.02
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.01
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER 
@@ -98,31 +98,42 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 
 -MechPen_FollowerSpace
 
+-mjshi's RuneSkills
 -mjshi's ChainCommand QTE plugin
 -mjshi's MatchCardLottery Minigame
 -mjshi's StatPolygon
 -mjshi's Wuxing Minigame
 
 -MOG_ActionName
--MOG_BattleHud
 -MOG_BattleResult
 -MOG_BossHp
 -MOG_ComboCounter
 -MOG_CharacterMotion
 -MOG_DizzyEffect
 -MOG_EventIndicators
+-MOG_EventText
 -MOG_TreasurePopup
 -MOG_Weather_EX
--MOG_PickupThrow
--MOG_ActorHud
--MOG_GoldHud
 -MOG_CharPoses
--MOG_EventSensor
 *MOG_ChronoEngine
 -MOG_ChronoATBHud
 -MOG_ChronoEnemyHp
 -MOG_ChronoToolHud
 -MOG_ChronoCT
+-MOG_Compass
+-MOG_EventSensor
+-MOG_PickupThrow
+-MOG_TimeSystem
+-MOG_TimeSystemHud
+-MOG_ActorHud
+-MOG_BattleHud
+-MOG_GoldHud
+-MOG_VariableHud
+-MOG_CharParticles
+-MOG_MenuParticles
+-MOG_CharShatterEffect
+-MOG_DestinationPointer
+-MOG_MenuCursor
 
 -Pv_BattleCommandCustomizer
 -Pv_ParticleCore (just add Pixi-particles to library folder, FOSSIL handles import)
@@ -405,7 +416,7 @@ et cetera) as well as your game as a whole are *not* considered to be
  //instead of mucking around with plugin order, this will inject the code to precisely where it needs to go
 //...hopefully.
 var Fossil =Fossil || {}
-Fossil.version='0.4.02'
+Fossil.version='1.0.01'
 
 //outer block testing scriptUrls exists so Fossil can act as a replacement for main.js
 //don't futz with it
@@ -480,6 +491,13 @@ fossilStaticFixes = function(){
 	//this will be a very high number because (A)
 	//we are more advanced than any existing MV version
 	//and (B) we'll have a fingerprint if someone wants to check if fossil is screwing with it
+	if(Utils.MZ_VERSION<'1.2.1')
+	{
+		if(Fossil.chattyOutput)
+		{
+			console.log("Your MZ version is less than 1.2.1.  Fossil was designed for 1.2.1, and gauges and other things may break on older versions of MZ.")
+		}
+	}
 	Utils.FAKE_VERSION='13.3.7';
 	//1337 seems fake enough.
 
