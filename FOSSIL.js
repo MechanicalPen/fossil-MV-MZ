@@ -14,7 +14,7 @@
 
  * @help FOSSIL goes at the start, before all other plugins.
 
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.01
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.02
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER 
@@ -416,7 +416,7 @@ et cetera) as well as your game as a whole are *not* considered to be
  //instead of mucking around with plugin order, this will inject the code to precisely where it needs to go
 //...hopefully.
 var Fossil =Fossil || {}
-Fossil.version='1.0.01'
+Fossil.version='1.0.02'
 
 //outer block testing scriptUrls exists so Fossil can act as a replacement for main.js
 //don't futz with it
@@ -685,7 +685,11 @@ fossilStaticFixes = function(){
 					}else{
 						//make a fake frames array of the proper length
 						$dataAnimations[index].frames=[]
-						$dataAnimations[index].frames.length=Fossil.guessAnimationEnd($dataAnimations[index])
+						$dataAnimations[index].frames.length=Math.max(Math.ceil(Fossil.guessAnimationEnd($dataAnimations[index])),1)
+						for (let frameNum=0;frameNum<$dataAnimations[index].frames.length;frameNum++)
+						{
+							$dataAnimations[index].frames[frameNum]=[0,0,0,0,0,0,0,0]
+						}
 						$dataAnimations[index]._isMVAnimation=false;
 					}
 				}
@@ -4205,6 +4209,12 @@ fossilDynamicFixes=function(){
 		
 	})
 
+	Fossil.loadPostFix('YEP_SkillLearnSystem',function()
+	{
+		//move the help menu to the top.	
+		Scene_LearnSkill.prototype.helpAreaTop = function() {return 0}
+		
+	})
 
 	Fossil.loadPostFix('MOG_BattleHud',function()
 	{
