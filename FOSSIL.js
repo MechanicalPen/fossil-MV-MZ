@@ -1221,13 +1221,6 @@ fossilStaticFixes = function(){
 			
 			switch(this.constructor.name)
 			{
-				case "Window_SkillLearnConfirm":
-				if(SceneManager._scene.helpWindowRect)
-				{
-					rectA=SceneManager._scene.helpWindowRect();
-					rectA.height = (this.windowHeight ? this.windowHeight() : rectA.height)
-				}
-				break;
 				case "Window_ItemActionCommand":
 				case "Window_ItemDiscardConfirm":
 				if(SceneManager._scene.itemWindowRect)
@@ -3315,20 +3308,9 @@ fossilDynamicFixes=function(){
 		Fossil.moveHelpWindowForYEP=Scene_MenuBase.prototype.helpAreaTop;
 		Scene_MenuBase.prototype.helpAreaTop= function()
 		{
-			//for YEP_EquipCore
-			if(this.constructor.name == "Scene_Equip")
-			{
-				return 0;
-			}
 
 			//this is for YEP_EquipCustomize
 			if(this.constructor.name =="Scene_EquipCustomize")
-			{
-				return 0;
-			}
-			
-			//this is for YEP_OptionsCore
-			if(Imported.YEP_OptionsCore && this.constructor.name =="Scene_Options")
 			{
 				return 0;
 			}
@@ -3476,13 +3458,6 @@ fossilDynamicFixes=function(){
 				
 				switch(this.constructor.name)
 				{
-					case "Window_SkillLearnConfirm":
-					if(SceneManager._scene.helpWindowRect)
-					{
-						rectA=SceneManager._scene.helpWindowRect();
-						rectA.height = (this.windowHeight ? this.windowHeight() : rectA.height)
-					}
-					break;
 					case "Window_ItemActionCommand":
 					case "Window_ItemDiscardConfirm":
 					if(SceneManager._scene.itemWindowRect)
@@ -4211,8 +4186,38 @@ fossilDynamicFixes=function(){
 
 	Fossil.loadPostFix('YEP_SkillLearnSystem',function()
 	{
+		Window_SkillLearnConfirm.prototype.initialize= function(){
+			var rectA=SceneManager._scene.helpWindowRect();
+			rectA.height = (this.windowHeight ? this.windowHeight() : rectA.height)
+			Window_Command.prototype.initialize.call(this,rectA);
+			this.openness=0;
+		}
+
+		Scene_LearnSkill.prototype.isBottomHelpMode = function() {
+			return false;
+		};
+		
+		//Yanfly assumes the help window is at the top (y=0)
+		//but this isn't always the case.
+		Fossil.fixSceneLearnSkillCommandWindow=Scene_LearnSkill.prototype.createCommandWindow 
+		Scene_LearnSkill.prototype.createCommandWindow  = function ()
+		{
+			const tempHeight=this._helpWindow.height;
+			this._helpWindow.height+=this._helpWindow.y;
+			Fossil.fixSceneLearnSkillCommandWindow.apply(this,arguments)
+			this._helpWindow.height=tempHeight;
+		}
+
+		Fossil.fixSceneLearnSkillStatusWindow=Scene_LearnSkill.prototype.createStatusWindow 
+		Scene_LearnSkill.prototype.createStatusWindow = function() {
+			const tempHeight=this._helpWindow.height
+			this._helpWindow.height+=this._helpWindow.y;
+			Fossil.fixSceneLearnSkillStatusWindow.apply(this,arguments);
+			this._helpWindow.height=tempHeight
+		}
+	
 		//move the help menu to the top.	
-		Scene_LearnSkill.prototype.helpAreaTop = function() {return 0}
+		//Scene_LearnSkill.prototype.helpAreaTop = function() {return 0}
 		
 	})
 
@@ -4563,6 +4568,7 @@ fossilDynamicFixes=function(){
 
 	Fossil.loadPostFix('YEP_EquipCore',function()
 	{
+		Scene_Equip.prototype.helpAreaTop=function(){return 0}
 
 		//if we're using equip core, then the help bar is at the top!
 		//As mentioned elsewhere, the help bar is half size because of touch controls.
@@ -4799,6 +4805,8 @@ fossilDynamicFixes=function(){
 			hideSpritesWindow_OptionsRefresh.apply(this,arguments)
 		}
 		
+		Scene_Options.prototype.helpAreaTop= function(){return 0}
+
 	})
 
 	Fossil.loadPostFix('HO_AchievementSystem',function()
