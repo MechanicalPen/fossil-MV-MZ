@@ -14,7 +14,7 @@
 
  * @help FOSSIL goes at the start, before all other plugins.
 
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.03
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.04
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER 
@@ -31,6 +31,7 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 ==Fully Functional==  
 (Alphabetical by plugin maker, then roughly by plugin order)
 ///////////////////////////////////////////////////////////////////////
+-ALOE_ConditionalChoices
 
 -DreamX_AutoEquipOnEmpty
 -DreamX_BattleSE
@@ -416,7 +417,7 @@ et cetera) as well as your game as a whole are *not* considered to be
  //instead of mucking around with plugin order, this will inject the code to precisely where it needs to go
 //...hopefully.
 var Fossil =Fossil || {}
-Fossil.version='1.0.03'
+Fossil.version='1.0.04'
 
 //outer block testing scriptUrls exists so Fossil can act as a replacement for main.js
 //don't futz with it
@@ -6859,6 +6860,21 @@ fossilDynamicFixes=function(){
 		
 	})
 
+	Fossil.loadPostFix('YEP_EventCopier',function()
+	{
+		//fix a copy-and paste error so the event copier actually executes post-copy code.
+		//originally it'd execut pre-copy code twice.
+		Yanfly.Param.EventCopierPostCopy = JSON.parse(Yanfly.Parameters['PostCopyCode']);
+	})
+	
+	Fossil.loadPostFix('ALOE_ConditionalChoices',function()
+	{
+		//import the rmmv function if we don't already define it somehow.
+		Window_ChoiceList.prototype.textWidthEx= Window_ChoiceList.prototype.textWidthEx || function(text) {
+			return this.drawTextEx(text, 0, this.contents.height);
+		};
+	})
+	
 	Fossil.loadPostFix(['YEP_SaveCore','YEP_X_Autosave','YEP_X_NewGamePlus'],function()
 	{
 
