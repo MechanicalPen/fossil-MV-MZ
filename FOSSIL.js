@@ -699,7 +699,15 @@ fossilStaticFixes = function(){
 	}
 	//rewrite since we did the check earlier.
 	Spriteset_Base.prototype.isMVAnimation = function(animation) {
-		return animation._isMVAnimation
+		if(typeof(animation._isMVAnimation)=="undefined")
+		{
+			//if this animation is being passed in differently than using $dataAnimations
+			//(like if someone has a $dataAnimationsMV thing they created)
+			//then fall back to the original code.
+			return !!animation.frames;
+		}else{
+			return animation._isMVAnimation;
+		}
 	};
 
 	//Making custom gauges is more difficult in MZ, because they default is hard-coded to be
@@ -2611,7 +2619,7 @@ fossilStaticFixes = function(){
 			const d = this._flashDuration--;
 			this._flashColor[3] *= (d - 1) / d;
 			
-			if(this._targets.length)
+			if(this._targets && this._targets.length)
 			{
 				for (const target of this._targets) {
 					target.setBlendColor(this._flashColor);
@@ -4602,6 +4610,51 @@ fossilDynamicFixes=function(){
 		}
 
 		
+	})
+	
+	Fossil.loadPostFix('YEP_X_VisualStateFX',function()
+	{
+		//stolen from RMMV and edited to guess how long the animation is.
+		Sprite_Animation.prototype.setupDuration = function() {
+			this._duration = Fossil.guessAnimationEnd(this._animation) * (this._rate||4) + 1;
+		};
+		
+		Fossil.fixTargetsSpriteAnimation=Sprite_Animation.prototype.setup
+		// prettier-ignore
+		Sprite_Animation.prototype.setup = function(
+			targets, animation, mirror, delay, previous
+		) {
+			Fossil.fixTargetsSpriteAnimation.apply(this,arguments)
+			if(targets && (targets.constructor.name !=='Array'))
+			{
+				this._targets=[targets]
+			}
+			this._targets=this._targets||[]
+		}
+		
+				Fossil.fixTargetsSpriteAnimationMV=Sprite_AnimationMV.prototype.setup
+		// prettier-ignore
+		Sprite_AnimationMV.prototype.setup = function(
+			targets, animation, mirror, delay, previous
+		) {
+			Fossil.fixTargetsSpriteAnimationMV.apply(this,arguments)
+			if(targets && (targets.constructor.name !=='Array'))
+			{
+				this._targets=[targets]
+			}
+			
+			this._targets=this._targets||[]
+				
+		}
+		//we don't have an _effectTarget anymore so...
+		Sprite_Battler.prototype.stateEffectTarget = function() {
+		  return this.mainSprite();
+		};
+		Sprite_Enemy.prototype.stateEffectTarget = function() {
+		  return this.mainSprite();
+		};
+		
+	
 	})
 
 	Fossil.loadPostFix('AnimatedSVEnemies',function()
