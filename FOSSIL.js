@@ -4639,48 +4639,52 @@ fossilDynamicFixes=function(){
 	
 	Fossil.loadPostFix('KNT_Editor',function()
 	{
-		//this looks for an uppercanvas that doesn't exist.
-		Fossil.fixCreateKnightEditorScreenAdjust= Knight.EditorHTMLTextInput.prototype.screenAdjust;	
-		Knight.EditorHTMLTextInput.prototype.screenAdjust = function() {
-			Graphics._canvas.id = "UpperCanvas";
-			Fossil.fixCreateKnightEditorScreenAdjust.apply(this,arguments);
-			Graphics._canvas.id = "gameCanvas";
-		};
-		
-		//change padding etc to make these look like MV windows.
-		
-		Knight.Window_Selectable.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
-		Knight.Window_Command.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
-		Knight.Window_HorzCommand.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
-		Knight.Window_ItemList.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
-		Knight.Editor.Window_DoodadList.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
-		
-		Knight.Window_Selectable.prototype.itemHeight=Fossil.MV.itemHeight;
-		Knight.Window_Command.prototype.itemHeight=Fossil.MV.itemHeight;
-		Knight.Window_HorzCommand.prototype.itemHeight=Fossil.MV.itemHeight;//
-		Knight.Window_ItemList.prototype.itemHeight=Fossil.MV.itemHeight;
-		Knight.Editor.Window_DoodadList.prototype.itemHeight=Fossil.MV.itemHeight;
-		
-		
-		Knight.Window_Selectable.prototype.setCursorRect=Fossil.MV.setCursorRect;
-		Knight.Window_Command.prototype.setCursorRect=Fossil.MV.setCursorRect;
-		Knight.Window_HorzCommand.prototype.setCursorRect=Fossil.MV.setCursorRect;
-		Knight.Window_ItemList.prototype.setCursorRect=Fossil.MV.setCursorRect;
-		Knight.Editor.Window_DoodadList.prototype.setCursorRect=Fossil.MV.setCursorRect;
-		
-		Knight.Window_Selectable.prototype.updatePadding = function() {this.padding = 0;};
-		Knight.Window_Command.prototype.updatePadding = function() {this.padding = 0;};
-		Knight.Window_HorzCommand.prototype.updatePadding = function() {this.padding = 0;};
-		Knight.Window_ItemList.prototype.updatePadding = function() {this.padding = 0;};
-		Knight.Editor.Window_DoodadList.prototype.updatePadding = function() {this.padding = 0;};
+		//don't edit any knight stuff on deploy when it doesn't exist.
+		if(Knight.EditorHTMLTextInput)
+		{
+			//this looks for an uppercanvas that doesn't exist.
+			Fossil.fixCreateKnightEditorScreenAdjust= Knight.EditorHTMLTextInput.prototype.screenAdjust;	
+			Knight.EditorHTMLTextInput.prototype.screenAdjust = function() {
+				Graphics._canvas.id = "UpperCanvas";
+				Fossil.fixCreateKnightEditorScreenAdjust.apply(this,arguments);
+				Graphics._canvas.id = "gameCanvas";
+			};
+			
+			//change padding etc to make these look like MV windows.
+			
+			Knight.Window_Selectable.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+			Knight.Window_Command.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+			Knight.Window_HorzCommand.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+			Knight.Window_ItemList.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+			Knight.Editor.Window_DoodadList.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+			
+			Knight.Window_Selectable.prototype.itemHeight=Fossil.MV.itemHeight;
+			Knight.Window_Command.prototype.itemHeight=Fossil.MV.itemHeight;
+			Knight.Window_HorzCommand.prototype.itemHeight=Fossil.MV.itemHeight;//
+			Knight.Window_ItemList.prototype.itemHeight=Fossil.MV.itemHeight;
+			Knight.Editor.Window_DoodadList.prototype.itemHeight=Fossil.MV.itemHeight;
+			
+			
+			Knight.Window_Selectable.prototype.setCursorRect=Fossil.MV.setCursorRect;
+			Knight.Window_Command.prototype.setCursorRect=Fossil.MV.setCursorRect;
+			Knight.Window_HorzCommand.prototype.setCursorRect=Fossil.MV.setCursorRect;
+			Knight.Window_ItemList.prototype.setCursorRect=Fossil.MV.setCursorRect;
+			Knight.Editor.Window_DoodadList.prototype.setCursorRect=Fossil.MV.setCursorRect;
+			
+			Knight.Window_Selectable.prototype.updatePadding = function() {this.padding = 0;};
+			Knight.Window_Command.prototype.updatePadding = function() {this.padding = 0;};
+			Knight.Window_HorzCommand.prototype.updatePadding = function() {this.padding = 0;};
+			Knight.Window_ItemList.prototype.updatePadding = function() {this.padding = 0;};
+			Knight.Editor.Window_DoodadList.prototype.updatePadding = function() {this.padding = 0;};
 
-		Knight.Editor.Window_DoodadProperties.prototype.updatePadding= function() {this.padding = 0;};
-		Knight.Button.prototype.updatePadding = function() {this.padding = 0;};
+			Knight.Editor.Window_DoodadProperties.prototype.updatePadding= function() {this.padding = 0;};
+			Knight.Button.prototype.updatePadding = function() {this.padding = 0;};
+			
 
-		//it also checks for a nonexistent resourcehandler
-		ResourceHandler={};
-		ResourceHandler.exists=function(){return false}
-		
+		}
+			//it also checks for a nonexistent resourcehandler
+			ResourceHandler={};
+			ResourceHandler.exists=function(){return false}
 		
 	})
 
