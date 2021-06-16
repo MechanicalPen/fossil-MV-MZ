@@ -1,6 +1,6 @@
 /*:
  * @plugindesc Fossil is an interoperability layer for RMMZ, designed to make MV plugins work in MZ. 
- * So far, we support over 250 plugins.  You can help!
+ * So far, we support over 300 plugins.  You can help!
  * @author FOSSIL TEAM
  * @target MZ  
 
@@ -14,7 +14,7 @@
 
  * @help FOSSIL goes at the start, before all other plugins.
 
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.04
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.05
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER 
@@ -97,6 +97,8 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -KMS_WaterMapEffect
 -KMS_Minimap
 
+-KNT_Editor
+
 -MechPen_FollowerSpace
 
 -mjshi's RuneSkills
@@ -135,6 +137,8 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -MOG_CharShatterEffect
 -MOG_DestinationPointer
 -MOG_MenuCursor
+
+-Olivia_AntiPlayerStress
 
 -Pv_BattleCommandCustomizer
 -Pv_ParticleCore (just add Pixi-particles to library folder, FOSSIL handles import)
@@ -417,7 +421,7 @@ et cetera) as well as your game as a whole are *not* considered to be
  //instead of mucking around with plugin order, this will inject the code to precisely where it needs to go
 //...hopefully.
 var Fossil =Fossil || {}
-Fossil.version='1.0.04'
+Fossil.version='1.0.05'
 
 //outer block testing scriptUrls exists so Fossil can act as a replacement for main.js
 //don't futz with it
@@ -501,6 +505,30 @@ fossilStaticFixes = function(){
 	}
 	Utils.FAKE_VERSION='13.3.7';
 	//1337 seems fake enough.
+	/**
+	 * Taken from MV.
+	 * Test this browser support passive event feature
+	 * 
+	 * @static
+	 * @method isSupportPassiveEvent
+	 * @return {Boolean} this browser support passive event or not
+	 */
+	Utils.isSupportPassiveEvent = function() {
+		if (typeof Utils._supportPassiveEvent === "boolean") {
+			return Utils._supportPassiveEvent;
+		}
+		// test support passive event
+		// https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md#feature-detection
+		var passive = false;
+		var options = Object.defineProperty({}, "passive", {
+			get: function() { passive = true; }
+		});
+		window.addEventListener("test", null, options);
+		Utils._supportPassiveEvent = passive;
+		return passive;
+	}
+
+
 
 	
 	//if we are running MZ we have webgl.
@@ -1114,7 +1142,9 @@ fossilStaticFixes = function(){
 		this.height = height;
 	};
 
-
+	//change names to work.
+	Window_Scrollable.prototype.scrollDown=Window_Scrollable.prototype.smoothScrollDown
+	Window_Scrollable.prototype.scrollUp=Window_Scrollable.prototype.smoothScrollUp
 	//dummy out a RMMV function that isn't present, isn't needed, and isn't spelled right
 	Window_Base.prototype.updateButtonsVisiblity = function(){}
 
@@ -2469,6 +2499,15 @@ fossilStaticFixes = function(){
 		return cache[url];
 
 	};
+	
+	ImageManager.loadEmptyBitmap = function() {
+		const cache = this._system
+		if (!cache["empty"]) {
+			cache["empty"] = new Bitmap()
+		}
+		return cache["empty"];
+	}
+	
 	// we now 'load' images instead of 'reserve' them.  Do the needful.
 	ImageManager.reserveAnimation = ImageManager.loadAnimation;
 	ImageManager.reserveBattleback1 = ImageManager.loadBattleback1;
@@ -4546,17 +4585,103 @@ fossilDynamicFixes=function(){
 		}
 	})
 	 
-	Fossil.loadPostFix('YEP_X_ExtDoodadPack1 && !!DoodadManager',function()
+	Fossil.loadPostFix('YEP_X_ExtDoodadPack1',function()
 	{
-		//while this was a readability issue in the MV version as well
-		//the party member names being hard to read is worse in MZ by default
-		//this extends the first textbox and scrunches the other ones so they're all legible. 
-		var updatePartyWindowTextSize = Window_GFD_SettingsParty.prototype.itemRect 
-		Window_GFD_SettingsParty.prototype.itemRect = function() {
-			this._textWidth=(this._textWidth-40)||80;
-			return updatePartyWindowTextSize.apply(this,arguments)
+		if(!!DoodadManager)
+		{
+			//while this was a readability issue in the MV version as well
+			//the party member names being hard to read is worse in MZ by default
+			//this extends the first textbox and scrunches the other ones so they're all legible. 
+			var updatePartyWindowTextSize = Window_GFD_SettingsParty.prototype.itemRect 
+			Window_GFD_SettingsParty.prototype.itemRect = function() {
+				this._textWidth=(this._textWidth-40)||80;
+				return updatePartyWindowTextSize.apply(this,arguments)
+			}
 		}
 	 
+	})
+
+	Fossil.loadPreFix('KNT_Editor',function()
+	{
+		//another MV function unused in MZ.
+		/**
+		 * @static
+		 * @method _onPointerDown
+		 * @param {PointerEvent} event
+		 * @private
+		 */
+		TouchInput._onPointerDown = function(event) {
+			if (event.pointerType === 'touch' && !event.isPrimary) {
+				const x = Graphics.pageToCanvasX(event.pageX);
+				const y = Graphics.pageToCanvasY(event.pageY);
+				if (Graphics.isInsideCanvas(x, y)) {
+					// For Microsoft Edge
+					this._onCancel(x, y);
+					event.preventDefault();
+				}
+			}
+		};
+		
+		//just ignore cache optimizations.
+		ImageManager.reserveBitmap = ImageManager.loadBitmap;
+			//import pixi filters
+		Fossil.filterScript = document.createElement("script");
+		Fossil.filterScript.type = "text/javascript";
+		Fossil.filterScript.async = false;
+		Fossil.filterScript.defer = true;
+		Fossil.filterScript.src='js/libs/pixi-filters.js'
+		document.body.appendChild(Fossil.filterScript);
+		Fossil.filterScript=undefined;//clean up after ourselves.
+		if(Fossil.chattyOutput){console.log('FOSSIL has imported pixi filters')}
+		
+		
+	})
+	
+	Fossil.loadPostFix('KNT_Editor',function()
+	{
+		//this looks for an uppercanvas that doesn't exist.
+		Fossil.fixCreateKnightEditorScreenAdjust= Knight.EditorHTMLTextInput.prototype.screenAdjust;	
+		Knight.EditorHTMLTextInput.prototype.screenAdjust = function() {
+			Graphics._canvas.id = "UpperCanvas";
+			Fossil.fixCreateKnightEditorScreenAdjust.apply(this,arguments);
+			Graphics._canvas.id = "gameCanvas";
+		};
+		
+		//change padding etc to make these look like MV windows.
+		
+		Knight.Window_Selectable.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+		Knight.Window_Command.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+		Knight.Window_HorzCommand.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+		Knight.Window_ItemList.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+		Knight.Editor.Window_DoodadList.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+		
+		Knight.Window_Selectable.prototype.itemHeight=Fossil.MV.itemHeight;
+		Knight.Window_Command.prototype.itemHeight=Fossil.MV.itemHeight;
+		Knight.Window_HorzCommand.prototype.itemHeight=Fossil.MV.itemHeight;//
+		Knight.Window_ItemList.prototype.itemHeight=Fossil.MV.itemHeight;
+		Knight.Editor.Window_DoodadList.prototype.itemHeight=Fossil.MV.itemHeight;
+		
+		
+		Knight.Window_Selectable.prototype.setCursorRect=Fossil.MV.setCursorRect;
+		Knight.Window_Command.prototype.setCursorRect=Fossil.MV.setCursorRect;
+		Knight.Window_HorzCommand.prototype.setCursorRect=Fossil.MV.setCursorRect;
+		Knight.Window_ItemList.prototype.setCursorRect=Fossil.MV.setCursorRect;
+		Knight.Editor.Window_DoodadList.prototype.setCursorRect=Fossil.MV.setCursorRect;
+		
+		Knight.Window_Selectable.prototype.updatePadding = function() {this.padding = 0;};
+		Knight.Window_Command.prototype.updatePadding = function() {this.padding = 0;};
+		Knight.Window_HorzCommand.prototype.updatePadding = function() {this.padding = 0;};
+		Knight.Window_ItemList.prototype.updatePadding = function() {this.padding = 0;};
+		Knight.Editor.Window_DoodadList.prototype.updatePadding = function() {this.padding = 0;};
+
+		Knight.Editor.Window_DoodadProperties.prototype.updatePadding= function() {this.padding = 0;};
+		Knight.Button.prototype.updatePadding = function() {this.padding = 0;};
+
+		//it also checks for a nonexistent resourcehandler
+		ResourceHandler={};
+		ResourceHandler.exists=function(){return false}
+		
+		
 	})
 
 	Fossil.loadPostFix('YEP_SkillCore',function()
