@@ -14,7 +14,7 @@
 
  * @help FOSSIL goes at the start, before all other plugins.
 
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.05
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.06
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER 
@@ -421,7 +421,7 @@ et cetera) as well as your game as a whole are *not* considered to be
  //instead of mucking around with plugin order, this will inject the code to precisely where it needs to go
 //...hopefully.
 var Fossil =Fossil || {}
-Fossil.version='1.0.05'
+Fossil.version='1.0.06'
 
 //outer block testing scriptUrls exists so Fossil can act as a replacement for main.js
 //don't futz with it
@@ -4656,30 +4656,47 @@ fossilDynamicFixes=function(){
 			Knight.Window_Command.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
 			Knight.Window_HorzCommand.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
 			Knight.Window_ItemList.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
-			Knight.Editor.Window_DoodadList.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+			Knight.Window_Base.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
 			
 			Knight.Window_Selectable.prototype.itemHeight=Fossil.MV.itemHeight;
 			Knight.Window_Command.prototype.itemHeight=Fossil.MV.itemHeight;
 			Knight.Window_HorzCommand.prototype.itemHeight=Fossil.MV.itemHeight;//
 			Knight.Window_ItemList.prototype.itemHeight=Fossil.MV.itemHeight;
-			Knight.Editor.Window_DoodadList.prototype.itemHeight=Fossil.MV.itemHeight;
-			
+			Knight.Window_Base.prototype.itemHeight=Fossil.MV.itemHeight;
 			
 			Knight.Window_Selectable.prototype.setCursorRect=Fossil.MV.setCursorRect;
 			Knight.Window_Command.prototype.setCursorRect=Fossil.MV.setCursorRect;
 			Knight.Window_HorzCommand.prototype.setCursorRect=Fossil.MV.setCursorRect;
 			Knight.Window_ItemList.prototype.setCursorRect=Fossil.MV.setCursorRect;
-			Knight.Editor.Window_DoodadList.prototype.setCursorRect=Fossil.MV.setCursorRect;
+			Knight.Window_Base.prototype.setCursorRect=Fossil.MV.setCursorRect;
+
 			
 			Knight.Window_Selectable.prototype.updatePadding = function() {this.padding = 0;};
 			Knight.Window_Command.prototype.updatePadding = function() {this.padding = 0;};
 			Knight.Window_HorzCommand.prototype.updatePadding = function() {this.padding = 0;};
 			Knight.Window_ItemList.prototype.updatePadding = function() {this.padding = 0;};
-			Knight.Editor.Window_DoodadList.prototype.updatePadding = function() {this.padding = 0;};
+			Knight.Window_Base.prototype.updatePadding = function() {this.padding = 0;};
 
-			Knight.Editor.Window_DoodadProperties.prototype.updatePadding= function() {this.padding = 0;};
-			Knight.Button.prototype.updatePadding = function() {this.padding = 0;};
 			
+			Fossil.fixdoodadDragXNotFound=Spriteset_Map.prototype.doodadDragX
+			Spriteset_Map.prototype.doodadDragX=function()
+			{
+				if(true)
+				{
+					return Fossil.fixdoodadDragXNotFound.apply(this,arguments)
+				}
+				
+			}
+			
+			//this happens in MV as well, dragging a doodad in the wrong mode causes a crash.
+			Fossil.fixdoodadUpdatePositionCrash=Knight.Editor.KnightEditor.updateDoodadPosition
+			Knight.Editor.KnightEditor.updateDoodadPosition=function()
+			{
+				if(!(this._draggingDoodad&&(this._currentDoodad==null)))
+				{
+						Fossil.fixdoodadUpdatePositionCrash.apply(this,arguments);
+				}
+			}
 
 		}
 			//it also checks for a nonexistent resourcehandler
