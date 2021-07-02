@@ -14,7 +14,7 @@
 
  * @help FOSSIL goes at the start, before all other plugins.
 
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.06
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.07
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER 
@@ -97,7 +97,8 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -KMS_WaterMapEffect
 -KMS_Minimap
 
--KNT_Editor
+-KNT_Editor note: if icons don't load, open&close the status menu. 
+//No need to edit core files here, Fossil handles loading pixi-filters
 
 -MechPen_FollowerSpace
 
@@ -421,7 +422,7 @@ et cetera) as well as your game as a whole are *not* considered to be
  //instead of mucking around with plugin order, this will inject the code to precisely where it needs to go
 //...hopefully.
 var Fossil =Fossil || {}
-Fossil.version='1.0.06'
+Fossil.version='1.0.07'
 
 //outer block testing scriptUrls exists so Fossil can act as a replacement for main.js
 //don't futz with it
@@ -3376,8 +3377,9 @@ fossilDynamicFixes=function(){
 			return Fossil.moveHelpWindowForYEP.call(this,arguments);
 		}
 
-
-		//re-remove any legacy animation stuff, as well as anything hooked into it.
+//probably don't need to remove it, actually, 
+//if MV code gets injected it OUGHT to be harmless in most cases.
+/* 		//re-remove any legacy animation stuff, as well as anything hooked into it.
 		Sprite_Character.prototype.updateAnimation=function(){}
 		Sprite_Character.prototype.setupAnimation=function(){}
 		Sprite_Character.prototype.endAnimation=function(){}
@@ -3390,7 +3392,7 @@ fossilDynamicFixes=function(){
 			Sprite_Character.prototype.startBalloon=function(){}
 			Sprite_Character.prototype.endBalloon=function(){}
 		}
-
+ */
 		//hue is now done as a sprite property rather than upon bitmap loading.  This uses the new RMMZ version.
 		var updateSpriteBaseHue = Sprite_Base.prototype.initialize
 		Sprite_Base.prototype.initialize = function() {
