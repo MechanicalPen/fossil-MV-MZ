@@ -5,7 +5,7 @@ Project Fossil (Fixing Old Software / Script Interoperability Layer) is a RPG Ma
 
 How to use: 
 
-This should be reasonably plug-and-play.  There aren't really parameters to configure.  
+This should be reasonably plug-and-play.  There aren't really parameters to configure. Add it to your project as the first plugin and if the MV plugins are supported it should work automatically.
 
 
 **Required Plugin Order**
