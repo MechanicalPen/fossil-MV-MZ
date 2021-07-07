@@ -14,7 +14,7 @@
 
  * @help FOSSIL goes at the start, before all other plugins.
 
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.08
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.09
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER 
@@ -422,7 +422,7 @@ et cetera) as well as your game as a whole are *not* considered to be
  //instead of mucking around with plugin order, this will inject the code to precisely where it needs to go
 //...hopefully.
 var Fossil =Fossil || {}
-Fossil.version='1.0.08'
+Fossil.version='1.0.09'
 
 //outer block testing scriptUrls exists so Fossil can act as a replacement for main.js
 //don't futz with it
@@ -3391,6 +3391,35 @@ fossilDynamicFixes=function(){
 		//this plugin is pretty hard to work with, 
 		//and fixing it is a big pain
 		//I think I will leave this for later?
+	})
+	
+	Fossil.loadPreFix('MVP_MouseOperation',function()
+	{
+		//this doesn't get defined in MV at all?  It's a mystery.
+		Window_Selectable.prototype.onTouch=function(){}
+		Fossil.undoMVPProcessTouchChanges=Window_Selectable.prototype.processTouch;
+	})
+	
+	Fossil.loadPostFix('MVP_MouseOperation',function()
+	{
+		Window_Selectable.prototype.processTouch=Fossil.undoMVPProcessTouchChanges;
+		Fossil.undoMVPProcessTouchChanges=undefined;
+		
+	})
+	
+	Fossil.loadPreFix('SRPG_MouseOperation',function()
+	{
+		Fossil.fixSRPGMouseWheel=TouchInput._onWheel 
+		TouchInput._onWheel = function(event) {
+			Fossil.fixSRPGMouseWheel.apply(this,arguments);
+			if(typeof(this._events)=='undefined')
+			{
+				this._events = {}
+			}
+			
+			this._events.wheelY=this._newState.wheelY;
+			this._events.wheelX=this._newState.wheelX;
+		}
 	})
 
 	
