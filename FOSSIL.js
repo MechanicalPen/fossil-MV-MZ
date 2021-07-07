@@ -14,7 +14,7 @@
 
  * @help FOSSIL goes at the start, before all other plugins.
 
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.07
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.08
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER 
@@ -422,7 +422,7 @@ et cetera) as well as your game as a whole are *not* considered to be
  //instead of mucking around with plugin order, this will inject the code to precisely where it needs to go
 //...hopefully.
 var Fossil =Fossil || {}
-Fossil.version='1.0.07'
+Fossil.version='1.0.08'
 
 //outer block testing scriptUrls exists so Fossil can act as a replacement for main.js
 //don't futz with it
@@ -1015,7 +1015,15 @@ fossilStaticFixes = function(){
 		width = width || 186;
 		var color1 = this.hpGaugeColor1();
 		var color2 = this.hpGaugeColor2();
-		var gaugeID = 'actor'+actor.actorId().toString()+'hpbar'
+		var actorName="";
+		if(actor.isEnemy())
+		{
+			actorName="enemy"+actor.name();
+		}else{
+			actorName="actor"+actor.actorId().toString()
+		}
+		
+		var gaugeID = actorName+'hpbar'
 		var newGauge = this.placeFossilGauge(gaugeID, 'this._target.hp','this._target.mhp',TextManager.hpA,x,y,width,12,actor)
 		newGauge._gaugeColor1=color1;
 		newGauge._gaugeColor2=color2;
@@ -1028,8 +1036,15 @@ fossilStaticFixes = function(){
 		width = width || 186;
 		var color1 = this.mpGaugeColor1();
 		var color2 = this.mpGaugeColor2();
-		var gaugeID = 'actor'+actor.actorId().toString()+'mpbar'
+		var actorName="";
+		if(actor.isEnemy())
+		{
+			actorName="enemy"+actor.name();
+		}else{
+			actorName="actor"+actor.actorId().toString()
+		}
 		
+		var gaugeID = actorName+'mpbar'
 		var newGauge = this.placeFossilGauge(gaugeID, 'this._target.mp','this._target.mmp',TextManager.mpA,x,y,width,12,actor)
 		newGauge._gaugeColor1=color1;
 		newGauge._gaugeColor2=color2;
@@ -1041,8 +1056,15 @@ fossilStaticFixes = function(){
 		width = width || 186;
 		var color1 = this.tpGaugeColor1();
 		var color2 = this.tpGaugeColor2();
-		var gaugeID = 'actor'+actor.actorId().toString()+'tpbar'
+		var actorName="";
+		if(actor.isEnemy())
+		{
+			actorName="enemy"+actor.name();
+		}else{
+			actorName="actor"+actor.actorId().toString()
+		}
 		
+		var gaugeID = actorName+'tpbar'
 		var newGauge = this.placeFossilGauge(gaugeID, 'this._target.tp','this._target.maxTp()',TextManager.tpA,x,y,width,12,actor)
 		
 		newGauge._gaugeColor1=color1;
@@ -1161,13 +1183,6 @@ fossilStaticFixes = function(){
 	{
 	var rectFixWindowBase= Window_Base.prototype.initialize;
 	Window_Base.prototype.initialize = function(rect) {
-		
-		if(this.constructor.name == 'Window_Hidden')
-		{
-			//special case for DTextPicture.  Code is wrapped, window is hidden.
-			//if you don't have a backsprite it crashes.
-			Window.prototype._createAllParts.call(this);
-		}
 		
 		if(arguments.length>0)
 		{
@@ -3337,6 +3352,48 @@ fossilDynamicFixes=function(){
 			if(Fossil.chattyOutput){console.log('FOSSIL has imported pixi particles')}
 	})
 	
+	
+
+	Fossil.loadPreFix('DTextPicture',function()
+	{
+		
+		var fixHiddenWindowBase= Window_Base.prototype.initialize;
+		Window_Base.prototype.initialize = function(rect) {
+		
+		if(this.constructor.name == 'Window_Hidden')
+			{
+				PIXI.Container.call(this);
+				this.updateBackOpacity=function(){};
+				//Window.prototype._createAllParts.call(this);
+				const tempCreateContents = this.createContents;
+				this.createContents=function(){
+					this._contentsSprite=this._windowContentsSprite;
+					this._contentsBackSprite=this._windowBackSprite;
+					this._frameSprite=this._windowFrameSprite;
+					tempCreateContents.apply(this,arguments);
+				}
+				
+				//Window.prototype._createAllParts.call(this);
+				//we have to inject here because it's not visible outside.
+			}
+			fixHiddenWindowBase.apply(this,arguments);
+			
+		}
+		//prevent an infinite loop when it tries to process a new line 
+		Fossil.DtextFixNewlineProcess=Window_Base.prototype.processNewLine;
+		Window_Base.prototype.processNewLine = function(textState) {
+			Fossil.DtextFixNewlineProcess.apply(this,arguments);
+			if(this.constructor.name == 'Window_Hidden')
+			{
+				textState.index++;//it doesn't increment this.
+			}
+		};
+		//this plugin is pretty hard to work with, 
+		//and fixing it is a big pain
+		//I think I will leave this for later?
+	})
+
+	
 	//////////////////////////////////////////////////////////////////////
 	//PRE CHECK IS NOW COMPLETE
 	/////////////////////////////////////////////////////////////////////////////////////////////
@@ -3410,14 +3467,6 @@ fossilDynamicFixes=function(){
 	if(true){
 		var rectFixFinalWindowBase= Window_Base.prototype.initialize;
 		Window_Base.prototype.initialize = function(rect) {
-			
-			if(this.constructor.name == 'Window_Hidden')
-			{
-				//special case for DTextPicture.  Code is wrapped, window is hidden.
-				console.log('hide')
-				//if you don't have a backsprite it crashes.
-				Window.prototype._createAllParts.call(this);
-			}
 			
 			if(arguments.length>0)
 			{
@@ -4165,36 +4214,6 @@ fossilDynamicFixes=function(){
 	}//end of our FINAL fixes.
 
 
-	Fossil.loadPostFix('DTextPicture',function()
-	{
-		
-		//DTextpicture creates a hidden window, we need to set an opacity on it
-		//so RMMZ doesn't flip out
-
-		var rectFixWindowHidden= Window_Hidden.prototype.initialize;
-		Window_Hidden.prototype.initialize = function(rect) {
-			
-			if (arguments[0].constructor.name=='Rectangle') // if our first argument is a rectangle this is MZ code
-			{
-				rectFixWindowHidden.apply(this,arguments) 
-			}else{ //if not, I am assuming it is MV.
-				if(arguments.length==1)
-				{
-					Fossil.log("Only one argument and not a rectangle.  I am guessing this is inheriting from a window that isn't updating")
-				}
-				var rect = new Rectangle(
-				arguments[0], 
-				arguments[1], 
-				arguments[2]||(this.windowWidth ? this.windowWidth() : 0) ||400,  
-				arguments[3]||(this.windowHeight ? this.windowHeight() : 0)||this.fittingHeight(this.numVisibleRows())||Graphics.boxHeight);
-				
-				rectFixWindowHidden.call(this,rect)
-			}
-		};
-		
-	})
-
-
 	Fossil.loadPostFix('FROG_Magic',function()
 	{
 		Window_StatusBase.prototype.placeBasicGauges = function(actor, x, y) {
@@ -4722,6 +4741,75 @@ fossilDynamicFixes=function(){
 			}
 		};
 	})
+	
+	Fossil.loadPostFix('SRPG_core',function()
+	{
+		//clear gauges after they're rendered
+		Fossil.clearSRPGCommandWindowsGauges=Window_SrpgActorCommandStatus.prototype.refresh
+		Window_SrpgActorCommandStatus.prototype.refresh=function()
+		{
+			if(this._additionalSprites)
+			{
+				Window_StatusBase.prototype.hideAdditionalSprites.call(this);
+			}
+			//this._additionalSprites = {};
+			Fossil.clearSRPGCommandWindowsGauges.apply(this,arguments);
+		}
+		
+		Fossil.clearSRPGStatusWindowsGauges=Window_SrpgStatus.prototype.refresh
+		Window_SrpgStatus.prototype.refresh=function()
+		{
+			if(this._additionalSprites)
+			{
+				Window_StatusBase.prototype.hideAdditionalSprites.call(this);
+			}
+			//this._additionalSprites = {};
+			Fossil.clearSRPGStatusWindowsGauges.apply(this,arguments);
+		}
+		Fossil.clearSRPGResultWindowsGauges=Window_SrpgBattleResult.prototype.refresh
+		Window_SrpgBattleResult.prototype.refresh=function()
+		{
+			if(this._additionalSprites)
+			{
+				Window_StatusBase.prototype.hideAdditionalSprites.call(this);
+			}
+			//this._additionalSprites = {};
+			Fossil.clearSRPGResultWindowsGauges.apply(this,arguments);
+		}
+		
+		
+		//shift exp over a tad in the battle result window
+		Window_SrpgBattleResult.prototype.drawGauge = function(x, y, width, rate, color1, color2) {
+			x=x-76;
+			gaugeID=[this.constructor.name.toString(),x,y,width].toString()
+			label ='';//no label
+			var fillW = Math.floor(width * rate);
+			var gaugeY = y + this.lineHeight() - 20;
+			var newGauge=this.placeFossilGauge(gaugeID, rate,'rate',label,x,gaugeY,width,12)
+			newGauge._gaugeColor1 = color1;
+			newGauge._gaugeColor2 = color2;
+			newGauge.hideValueText = true;
+			newGauge.hideLabelText=true;
+			newGauge.drawGauge();
+
+		};
+		
+		
+		
+			//change padding etc to make these look like MV windows.
+			Window_SrpgStatus.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+			Window_SrpgStatus.prototype.itemHeight=Fossil.MV.itemHeight;
+			
+			Window_SrpgBattleResult.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+			Window_SrpgBattleResult.prototype.itemHeight=Fossil.MV.itemHeight;
+			Window_SrpgBattleResult.prototype.updatePadding = function() {this.padding = 12;};
+			Window_ActorCommand.prototype.drawItemBackground=Fossil.MV.drawItemBackground;
+			//Window_ActorCommand.prototype.itemHeight=Fossil.MV.itemHeight;
+			//Window_ActorCommand.prototype.setCursorRect=Fossil.MV.setCursorRect;
+			//Window_ActorCommand.prototype.updatePadding = function() {this.padding = 0;};
+			
+	})
+	
 
 	Fossil.loadPostFix('YEP_EquipCore',function()
 	{
