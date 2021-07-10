@@ -14,7 +14,7 @@
 
  * @help FOSSIL goes at the start, before all other plugins.
 
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.10
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.11
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER 
@@ -32,6 +32,9 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 (Alphabetical by plugin maker, then roughly by plugin order)
 ///////////////////////////////////////////////////////////////////////
 -ALOE_ConditionalChoices
+
+-Astfgl's QTEWindow
+-Astfgl's QTEAddonSPW
 
 -DreamX_AutoEquipOnEmpty
 -DreamX_BattleSE
@@ -301,6 +304,7 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 *YEP_EnemyLevels
 -YEP_X_DifficultySlider
 -YEP_X_EnemyBaseParam
+-YEP_X_MapEnemyLevels
 -YEP_EnhancedTP
 -YEP_X_MoreTPModes
 *YEP Equip Battle Skills
@@ -332,6 +336,7 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -YEP_EventRegionTrigger
 -YEP_EventSpawner
 -YEP_EventSpriteOffset
+-YEP_EventStepAniOpt
 -YEP_EventTimerControl
 -YEP_IconsOnEvents
 -YEP_BaseTroopEvents
@@ -350,6 +355,7 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -YEP_HelpFileAccess
 -YEP_IconBalloons
 -YEP_KeyNameEntry
+-YEP_KeyNumberInput
 -YEP_KeyboardConfig
 -YEP_MainMenuVar
 -YEP_MapGoldWindow
@@ -422,7 +428,7 @@ et cetera) as well as your game as a whole are *not* considered to be
  //instead of mucking around with plugin order, this will inject the code to precisely where it needs to go
 //...hopefully.
 var Fossil =Fossil || {}
-Fossil.version='1.0.10'
+Fossil.version='1.0.11'
 
 //outer block testing scriptUrls exists so Fossil can act as a replacement for main.js
 //don't futz with it
@@ -528,7 +534,23 @@ fossilStaticFixes = function(){
 		Utils._supportPassiveEvent = passive;
 		return passive;
 	}
-
+	/**
+	 * taken from rpg_core
+	 * Makes a CSS color string from RGB values.
+	 *
+	 * @static
+	 * @method rgbToCssColor
+	 * @param {Number} r The red value in the range (0, 255)
+	 * @param {Number} g The green value in the range (0, 255)
+	 * @param {Number} b The blue value in the range (0, 255)
+	 * @return {String} CSS color string
+	 */
+	Utils.rgbToCssColor = function(r, g, b) {
+		r = Math.round(r);
+		g = Math.round(g);
+		b = Math.round(b);
+		return 'rgb(' + r + ',' + g + ',' + b + ')';
+	};
 
 
 	
@@ -4990,7 +5012,45 @@ fossilDynamicFixes=function(){
 			
 	})
 
-
+	Fossil.loadPostFix(['QTEAddonSPW','QTEWindow'],function()
+	{
+		//because the plugin can sample skill sequences of multiple lengths
+		// if you set a minimum length to 3
+		// and input a skill of length 4
+		// then it will have to test ABCD, ABC, and BCD
+		// the problem is that it throws a failure report after any of the three
+		// in Game_Map.prototype.getSkillMatch 
+		//instead of in Game_Map.prototype.trySequence 
+		//so I'm gonna change how that works.
+		
+		Fossil.displayNoMatchBackup=Window_BattleLog.prototype.displayNoMatch;
+		Window_BattleLog.prototype.displayNoMatch = function(){}; //suppress this by removing it.
+		
+		//gonna have to inject into trysequence and getSkillMatch
+		//basically I will flag something at the beginning of trysequence saying it found no matches
+		//and then have a hidden variable track if getskillmatch ever returned something
+		Fossil.QTEtrySequence=Game_Map.prototype.trySequence;
+		Game_Map.prototype.trySequence=function(user,target,minInputs,maxInputs) {
+			Fossil.weFoundNoQTEMatchesReally=true;
+			Fossil.QTEtrySequence.apply(this,arguments);
+			if(Fossil.weFoundNoQTEMatchesReally)
+			{
+				Fossil.displayNoMatchBackup(target);
+			}
+		}
+		
+		//track if we found a skill match.
+		Fossil.QTEgetSkillMatch=Game_Map.prototype.getSkillMatch
+		Game_Map.prototype.getSkillMatch = function(actorId,seq) {
+			var tempVal=Fossil.QTEgetSkillMatch.apply(this,arguments);
+			if (tempVal !== "no match found")
+			{
+				Fossil.weFoundNoQTEMatchesReally=false;
+			}
+			return tempVal
+		}
+		
+	})
 
 
 	Fossil.loadPostFix('YEP_StatusMenuCore',function()
@@ -5357,6 +5417,35 @@ fossilDynamicFixes=function(){
 		
 	})
 
+	Fossil.loadPostFix('YEP_BattleEngineCore',function()
+	{
+		//need to undo how it treats common events
+		//since now there's an actual common event queuing system!
+		/* Game_Temp.prototype.isCommonEventReserved=Yanfly.BEC.Game_Temp_isCommonEventReserved;
+		Yanfly.BEC.Game_Temp_isCommonEventReserved=undefined; */
+		Game_Temp.prototype.reservedCommonEvent=undefined;
+		Game_Temp.prototype.clearCommonEvent=undefined;
+		
+		//now have it add a common event onto the common event queue 
+		Fossil.forceActionQueueRetrieveCommonEvent=Game_Temp.prototype.retrieveCommonEvent;
+		Game_Temp.prototype.retrieveCommonEvent = function() 
+		{
+			if(this._forceActionQueue){
+				const tempAction= this._forceActionQueue;
+				this._forceActionQueue=undefined;
+				return tempAction;
+			}else{
+				return Fossil.forceActionQueueRetrieveCommonEvent.apply(this,arguments)
+			}
+		}
+		
+/* 		Fossil.addActionQueueToReservedList=Game_Temp.prototype.isCommonEventReserved ;
+		Game_Temp.prototype.isCommonEventReserved = function() {
+			return (Fossil.addActionQueueToReservedList.apply(this,arguments) || !!this._forceActionQueue)
+		} */
+		
+			
+	})
 	//lotta pieces we gotta pay attention to.
 	Fossil.loadPostFix(
 	['YEP_BattleEngineCore'
