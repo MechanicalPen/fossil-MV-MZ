@@ -14,7 +14,7 @@
 
  * @help FOSSIL goes at the start, before all other plugins.
 
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.11
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.12
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER 
@@ -428,7 +428,7 @@ et cetera) as well as your game as a whole are *not* considered to be
  //instead of mucking around with plugin order, this will inject the code to precisely where it needs to go
 //...hopefully.
 var Fossil =Fossil || {}
-Fossil.version='1.0.11'
+Fossil.version='1.0.12'
 
 //outer block testing scriptUrls exists so Fossil can act as a replacement for main.js
 //don't futz with it
@@ -4871,6 +4871,29 @@ fossilDynamicFixes=function(){
 				};
 			
 			
+			//in MV the battlelog inherited all the selectable stuff.
+			//in mz it only gets window_base.  
+			//since so many of these selections are needed, I am just changing the prototype
+			//in theory this shouldn't break things too much (since window_selectable 
+			//is also derived from window_base, and we aren't overwriting) but who knows?
+
+			//rip out all the properties that exist in window_selectable
+			//that don't exist in window_battlelog
+			//and stick them in!
+			
+			 for (var i in Window_Selectable.prototype) 
+			{
+					if(Window_BattleLog.prototype[i]==undefined)
+					{
+						Window_BattleLog.prototype[i] = Window_Selectable.prototype[i];
+					}
+			} 
+			
+			Window_BattleLog.prototype.scrollBaseY=function(){return 0}
+			Window_BattleLog.prototype.scrollBaseX=function(){return 0}
+			
+ 			Window_SrpgBattleStatus.prototype.drawCurrentAndMax =function(){}
+
 	})
 	
 
