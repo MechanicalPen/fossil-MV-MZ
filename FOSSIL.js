@@ -14,7 +14,7 @@
 
  * @help FOSSIL goes at the start, before all other plugins.
 
-Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.12
+Fixing Old Software / Special Interoperability Layer (FOSSIL) Version 1.0.13
 
 FOSSIL is an interoperability plugin.  
 The purpose of this layer is to expand the use and usefulness of RPG MAKER 
@@ -2933,10 +2933,20 @@ fossilStaticFixes = function(){
 	if(Fossil.pluginNameList.contains('YEP_X_MoreCurrencies'))
 	{
 		//yanfly didn't initialize Yanfly.Icon when getting Yanfly.Icon.Gold in this
-		//initialize all the Yanfly namespace.
-		window.Yanfly = Yanfly || {};
+		//initialize all the needed Yanfly namespace.
+		if(typeof(Yanfly)=='undefined')
+		{
+			Yanfly=window.Yanfly ||{};
+			Yanfly.Param = Yanfly.Param || {};
+			Yanfly.Icon = Yanfly.Icon || {};
+		}
+		//this should fix it.
+		//Yanfly=window.Yanfly //our fixes keep the window object, 
+			//but lose global scoped var and const definitions.
+			//this is very weird, but work-around-able
+		/* window.Yanfly = Yanfly || {};
 		Yanfly.Param = Yanfly.Param || {};
-		Yanfly.Icon = Yanfly.Icon || {};
+		Yanfly.Icon = Yanfly.Icon || {}; */
 	}
 
 
@@ -4776,6 +4786,28 @@ fossilDynamicFixes=function(){
 			ResourceHandler.exists=function(){return false}
 		
 	})
+	
+	
+	//I am going to trust that if someone fixes the typo in the filename 
+	//they won't include the plugin twice under both filenames as well
+	Fossil.loadPreFix(['VE_DamgePopup','VE_DamagePopup'],function()
+	{
+		//window definition code is wrapped, so we slide in a layer underneath the plugin
+		//that way when it goes down to code we can touch, we ID it and fix preemptively.
+		var damageSpriteFixWindowBase = Window_Base.prototype.initialize;
+			Window_Base.prototype.initialize = function(){
+			
+			if(this.constructor.name=='Window_DamageSprite')
+			{
+				damageSpriteFixWindowBase.call(this,new Rectangle(0,0,200,200))
+				
+
+			}else{
+				damageSpriteFixWindowBase.apply(this,arguments)
+			}
+		}
+		
+	})
 
 	Fossil.loadPostFix('YEP_SkillCore',function()
 	{
@@ -5477,9 +5509,13 @@ fossilDynamicFixes=function(){
 	,'YEP_X_VisualHpGauge','YEP_X_VisualATBGauge','YEP_X_TurnOrderDisplay']
 	,function ()
 	{
-		Yanfly=window.Yanfly //our fixes keep the window object, 
-		//but lose global scoped var and const definitions.
-		//this is very weird, but work-around-able
+		//not sure this is needed, might be causing bugs.
+/* 		if((typeof(Yanfly)=='undefined')&&!(typeof(window.Yanfly)=='undefined'))
+		{
+			Yanfly=window.Yanfly //our fixes keep the window object, 
+			//but lose global scoped var and const definitions.
+			//this is very weird, but work-around-able
+		} */
 
 							
 		//if we don't have improved battle backs imported, then get rid of this function
@@ -6691,7 +6727,13 @@ fossilDynamicFixes=function(){
 		
 	})
 
-
+	//I am going to trust that if someone fixes the typo in the filename 
+	//they won't include the plugin twice under both filenames as well
+	Fossil.loadPostFix(['VE_DamgePopup','VE_DamagePopup'],function()
+	{
+		
+	})
+	
 
 
 	Fossil.loadPostFix('EquipSlotsCore',function()
