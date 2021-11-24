@@ -53,6 +53,8 @@ plugin command, or put oldCommand('whateverthecommandwas') in a script.
 -DreamX_RandomPrefixesSuffixes
 -DreamX_TouchSurpriseBattles
 
+-EISShopSystem
+
 *FROG_Core
 -FROG_Magic
 -FROG_RaceCore
@@ -7514,7 +7516,71 @@ fossilDynamicFixes=function(){
 
 	})
 
+	Fossil.loadPostFix('EISShopSystem', function()
+	{
+		// Window_ShopBuy's old initialization required shopGoods to be passed into it, and also called a
+		// windowWidth function. We will also initialize isStockableShop, to work around a necessary method
+		// being blocked in the original plugin.
+		const _Window_ShopBuy_initialize = Window_ShopBuy.prototype.initialize;
+		Window_ShopBuy.prototype.initialize = function(rect, shopGoods) {
+			Fossil.EISShopSystem = Fossil.EISShopSystem || {};
+			Fossil.EISShopSystem.isStockableShop = false;
 
+			this._FossilWidth = rect.width;
+			_Window_ShopBuy_initialize.call(this, rect.x, rect.y, rect.height, shopGoods);
+		};
+
+		Window_ShopBuy.prototype.windowWidth = function() {
+			return this._FossilWidth;
+		};
+
+		// Using this method to track when a shop is stockable, because the ShopManager.isStockableShop
+		// method is blocked off.
+		const _Window_ShopBuy_prepareStockShop = Window_ShopBuy.prototype.prepareStockShop;
+		Window_ShopBuy.prototype.prepareStockShop = function() {
+			Fossil.EISShopSystem.isStockableShop = true;
+			_Window_ShopBuy_prepareStockShop.call(this);
+		};
+
+		// The original plugin has a bug which allows the player to purchase items in 
+		// Stockable Shops, regardless of how much gold they have. This should fix it.
+		const _Window_ShopBuy_isEnabled = Window_ShopBuy.prototype.isEnabled;
+		Window_ShopBuy.prototype.isEnabled = function(item) {
+			if (item && this.price(item) <= this._money && !$gameParty.hasMaxItems(item)) {
+				if (Fossil.EISShopSystem.isStockableShop) {
+					return (item.stock > 0);
+				} else {
+					return true;
+				}
+			} else {
+				return false;
+			}
+		};
+
+		Window_ShopNumber.prototype.changeNumber = function(amount) {
+			const lastNumber = this._number;
+			if (Fossil.EISShopSystem.isStockableShop && typeof this._item.stock !== 'undefined') {
+				this._max = Math.min(this._item.stock, this._max);
+			}
+			this._number = (this._number + amount).clamp(1, this._max);
+			if (this._number !== lastNumber) {
+				this.playCursorSound();
+				this.refresh();
+			}
+		};
+
+		// Modified creatBuyWindow to pass the goods into the goods into the ShopBuy constructor
+		Scene_Shop.prototype.createBuyWindow = function() {
+			const rect = this.buyWindowRect();
+			this._buyWindow = new Window_ShopBuy(rect, this._goods);
+			this._buyWindow.setHelpWindow(this._helpWindow);
+			this._buyWindow.setStatusWindow(this._statusWindow);
+			this._buyWindow.hide();
+			this._buyWindow.setHandler("ok", this.onBuyOk.bind(this));
+			this._buyWindow.setHandler("cancel", this.onBuyCancel.bind(this));
+			this.addWindow(this._buyWindow);
+		};
+	})
 
 
 
