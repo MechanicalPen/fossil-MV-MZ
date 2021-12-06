@@ -7544,7 +7544,6 @@ fossilDynamicFixes=function(){
 
 		// The original plugin has a bug which allows the player to purchase items in 
 		// Stockable Shops, regardless of how much gold they have. This should fix it.
-		const _Window_ShopBuy_isEnabled = Window_ShopBuy.prototype.isEnabled;
 		Window_ShopBuy.prototype.isEnabled = function(item) {
 			if (item && this.price(item) <= this._money && !$gameParty.hasMaxItems(item)) {
 				if (Fossil.EISShopSystem.isStockableShop) {
@@ -7579,6 +7578,18 @@ fossilDynamicFixes=function(){
 			this._buyWindow.setHandler("ok", this.onBuyOk.bind(this));
 			this._buyWindow.setHandler("cancel", this.onBuyCancel.bind(this));
 			this.addWindow(this._buyWindow);
+		};
+
+		// Fix the position of the gold window
+		Scene_Shop.prototype.createCommandWindow = function() {
+			const rect = this.commandWindowRect();
+			this._commandWindow = new Window_ShopCommand(rect, this._purchaseOnly, this._sellOnly);
+			this._commandWindow.setPurchaseOnly(this._purchaseOnly);
+			this._commandWindow.y = this.mainAreaTop();
+			this._commandWindow.setHandler("buy", this.commandBuy.bind(this));
+			this._commandWindow.setHandler("sell", this.commandSell.bind(this));
+			this._commandWindow.setHandler("cancel", this.popScene.bind(this));
+			this.addWindow(this._commandWindow);
 		};
 	})
 
