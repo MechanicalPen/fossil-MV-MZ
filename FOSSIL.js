@@ -7659,8 +7659,10 @@ fossilDynamicFixes=function(){
 //if you just want to fix plugins, there's nothing here for you to do.  Go up^ to that block.
 if(typeof(scriptUrls)!=="undefined")
 {
-	
-	if($plugins[0].name!=='FOSSIL')
+	// $plugins[0].name!=='FOSSIL' is true on Joiplay. I'm guessing they load their own plugin first?
+	// Either way, doesn't seem to break anything and if a published build sees this there's nothing
+	// they can do anyways. So we'll only check it on test.
+	if(Utils.isOptionValid("test") && $plugins[0].name!=='FOSSIL')
 	{
 		throw new Error('FOSSIL needs to be the first plugin.  If FOSSIL is not the first plugin, everything will break!'); 
 	}
@@ -7981,7 +7983,10 @@ if(typeof(scriptUrls)=="undefined")
 			if (++this.loadCount === this.numScripts) {
 				//Adding these lines is the only modification we make to the main class;
 				Fossil.pluginNameList =  $plugins.filter(plugin => plugin.status).map(a => a.name );
-				if($plugins[0].name!=='FOSSIL')
+				// $plugins[0].name!=='FOSSIL' is true on Joiplay. I'm guessing they load their own plugin first?
+				// Either way, doesn't seem to break anything and if a published build sees this there's nothing
+				// they can do anyways. So we'll only check it on test.
+				if(Utils.isOptionValid("test") && $plugins[0].name!=='FOSSIL')
 				{
 					throw new Error('Fossil needs to be the first plugin.  If Fossil is not the first plugin, everything will break!'); 
 				}
